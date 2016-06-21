@@ -1,0 +1,25 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    group = 'org.neo4j.shell'
+    version = '1.0.0-SNAPSHOT'
+
+    repositories {
+        jcenter()
+    }
+}
+
+ext {
+    findbugsVersion = '3.0.0'
+    jansiVersion = '1.13'
+    jlineVersion = '2.14.2'
+}

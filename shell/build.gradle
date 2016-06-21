@@ -1,0 +1,12 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'org.neo4j.shell.Main'
+
+dependencies {
+    compile "com.google.code.findbugs:annotations:$findbugsVersion"
+    compile "org.fusesource.jansi:jansi:$jansiVersion"
+    compile("jline:jline:$jlineVersion") {
+        exclude(group: 'junit', module: 'junit')
+    }
+}
