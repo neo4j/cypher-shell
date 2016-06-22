@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
+import org.neo4j.shell.commands.Exit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,6 +27,8 @@ public class InteractiveShellRunner {
         while (running) {
             try {
                 running = work();
+            } catch (Exit.ExitException e) {
+                throw e;
             } catch (Throwable t) {
                 // TODO: 6/21/16 Do error handling
                 System.err.println("Error: " + t.getMessage());
@@ -33,7 +36,7 @@ public class InteractiveShellRunner {
         }
     }
 
-    private boolean work() throws IOException {
+    private boolean work() throws IOException, Exit.ExitException {
         String line = readLine();
 
         if (null == line) {

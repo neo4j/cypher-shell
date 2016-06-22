@@ -2,27 +2,24 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiRenderer;
+import org.neo4j.shell.commands.Exit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.neo4j.shell.CommandHelper.registerCommands;
 
 /**
  * An interactive shell for evaluating cypher statements.
  */
 public class CypherShell {
 
-    private final List<Command> commands;
+    private final CommandHelper commandHelper;
 
     CypherShell() {
-        commands = new ArrayList<>();
-
-        registerCommands(commands, this);
+        commandHelper = new CommandHelper(this);
     }
 
     int run() {
@@ -34,7 +31,9 @@ public class CypherShell {
             runner.run();
 
             exitCode = 0;
-        } catch (Throwable t) {
+        } catch (Exit.ExitException e) {
+            exitCode = e.getCode();
+        }catch (Throwable t) {
             // TODO: 6/21/16 Print to error log
             exitCode = 1;
         }
@@ -54,7 +53,7 @@ public class CypherShell {
         return "@|bold cypher:|@1@|bold >|@ ";
     }
 
-    void execute(@Nonnull final String line) {
+    void execute(@Nonnull final String line) throws Exit.ExitException {
         // TODO: 6/21/16 handle command
 
         // See if it's a shell command
@@ -64,8 +63,17 @@ public class CypherShell {
             return;
         }
 
-        // Else it will be parsed as Cypher
-        System.out.println("Executing: " + line);
+        // Else it will be parsed as Cypher, but for that we need to be connected
+        if (!isConnected()) {
+            System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Not connected to Neo4j yet").reset());
+            return;
+        }
+
+        System.out.println("Cypher: " + line);
+    }
+
+    private boolean isConnected() {
+        return false;
     }
 
     @Nullable
@@ -78,28 +86,20 @@ public class CypherShell {
 
         String name = parts[0];
 
-        Command cmd = getCommand(name);
+        Command cmd = commandHelper.getCommand(name);
 
         if (cmd != null) {
-            List<String> args = Arrays.asList(parts);
-            args.remove(0);
+            List<String> args = new ArrayList<>();
+            for (int i = 1; i < parts.length; i++) {
+                args.add(parts[i]);
+            }
             return () -> cmd.execute(args);
         }
 
         return null;
     }
 
-    @Nullable
-    private Command getCommand(@Nonnull final String name) {
-        for (Command command: commands) {
-            if (name.equals(command.getName())) {
-                return command;
-            }
-        }
-        return null;
-    }
-
-    private void executeCmd(@Nonnull final CommandExecutable<Object> cmdExe) {
+    private void executeCmd(@Nonnull final CommandExecutable<Object> cmdExe) throws Exit.ExitException {
         try {
             Object result = cmdExe.execute();
         } catch (CommandException e) {

@@ -2,6 +2,8 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
 
+import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -10,6 +12,7 @@ import java.util.List;
 public class Help implements Command {
     public static final String COMMAND_NAME = ":help";
 
+    @Nonnull
     @Override
     public String getName() {
         return COMMAND_NAME;
@@ -30,13 +33,16 @@ public class Help implements Command {
         return null;
     }
 
+    @Nonnull
     @Override
-    public List getAliases() {
-        return null;
+    public List<String> getAliases() {
+        return Arrays.asList(":man");
     }
 
     @Override
-    public Object execute(List<String> args) {
+    public Object execute(@Nonnull List<String> args) {
+        System.out.println("HELP I AM BEING ATTACKED");
+
         return null;
     }
 }
