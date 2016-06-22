@@ -10,4 +10,5 @@ dependencies {
     compile("jline:jline:$jlineVersion") {
         exclude(group: 'junit', module: 'junit')
     }
+    testCompile "junit:junit:$junitVersion"
 }

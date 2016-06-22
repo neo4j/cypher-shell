@@ -4,6 +4,7 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.v1.*;
 import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.prettyprint.PrettyPrinter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -72,18 +73,15 @@ public class CypherShell {
             return;
         }
 
-        System.out.println("Cypher: " + line);
         executeCypher(line);
     }
 
     private void executeCypher(@Nonnull final String line) {
         // TODO: 6/22/16 Lots...
+        // TODO: 6/22/16 Expose transaction handling
         StatementResult result = session.run(line);
 
-        while (result.hasNext()) {
-            Record record = result.next();
-            System.out.println("Result with size: " + record.size());
-        }
+        PrettyPrinter.print(result);
     }
 
     private boolean isConnected() {
@@ -146,8 +144,13 @@ public class CypherShell {
             driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
                     authToken);
             session = driver.session();
+            // Bug in Java driver forces us to run a statement to make it actually connect
+            session.run("RETURN 1").consume();
         } catch (Throwable t) {
-            silentDisconnect();
+            try {
+                silentDisconnect();
+            } catch (Throwable ignore) {}
+            throw t;
         }
     }
 
@@ -155,12 +158,15 @@ public class CypherShell {
      * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
      */
     private void silentDisconnect() {
-        if (session != null) {
-            session.close();
+        try {
+            if (session != null) {
+                session.close();
+            }
+            if (driver != null) {
+                driver.close();
+            }
+        } finally {
             session = null;
-        }
-        if (driver != null) {
-            driver.close();
             driver = null;
         }
     }
