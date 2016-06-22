@@ -124,13 +124,27 @@ public class CypherShell {
     /**
      * Open a session to Neo4j
      */
-    public void connect(String host, int port, String username, String password) throws CommandException {
+    public void connect(@Nonnull final String host, final int port, @Nonnull final String username,
+                        @Nonnull final String password) throws CommandException {
         if (isConnected()) {
             throw new CommandException("Already connected");
         }
+
+        final AuthToken authToken;
+        if (username.isEmpty() && password.isEmpty()) {
+            authToken = null;
+        } else if (!username.isEmpty() && !password.isEmpty()) {
+            authToken = AuthTokens.basic(username, password);
+        } else if (username.isEmpty()) {
+            throw new CommandException("Specified password but no username");
+        } else {
+            throw new CommandException("Specified username but no password");
+        }
+        
         try {
+
             driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
-                    AuthTokens.basic(username, password));
+                    authToken);
             session = driver.session();
         } catch (Throwable t) {
             if (session != null) {
