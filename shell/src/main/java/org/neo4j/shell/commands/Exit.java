@@ -41,7 +41,7 @@ public class Exit implements Command {
     }
 
     @Override
-    public Object execute(@Nonnull List<String> args) throws ExitException {
+    public void execute(@Nonnull List<String> args) throws ExitException {
         System.out.println("Exiting. Bye bye.");
 
         throw new ExitException(0);

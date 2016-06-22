@@ -2,6 +2,7 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiRenderer;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.commands.Exit;
 
 import javax.annotation.Nonnull;
@@ -17,6 +18,8 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class CypherShell {
 
     private final CommandHelper commandHelper;
+    private Driver driver;
+    private Session session;
 
     CypherShell() {
         commandHelper = new CommandHelper(this);
@@ -57,7 +60,7 @@ public class CypherShell {
         // TODO: 6/21/16 handle command
 
         // See if it's a shell command
-        CommandExecutable<Object> cmd = getCommandExecutable(line);
+        CommandExecutable cmd = getCommandExecutable(line);
         if (cmd != null) {
             executeCmd(cmd);
             return;
@@ -70,14 +73,25 @@ public class CypherShell {
         }
 
         System.out.println("Cypher: " + line);
+        executeCypher(line);
+    }
+
+    private void executeCypher(@Nonnull final String line) {
+        // TODO: 6/22/16 Lots...
+        StatementResult result = session.run(line);
+
+        while (result.hasNext()) {
+            Record record = result.next();
+            System.out.println("Result with size: " + record.size());
+        }
     }
 
     private boolean isConnected() {
-        return false;
+        return driver != null;
     }
 
     @Nullable
-    private CommandExecutable<Object> getCommandExecutable(@Nonnull final String line) {
+    private CommandExecutable getCommandExecutable(@Nonnull final String line) {
         String[] parts = line.trim().split("\\s");
 
         if (parts.length < 1) {
@@ -99,11 +113,34 @@ public class CypherShell {
         return null;
     }
 
-    private void executeCmd(@Nonnull final CommandExecutable<Object> cmdExe) throws Exit.ExitException {
+    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException {
         try {
-            Object result = cmdExe.execute();
+            cmdExe.execute();
         } catch (CommandException e) {
             System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(e.getMessage()).reset());
+        }
+    }
+
+    /**
+     * Open a session to Neo4j
+     */
+    public void connect(String host, int port, String username, String password) throws CommandException {
+        if (isConnected()) {
+            throw new CommandException("Already connected");
+        }
+        try {
+            driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
+                    AuthTokens.basic(username, password));
+            session = driver.session();
+        } catch (Throwable t) {
+            if (session != null) {
+                session.close();
+                session = null;
+            }
+            if (driver != null) {
+                driver.close();
+                driver = null;
+            }
         }
     }
 }

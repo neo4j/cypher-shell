@@ -40,9 +40,7 @@ public class Help implements Command {
     }
 
     @Override
-    public Object execute(@Nonnull List<String> args) {
+    public void execute(@Nonnull List<String> args) {
         System.out.println("HELP I AM BEING ATTACKED");
-
-        return null;
     }
 }

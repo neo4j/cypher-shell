@@ -23,7 +23,7 @@ public interface Command {
 
     @Nonnull List<String> getAliases();
 
-    Object execute(@Nonnull final List<String> args) throws Exit.ExitException;
+    void execute(@Nonnull final List<String> args) throws Exit.ExitException, CommandException;
 
     //boolean getHidden();
 }

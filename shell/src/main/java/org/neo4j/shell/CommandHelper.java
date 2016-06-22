@@ -1,5 +1,6 @@
 package org.neo4j.shell;
 
+import org.neo4j.shell.commands.Connect;
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.commands.Help;
 
@@ -20,6 +21,7 @@ public class CommandHelper {
     public void registerAllCommands(@Nonnull final CypherShell cypherShell) {
         registerCommand(new Help());
         registerCommand(new Exit());
+        registerCommand(new Connect(cypherShell));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {

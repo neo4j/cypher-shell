@@ -4,6 +4,7 @@ apply plugin: 'application'
 mainClassName = 'org.neo4j.shell.Main'
 
 dependencies {
+    compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
     compile "com.google.code.findbugs:annotations:$findbugsVersion"
     compile "org.fusesource.jansi:jansi:$jansiVersion"
     compile("jline:jline:$jlineVersion") {
