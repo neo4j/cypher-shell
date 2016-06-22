@@ -92,7 +92,7 @@ public class CypherShell {
     @Nullable
     private Command getCommand(@Nonnull final String name) {
         for (Command command: commands) {
-            if (name.equals(command.getName()) || name.equals(command.getShortcut())) {
+            if (name.equals(command.getName())) {
                 return command;
             }
         }
