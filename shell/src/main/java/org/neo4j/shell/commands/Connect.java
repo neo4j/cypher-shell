@@ -39,7 +39,7 @@ public class Connect implements Command {
 
     @Override
     public String getUsage() {
-        return "[[username:password@]host][:port]";
+        return "[username:password@][host][:port]";
     }
 
     @Nonnull
