@@ -3,9 +3,9 @@
 Use `./gradlew tasks` to list possible tasks. But you probably want either
 
 *  `installDist`
-   which will build a runnable script for you at `build/install/neo4j-shell`
+   which will build a runnable script for you at `shell/build/install/shell`
 
 * `distTar` or `distZip`
-   which builds a runnable script and packages it up for you under `build/distributions`
+   which builds a runnable script and packages it up for you under `shell/build/distributions`
 
-You can then just run the executable under `bin/neo4j-shell`.
+You can then just run the executable under `bin/shell`.
