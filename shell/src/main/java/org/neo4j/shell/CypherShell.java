@@ -127,7 +127,8 @@ public class CypherShell {
     public void connect(@Nonnull final String host, final int port, @Nonnull final String username,
                         @Nonnull final String password) throws CommandException {
         if (isConnected()) {
-            throw new CommandException("Already connected");
+            // TODO: 6/22/16 Highlight disconnect here
+            throw new CommandException("Already connected. Call :disconnect first.");
         }
 
         final AuthToken authToken;
@@ -140,21 +141,34 @@ public class CypherShell {
         } else {
             throw new CommandException("Specified username but no password");
         }
-        
-        try {
 
+        try {
             driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
                     authToken);
             session = driver.session();
         } catch (Throwable t) {
-            if (session != null) {
-                session.close();
-                session = null;
-            }
-            if (driver != null) {
-                driver.close();
-                driver = null;
-            }
+            silentDisconnect();
         }
+    }
+
+    /**
+     * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
+     */
+    private void silentDisconnect() {
+        if (session != null) {
+            session.close();
+            session = null;
+        }
+        if (driver != null) {
+            driver.close();
+            driver = null;
+        }
+    }
+
+    public void disconnect() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected, nothing to disconnect from.");
+        }
+        silentDisconnect();
     }
 }
