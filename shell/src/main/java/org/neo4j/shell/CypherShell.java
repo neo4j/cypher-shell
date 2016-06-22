@@ -19,10 +19,19 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class CypherShell {
 
     private final CommandHelper commandHelper;
+    private final String host;
+    private final int port;
+    private final String username;
+    private final String password;
     private Driver driver;
     private Session session;
 
-    CypherShell() {
+    CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+
         commandHelper = new CommandHelper(this);
     }
 
@@ -30,15 +39,16 @@ public class CypherShell {
         int exitCode;
 
         try {
-            InteractiveShellRunner runner = new InteractiveShellRunner(this, this::renderPrompt);
+            connect(host, port, username, password);
 
+            InteractiveShellRunner runner = new InteractiveShellRunner(this, this::renderPrompt);
             runner.run();
 
             exitCode = 0;
         } catch (Exit.ExitException e) {
             exitCode = e.getCode();
-        }catch (Throwable t) {
-            // TODO: 6/21/16 Print to error log
+        } catch (Throwable t) {
+            System.err.println(t.getMessage());
             exitCode = 1;
         }
 
@@ -69,7 +79,7 @@ public class CypherShell {
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
-            System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Not connected to Neo4j yet").reset());
+            System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Not connected to Neo4j").reset());
             return;
         }
 

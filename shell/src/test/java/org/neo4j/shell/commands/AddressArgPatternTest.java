@@ -1,13 +1,14 @@
 package org.neo4j.shell.commands;
 
 import org.junit.Test;
+import org.neo4j.shell.CliArgHelper;
 
 import java.util.regex.Matcher;
 
 import static org.junit.Assert.*;
 
 
-public class ConnectArgPatternTest {
+public class AddressArgPatternTest {
 
     @Test
     public void testHosts() {
@@ -55,7 +56,7 @@ public class ConnectArgPatternTest {
 
     private void verifyUserPassHostPort(String user, String pass, String host, String port) {
         String args = user + ":" + pass + "@" + host + ":" + port;
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(port.trim(), m.group("port"));
@@ -65,7 +66,7 @@ public class ConnectArgPatternTest {
 
     private void verifyUserPassPort(String user, String pass, String port) {
         String args = user + ":" + pass + "@:" + port;
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(port.trim(), m.group("port"));
         assertEquals(user.trim(), m.group("username"));
@@ -76,7 +77,7 @@ public class ConnectArgPatternTest {
 
     private void verifyUserPassHost(String user, String pass, String host) {
         String args = user + ":" + pass + "@" + host;
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(user.trim(), m.group("username"));
@@ -87,7 +88,7 @@ public class ConnectArgPatternTest {
 
     private void verifyHostPort(String host, String port) {
         String args = host + ":" + port;
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(port.trim(), m.group("port"));
@@ -97,7 +98,7 @@ public class ConnectArgPatternTest {
     }
 
     private void verifySinglePort(String args) {
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(args.trim().substring(1), m.group("port"));
 
@@ -107,7 +108,7 @@ public class ConnectArgPatternTest {
     }
 
     private void verifySingleHost(String args) {
-        Matcher m = Connect.argPattern.matcher(args);
+        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(args.trim(), m.group("host"));
         assertNull("Did not expect match for password group", m.group("password"));

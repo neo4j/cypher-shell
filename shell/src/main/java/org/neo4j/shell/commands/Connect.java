@@ -1,7 +1,6 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.shell.CliArgHelper;
 import org.neo4j.shell.Command;
 import org.neo4j.shell.CommandException;
 import org.neo4j.shell.CypherShell;
@@ -10,14 +9,11 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Command to connect to an instance of Neo4j.
  */
 public class Connect implements Command {
-    static final Pattern argPattern =
-            Pattern.compile("\\s*((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
     private static final String COMMAND_NAME = ":connect";
 
     private final CypherShell shell;
@@ -70,7 +66,7 @@ public class Connect implements Command {
         if (args.size() > 1) {
             throw new CommandException("Too many arguments.\n" + errorExplanation());
         } else if (args.size() == 1) {
-            Matcher m = argPattern.matcher(args.get(0));
+            Matcher m = CliArgHelper.addressArgPattern.matcher(args.get(0));
             if (!m.matches()) {
                 // TODO: 6/22/16 Highlighting here
                  throw new CommandException("Could not parse " + args.get(0) + "\n" + errorExplanation());
@@ -92,7 +88,6 @@ public class Connect implements Command {
         }
 
         shell.connect(host, port, username, password);
-
         System.out.println("Connected to neo4j at " + host + ":" + port);
     }
 }

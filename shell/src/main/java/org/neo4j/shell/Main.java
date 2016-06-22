@@ -5,12 +5,12 @@ import org.fusesource.jansi.AnsiConsole;
 public class Main {
 
     public static void main(String[] args) {
-        // TODO: 6/21/16 command line arguments
+        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse(args);
 
-        configureTerminal(false);
+        configureTerminal(cliArgs.suppressColor());
 
         Main main = new Main();
-        main.startShell();
+        main.startShell(cliArgs);
     }
 
     private static void configureTerminal(boolean suppressColor) {
@@ -19,8 +19,8 @@ public class Main {
         }
     }
 
-    private void startShell() {
-        CypherShell shell = new CypherShell();
+    private void startShell(CliArgHelper.CliArgs cliArgs) {
+        CypherShell shell = new CypherShell(cliArgs.host(), cliArgs.port(), cliArgs.username(), cliArgs.password());
 
         // TODO: 6/21/16 Shutdown hook for recording history
 

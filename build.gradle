@@ -19,6 +19,7 @@ allprojects {
 }
 
 ext {
+    argparse4jVersion = '0.7.0'
     junitVersion = '4.12'
     neo4jJavaVersion = '1.0.1'
     findbugsVersion = '3.0.0'
