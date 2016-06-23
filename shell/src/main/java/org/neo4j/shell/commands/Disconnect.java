@@ -26,20 +26,22 @@ public class Disconnect implements Command {
         return COMMAND_NAME;
     }
 
+    @Nonnull
     @Override
     public String getDescription() {
-        return null;
+        return "Disconnect from neo4j";
     }
 
+    @Nonnull
     @Override
     public String getUsage() {
-        return null;
+        return "";
     }
 
     @Nonnull
     @Override
     public String getHelp() {
-        return null;
+        return "Disconnect from neo4j without quitting the shell.";
     }
 
     @Nonnull
@@ -51,6 +53,6 @@ public class Disconnect implements Command {
     @Override
     public void execute(@Nonnull List<String> args) throws Exit.ExitException, CommandException {
         shell.disconnect();
-        System.out.println("Disconnected");
+        shell.printOut("Disconnected");
     }
 }

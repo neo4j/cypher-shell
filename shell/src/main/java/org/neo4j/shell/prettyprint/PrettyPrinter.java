@@ -17,7 +17,7 @@ import java.util.Map;
  * Print the result from neo4j in a intelligible fashion.
  */
 public class PrettyPrinter {
-    public static void print(@Nonnull final StatementResult result) {
+    public static String format(@Nonnull final StatementResult result) {
         // TODO: 6/22/16 Format nicely
         StringBuilder sb = new StringBuilder();
         for (String key: result.keys()) {
@@ -26,14 +26,14 @@ public class PrettyPrinter {
             }
             sb.append(key);
         }
-        System.out.println(sb.toString());
 
         while (result.hasNext()) {
-            print(result.next());
+            sb.append("\n").append(format(result.next()));
         }
+        return sb.toString();
     }
 
-    private static void print(@Nonnull final Record record) {
+    private static String format(@Nonnull final Record record) {
         // TODO: 6/22/16 Format nicely
         StringBuilder sb = new StringBuilder();
         for (Value value: record.values()) {
@@ -43,7 +43,7 @@ public class PrettyPrinter {
             sb.append(toString(value));
         }
 
-        System.out.println(sb.toString());
+        return sb.toString();
     }
 
     @Nonnull

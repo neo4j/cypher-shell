@@ -28,11 +28,13 @@ public class Connect implements Command {
         return COMMAND_NAME;
     }
 
+    @Nonnull
     @Override
     public String getDescription() {
         return "Connect to a running instance of neo4j";
     }
 
+    @Nonnull
     @Override
     public String getUsage() {
         return "[username:password@][host][:port]";
@@ -41,18 +43,13 @@ public class Connect implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return getDescription();
+        return "Connect to a running instance of neo4j. Must be in disconnected state.";
     }
 
     @Nonnull
     @Override
     public List<String> getAliases() {
         return new ArrayList<>();
-    }
-
-    private String errorExplanation() {
-        return COMMAND_NAME + " takes a single optional argument of the form: " +
-                getUsage() + "\nFor example 'localhost:7687' or 'username:password@localhost:7687'";
     }
 
     @Override
@@ -64,12 +61,15 @@ public class Connect implements Command {
         String password = "";
 
         if (args.size() > 1) {
-            throw new CommandException("Too many arguments.\n" + errorExplanation());
+            throw new CommandException(
+                    String.format(("Too many arguments. @|bold %s|@ accepts a single optional argument.\n"
+                            + "usage: @|bold %s|@ %s"),
+                    COMMAND_NAME, COMMAND_NAME, getUsage()));
         } else if (args.size() == 1) {
             Matcher m = CliArgHelper.addressArgPattern.matcher(args.get(0));
             if (!m.matches()) {
-                // TODO: 6/22/16 Highlighting here
-                 throw new CommandException("Could not parse " + args.get(0) + "\n" + errorExplanation());
+                 throw new CommandException(String.format("Could not parse @|bold %s|@\nusage: @|bold %s|@ %s",
+                         args.get(0), COMMAND_NAME, getUsage()));
             }
 
             if (null != m.group("host")) {
@@ -88,6 +88,6 @@ public class Connect implements Command {
         }
 
         shell.connect(host, port, username, password);
-        System.out.println("Connected to neo4j at " + host + ":" + port);
+        shell.printOut("Connected to neo4j at @|bold " + host + ":" + port + "|@");
     }
 }

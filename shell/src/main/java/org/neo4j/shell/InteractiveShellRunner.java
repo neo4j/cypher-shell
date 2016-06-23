@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.commands.Exit;
 
 import javax.annotation.Nonnull;
@@ -29,14 +30,20 @@ public class InteractiveShellRunner {
                 running = work();
             } catch (Exit.ExitException e) {
                 throw e;
-            } catch (Throwable t) {
-                // TODO: 6/21/16 Do error handling
-                System.err.println("Error: " + t.getMessage());
+            } catch (ClientException e) {
+                shell.printError(BoltHelper.getSensibleMsg(e));
+            }
+            catch (CommandException e) {
+                shell.printError(e.getMessage());
+            }
+            catch (Throwable t) {
+                // TODO: 6/21/16 Unknown errors maybe should be handled differently
+                shell.printError(t.getMessage());
             }
         }
     }
 
-    private boolean work() throws IOException, Exit.ExitException {
+    private boolean work() throws IOException, Exit.ExitException, CommandException {
         String line = readLine();
 
         if (null == line) {

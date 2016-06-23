@@ -8,6 +8,7 @@ import org.neo4j.shell.commands.Help;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Utility methods for dealing with commands
@@ -20,8 +21,8 @@ public class CommandHelper {
     }
 
     public void registerAllCommands(@Nonnull final CypherShell cypherShell) {
-        registerCommand(new Help());
-        registerCommand(new Exit());
+        registerCommand(new Help(cypherShell));
+        registerCommand(new Exit(cypherShell));
         registerCommand(new Connect(cypherShell));
         registerCommand(new Disconnect(cypherShell));
     }
@@ -51,6 +52,14 @@ public class CommandHelper {
             return commands.get(name);
         }
         return null;
+    }
+
+    /**
+     * Get a list of all registered commands
+     */
+    @Nonnull
+    public Iterable<Command> getAllCommands() {
+        return commands.values().stream().distinct().collect(Collectors.toList());
     }
 
     private class DuplicateCommandException extends RuntimeException {

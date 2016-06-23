@@ -2,7 +2,9 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiRenderer;
+import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 
@@ -10,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
@@ -47,12 +50,28 @@ public class CypherShell {
             exitCode = 0;
         } catch (Exit.ExitException e) {
             exitCode = e.getCode();
-        } catch (Throwable t) {
-            System.err.println(t.getMessage());
+        }
+        catch (ClientException e) {
+            // When connect throws
+            printError(BoltHelper.getSensibleMsg(e));
+            exitCode = 1;
+        }
+        catch (Throwable t) {
+            printError(t.getMessage());
             exitCode = 1;
         }
 
         return exitCode;
+    }
+
+    public void printOut(@Nonnull final String msg) {
+        //System.out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).a(msg).reset());
+        System.out.println(ansi().render(msg));
+    }
+
+    public void printError(@Nonnull final String msg) {
+        //System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Error: " + msg).reset());
+        System.err.println(ansi().render("@|red " + msg + "|@"));
     }
 
     @Nonnull
@@ -67,7 +86,7 @@ public class CypherShell {
         return "@|bold cypher:|@1@|bold >|@ ";
     }
 
-    void execute(@Nonnull final String line) throws Exit.ExitException {
+    void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {
         // TODO: 6/21/16 handle command
 
         // See if it's a shell command
@@ -79,7 +98,7 @@ public class CypherShell {
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
-            System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Not connected to Neo4j").reset());
+            printError("Not connected to Neo4j");
             return;
         }
 
@@ -91,7 +110,7 @@ public class CypherShell {
         // TODO: 6/22/16 Expose transaction handling
         StatementResult result = session.run(line);
 
-        PrettyPrinter.print(result);
+        printOut(PrettyPrinter.format(result));
     }
 
     private boolean isConnected() {
@@ -121,12 +140,8 @@ public class CypherShell {
         return null;
     }
 
-    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException {
-        try {
-            cmdExe.execute();
-        } catch (CommandException e) {
-            System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(e.getMessage()).reset());
-        }
+    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException, CommandException {
+        cmdExe.execute();
     }
 
     /**
@@ -151,8 +166,9 @@ public class CypherShell {
         }
 
         try {
+            // TODO: 6/23/16 Expose some connection config functionality via cmdline arguments
             driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
-                    authToken);
+                    authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
             session = driver.session();
             // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();
@@ -186,5 +202,10 @@ public class CypherShell {
             throw new CommandException("Not connected, nothing to disconnect from.");
         }
         silentDisconnect();
+    }
+
+    @Nonnull
+    public CommandHelper getCommandHelper() {
+        return commandHelper;
     }
 }

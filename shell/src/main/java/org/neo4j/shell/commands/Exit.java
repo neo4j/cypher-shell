@@ -1,6 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
+import org.neo4j.shell.CypherShell;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -11,6 +12,11 @@ import java.util.List;
  */
 public class Exit implements Command {
     public static final String COMMAND_NAME = ":exit";
+    private final CypherShell shell;
+
+    public Exit(@Nonnull final CypherShell shell) {
+        this.shell = shell;
+    }
 
     @Nonnull
     @Override
@@ -18,20 +24,22 @@ public class Exit implements Command {
         return COMMAND_NAME;
     }
 
+    @Nonnull
     @Override
     public String getDescription() {
-        return null;
+        return "Exit the shell";
     }
 
+    @Nonnull
     @Override
     public String getUsage() {
-        return null;
+        return "";
     }
 
     @Nonnull
     @Override
     public String getHelp() {
-        return null;
+        return "Exit the shell. Corresponds to entering @|bold CTRL-D|@.";
     }
 
     @Nonnull
@@ -42,7 +50,7 @@ public class Exit implements Command {
 
     @Override
     public void execute(@Nonnull List<String> args) throws ExitException {
-        System.out.println("Exiting. Bye bye.");
+        shell.printOut("Exiting. Bye bye.");
 
         throw new ExitException(0);
     }

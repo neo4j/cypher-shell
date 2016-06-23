@@ -11,19 +11,15 @@ import java.util.List;
 public interface Command {
     @Nonnull String getName();
 
-    //String getShortcut();
-
     //Completer getCompleter();
 
-    String getDescription();
+    @Nonnull String getDescription();
 
-    String getUsage();
+    @Nonnull String getUsage();
 
     @Nonnull String getHelp();
 
     @Nonnull List<String> getAliases();
 
     void execute(@Nonnull final List<String> args) throws Exit.ExitException, CommandException;
-
-    //boolean getHidden();
 }
