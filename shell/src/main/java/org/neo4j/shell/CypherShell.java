@@ -1,6 +1,8 @@
 package org.neo4j.shell;
 
-import org.fusesource.jansi.Ansi;
+import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
+import static org.fusesource.jansi.internal.CLibrary.isatty;
+
 import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
@@ -80,6 +82,10 @@ public class CypherShell {
 
     @Nonnull
     private String buildPrompt() {
+        // Only use a prompt in case STDIN is a TTY
+        if (1 != isatty(STDIN_FILENO)) {
+            return "";
+        }
         // TODO: 6/21/16 Line number
 
         return "@|bold cypher:|@1@|bold >|@ ";
