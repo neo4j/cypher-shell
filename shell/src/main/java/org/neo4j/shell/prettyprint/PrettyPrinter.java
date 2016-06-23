@@ -19,6 +19,10 @@ import java.util.Map;
 public class PrettyPrinter {
     public static String format(@Nonnull final StatementResult result) {
         // TODO: 6/22/16 Format nicely
+        if (!result.hasNext()) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
         for (String key: result.keys()) {
             if (sb.length() > 0) {
