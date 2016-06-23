@@ -5,6 +5,7 @@ import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.commands.Disconnect;
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 
@@ -65,12 +66,10 @@ public class CypherShell {
     }
 
     public void printOut(@Nonnull final String msg) {
-        //System.out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).a(msg).reset());
         System.out.println(ansi().render(msg));
     }
 
     public void printError(@Nonnull final String msg) {
-        //System.err.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a("Error: " + msg).reset());
         System.err.println(ansi().render("@|red " + msg + "|@"));
     }
 
@@ -87,8 +86,6 @@ public class CypherShell {
     }
 
     void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {
-        // TODO: 6/21/16 handle command
-
         // See if it's a shell command
         CommandExecutable cmd = getCommandExecutable(line);
         if (cmd != null) {
@@ -150,8 +147,8 @@ public class CypherShell {
     public void connect(@Nonnull final String host, final int port, @Nonnull final String username,
                         @Nonnull final String password) throws CommandException {
         if (isConnected()) {
-            // TODO: 6/22/16 Highlight disconnect here
-            throw new CommandException("Already connected. Call :disconnect first.");
+            throw new CommandException(String.format("Already connected. Call @|bold %s|@ first.",
+                    Disconnect.COMMAND_NAME));
         }
 
         final AuthToken authToken;

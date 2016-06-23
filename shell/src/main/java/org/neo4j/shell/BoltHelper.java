@@ -32,8 +32,7 @@ public class BoltHelper {
             // These seem to have sensible error messages in them
             msg = cause.getMessage();
         } else {
-            msg = "no idea. " + cause.getClass() +
-             "\n" + cause.getMessage();
+            msg = cause.getMessage();
         }
 
         return msg;
