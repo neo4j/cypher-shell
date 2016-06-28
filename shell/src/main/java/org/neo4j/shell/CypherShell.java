@@ -1,8 +1,5 @@
 package org.neo4j.shell;
 
-import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.isatty;
-
 import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
@@ -18,6 +15,8 @@ import java.util.List;
 import java.util.logging.Level;
 
 import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
+import static org.fusesource.jansi.internal.CLibrary.isatty;
 
 /**
  * An interactive shell for evaluating cypher statements.
@@ -72,16 +71,16 @@ public class CypherShell {
     }
 
     public void printError(@Nonnull final String msg) {
-        System.err.println(ansi().render("@|red " + msg + "|@"));
+        System.err.println(ansi().render(msg));
     }
 
     @Nonnull
     private String renderPrompt() {
-        return AnsiRenderer.render(buildPrompt());
+        return AnsiRenderer.render(prompt());
     }
 
     @Nonnull
-    private String buildPrompt() {
+    public String prompt() {
         // Only use a prompt in case STDIN is a TTY
         if (1 != isatty(STDIN_FILENO)) {
             return "";
@@ -89,6 +88,17 @@ public class CypherShell {
         // TODO: 6/21/16 Line number
 
         return "@|bold cypher:|@1@|bold >|@ ";
+    }
+
+    @Nullable
+    public Character promptMask() {
+        // If STDIN is a TTY, then echo what user types
+        if (1 == isatty(STDIN_FILENO)) {
+            return null;
+        } else {
+            // Suppress echo
+            return 0;
+        }
     }
 
     void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {

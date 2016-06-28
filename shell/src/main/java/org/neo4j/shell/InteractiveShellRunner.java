@@ -59,7 +59,6 @@ public class InteractiveShellRunner {
 
     @Nullable
     private String readLine() throws IOException {
-        return reader.readLine(prompt.get());
-
+        return reader.readLine(shell.prompt(), shell.promptMask());
     }
 }
