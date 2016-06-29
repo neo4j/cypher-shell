@@ -1,5 +1,6 @@
 package org.neo4j.shell;
 
+import jline.console.history.History;
 import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
@@ -12,16 +13,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.isatty;
-
 /**
- * An interactive shell for evaluating cypher statements.
+ * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell {
+public class CypherShell extends Shell {
 
     private final CommandHelper commandHelper;
     private final String host;
@@ -30,8 +28,10 @@ public class CypherShell {
     private final String password;
     private Driver driver;
     private Session session;
+    private ShellRunner runner = null;
 
     CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
+        super();
         this.host = host;
         this.port = port;
         this.username = username;
@@ -46,7 +46,7 @@ public class CypherShell {
         try {
             connect(host, port, username, password);
 
-            InteractiveShellRunner runner = new InteractiveShellRunner(this, this::renderPrompt);
+            runner = getShellRunner();
             runner.run();
 
             exitCode = 0;
@@ -66,42 +66,8 @@ public class CypherShell {
         return exitCode;
     }
 
-    public void printOut(@Nonnull final String msg) {
-        System.out.println(ansi().render(msg));
-    }
-
-    public void printError(@Nonnull final String msg) {
-        System.err.println(ansi().render(msg));
-    }
-
-    @Nonnull
-    private String renderPrompt() {
-        return AnsiRenderer.render(prompt());
-    }
-
-    @Nonnull
-    public String prompt() {
-        // Only use a prompt in case STDIN is a TTY
-        if (1 != isatty(STDIN_FILENO)) {
-            return "";
-        }
-        // TODO: 6/21/16 Line number
-
-        return "@|bold cypher:|@1@|bold >|@ ";
-    }
-
-    @Nullable
-    public Character promptMask() {
-        // If STDIN is a TTY, then echo what user types
-        if (1 == isatty(STDIN_FILENO)) {
-            return null;
-        } else {
-            // Suppress echo
-            return 0;
-        }
-    }
-
-    void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {
+    @Override
+    public void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {
         // See if it's a shell command
         CommandExecutable cmd = getCommandExecutable(line);
         if (cmd != null) {
@@ -116,6 +82,15 @@ public class CypherShell {
         }
 
         executeCypher(line);
+    }
+
+    @Nonnull
+    public Optional<History> getHistory() {
+        if (runner == null) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(runner.getHistory());
+        }
     }
 
     private void executeCypher(@Nonnull final String line) {
@@ -220,5 +195,23 @@ public class CypherShell {
     @Nonnull
     public CommandHelper getCommandHelper() {
         return commandHelper;
+    }
+
+    @Override
+    @Nonnull
+    public String prompt() {
+        return AnsiRenderer.render("@|bold neo4j>|@ ");
+    }
+
+    @Override
+    @Nullable
+    public Character promptMask() {
+        // If STDIN is a TTY, then echo what user types
+        if (isInteractive()) {
+            return null;
+        } else {
+            // Suppress echo
+            return 0;
+        }
     }
 }
