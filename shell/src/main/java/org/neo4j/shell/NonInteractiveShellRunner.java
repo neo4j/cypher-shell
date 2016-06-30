@@ -29,6 +29,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
     public void run() throws CommandException, IOException {
         String line;
         boolean running = true;
+        boolean errorOccurred = false;
         while (running) {
             line = reader.readLine();
 
@@ -45,6 +46,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
                 // These exceptions are always fatal
                 throw e;
             } catch (ClientException e) {
+                errorOccurred = true;
                 if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
                     shell.printError(BoltHelper.getSensibleMsg(e));
                 } else {
@@ -52,12 +54,18 @@ public class NonInteractiveShellRunner extends ShellRunner {
                 }
             }
             catch (Throwable t) {
+                errorOccurred = true;
                 if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
                     shell.printError(t.getMessage());
                 } else {
                     throw t;
                 }
             }
+        }
+
+        // End of input, in case of error, set correct exit code
+        if (errorOccurred) {
+            throw new Exit.ExitException(1);
         }
     }
 
