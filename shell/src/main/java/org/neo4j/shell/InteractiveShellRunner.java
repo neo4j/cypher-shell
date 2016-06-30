@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
+import jline.console.history.MemoryHistory;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.commands.Exit;
 
@@ -19,7 +20,7 @@ import static java.lang.System.getProperty;
 public class InteractiveShellRunner extends ShellRunner {
     private final ConsoleReader reader;
     private final Shell shell;
-    private final FileHistory history;
+    private final MemoryHistory history;
 
     public InteractiveShellRunner(@Nonnull final Shell shell) throws IOException {
         super();
@@ -29,24 +30,32 @@ public class InteractiveShellRunner extends ShellRunner {
     }
 
     @Nonnull
-    private FileHistory setupHistory(@Nonnull final ConsoleReader reader, @Nonnull final Shell shell) throws IOException {
-        final FileHistory history = new FileHistory(getHistoryFile());
-        history.setIgnoreDuplicates(true);
-        reader.setHistory(history);
+    private MemoryHistory setupHistory(@Nonnull final ConsoleReader reader, @Nonnull final Shell shell) throws IOException {
+        try {
+            final FileHistory history = new FileHistory(getHistoryFile());
+            history.setIgnoreDuplicates(true);
+            reader.setHistory(history);
 
-        // Make sure we flush history on exit
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    history.flush();
-                } catch (IOException e) {
-                    shell.printError("Failed to save history:\n" + e.getMessage());
+            // Make sure we flush history on exit
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        history.flush();
+                    } catch (IOException e) {
+                        shell.printError("Failed to save history:\n" + e.getMessage());
+                    }
                 }
-            }
-        });
+            });
 
-        return history;
+            return history;
+        } catch (IOException e) {
+            shell.printError("Could not load history file. Falling back to session-based history.\n"
+                    + e.getMessage());
+            MemoryHistory history = new MemoryHistory();
+            history.setIgnoreDuplicates(true);
+            return history;
+        }
     }
 
     @Nonnull
@@ -81,7 +90,7 @@ public class InteractiveShellRunner extends ShellRunner {
     }
 
     @Override
-    @Nonnull
+    @Nullable
     public History getHistory() {
         return history;
     }
