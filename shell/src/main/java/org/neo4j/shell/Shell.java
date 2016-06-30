@@ -5,6 +5,8 @@ import org.neo4j.shell.commands.Exit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 
 import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
@@ -15,12 +17,26 @@ import static org.fusesource.jansi.internal.CLibrary.isatty;
  */
 abstract public class Shell {
 
+    protected InputStream in = System.in;
+    protected PrintStream out = System.out;
+    protected PrintStream err = System.err;
+
     public void printOut(@Nonnull final String msg) {
-        System.out.println(ansi().render(msg));
+        out.println(ansi().render(msg));
     }
 
     public void printError(@Nonnull final String msg) {
-        System.err.println(ansi().render(msg));
+        err.println(ansi().render(msg));
+    }
+
+    @Nonnull
+    public InputStream getInputStream() {
+        return in;
+    }
+
+    @Nonnull
+    public PrintStream getOutputStream() {
+        return out;
     }
 
     @Nonnull
@@ -46,4 +62,5 @@ abstract public class Shell {
     }
 
     abstract public void execute(@Nonnull String line) throws Exit.ExitException, CommandException;
+
 }

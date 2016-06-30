@@ -10,7 +10,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
- * A shell runner which reads from STDIN and executes commands until completion.
+ * A shell runner which reads from STDIN and executes commands until completion. In case of errors, the failBehavior
+ * determines if the shell exits immediately, or if it should keep trying the next commands.
  */
 public class NonInteractiveShellRunner extends ShellRunner {
 
@@ -22,7 +23,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
         super();
         failBehavior = cliArgs.getFailBehavior();
         this.shell = shell;
-        reader = new ConsoleReader();
+        reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
     }
 
     @Override
