@@ -40,13 +40,13 @@ public class CypherShell extends Shell {
         commandHelper = new CommandHelper(this);
     }
 
-    int run() {
+    int run(@Nonnull CliArgHelper.CliArgs cliArgs) {
         int exitCode;
 
         try {
             connect(host, port, username, password);
 
-            runner = getShellRunner();
+            runner = getShellRunner(cliArgs);
             runner.run();
 
             exitCode = 0;

@@ -2,6 +2,7 @@ package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
 import jline.console.history.History;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.commands.Exit;
 
 import javax.annotation.Nonnull;
@@ -15,11 +16,13 @@ public class NonInteractiveShellRunner extends ShellRunner {
 
     private final Shell shell;
     private final ConsoleReader reader;
+    private final CliArgHelper.FailBehavior failBehavior;
 
-    public NonInteractiveShellRunner(@Nonnull Shell shell) throws IOException {
+    public NonInteractiveShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
         super();
+        failBehavior = cliArgs.getFailBehavior();
         this.shell = shell;
-        this.reader = new ConsoleReader();
+        reader = new ConsoleReader();
     }
 
     @Override
@@ -41,9 +44,19 @@ public class NonInteractiveShellRunner extends ShellRunner {
             } catch (Exit.ExitException e) {
                 // These exceptions are always fatal
                 throw e;
-            } catch (CommandException e) {
-                // TODO: 6/29/16 let a flag control if we should exit directly on errors or keep going
-                throw e;
+            } catch (ClientException e) {
+                if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
+                    shell.printError(BoltHelper.getSensibleMsg(e));
+                } else {
+                    throw e;
+                }
+            }
+            catch (Throwable t) {
+                if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
+                    shell.printError(t.getMessage());
+                } else {
+                    throw t;
+                }
             }
         }
     }

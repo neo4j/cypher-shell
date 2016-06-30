@@ -37,11 +37,11 @@ abstract public class Shell {
         return 1 == isatty(STDIN_FILENO);
     }
 
-    ShellRunner getShellRunner() throws IOException {
+    ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
         if (isInteractive()) {
             return new InteractiveShellRunner(this);
         } else {
-            return new NonInteractiveShellRunner(this);
+            return new NonInteractiveShellRunner(this, cliArgs);
         }
     }
 

@@ -2,6 +2,8 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.AnsiConsole;
 
+import javax.annotation.Nonnull;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -19,11 +21,11 @@ public class Main {
         }
     }
 
-    private void startShell(CliArgHelper.CliArgs cliArgs) {
+    private void startShell(@Nonnull CliArgHelper.CliArgs cliArgs) {
         CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(),
                 cliArgs.getUsername(), cliArgs.getPassword());
 
-        int code = shell.run();
+        int code = shell.run(cliArgs);
 
         System.exit(code);
     }
