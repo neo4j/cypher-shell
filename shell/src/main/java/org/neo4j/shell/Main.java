@@ -20,9 +20,8 @@ public class Main {
     }
 
     private void startShell(CliArgHelper.CliArgs cliArgs) {
-        CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(), cliArgs.getUsername(), cliArgs.getPassword());
-
-        // TODO: 6/21/16 Shutdown hook for recording history
+        CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(),
+                cliArgs.getUsername(), cliArgs.getPassword());
 
         int code = shell.run();
 
