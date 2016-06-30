@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse(args);
 
-        configureTerminal(cliArgs.suppressColor());
+        configureTerminal(cliArgs.getSuppressColor());
 
         Main main = new Main();
         main.startShell(cliArgs);
@@ -20,7 +20,7 @@ public class Main {
     }
 
     private void startShell(CliArgHelper.CliArgs cliArgs) {
-        CypherShell shell = new CypherShell(cliArgs.host(), cliArgs.port(), cliArgs.username(), cliArgs.password());
+        CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(), cliArgs.getUsername(), cliArgs.getPassword());
 
         // TODO: 6/21/16 Shutdown hook for recording history
 
