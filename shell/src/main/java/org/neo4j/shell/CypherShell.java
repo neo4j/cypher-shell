@@ -21,6 +21,7 @@ import java.util.logging.Level;
  */
 public class CypherShell extends Shell {
 
+    private static final String COMMENT_PREFIX = "//";
     private final CommandHelper commandHelper;
     private final String host;
     private final int port;
@@ -67,11 +68,15 @@ public class CypherShell extends Shell {
     }
 
     @Override
-    public void execute(@Nonnull final String line) throws Exit.ExitException, CommandException {
+    public void executeLine(@Nonnull final String line) throws Exit.ExitException, CommandException {
         // See if it's a shell command
         CommandExecutable cmd = getCommandExecutable(line);
         if (cmd != null) {
             executeCmd(cmd);
+            return;
+        }
+        // Comments and empty lines have to be ignored (Bolt throws errors on "empty" lines)
+        if (line.isEmpty() || line.startsWith(COMMENT_PREFIX)) {
             return;
         }
 
@@ -93,20 +98,26 @@ public class CypherShell extends Shell {
         }
     }
 
-    private void executeCypher(@Nonnull final String line) {
+    /**
+     * Executes a piece of text as if it were Cypher. By default, all of the cypher is executed in single statement
+     * (with an implicit transaction).
+     *
+     * @param cypher non-empty cypher text to executeLine
+     */
+    void executeCypher(@Nonnull final String cypher) {
         // TODO: 6/22/16 Lots...
         // TODO: 6/22/16 Expose transaction handling
-        StatementResult result = session.run(line);
+        StatementResult result = session.run(cypher);
 
         printOut(PrettyPrinter.format(result));
     }
 
-    private boolean isConnected() {
+    boolean isConnected() {
         return driver != null;
     }
 
     @Nullable
-    private CommandExecutable getCommandExecutable(@Nonnull final String line) {
+    CommandExecutable getCommandExecutable(@Nonnull final String line) {
         String[] parts = line.trim().split("\\s");
 
         if (parts.length < 1) {
@@ -128,7 +139,7 @@ public class CypherShell extends Shell {
         return null;
     }
 
-    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException, CommandException {
+    void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException, CommandException {
         cmdExe.execute();
     }
 
@@ -171,7 +182,7 @@ public class CypherShell extends Shell {
     /**
      * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
      */
-    private void silentDisconnect() {
+    void silentDisconnect() {
         try {
             if (session != null) {
                 session.close();

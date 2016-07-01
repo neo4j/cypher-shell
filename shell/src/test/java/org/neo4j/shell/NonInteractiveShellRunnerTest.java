@@ -85,7 +85,7 @@ public class NonInteractiveShellRunnerTest {
         }
 
         @Override
-        public void execute(@Nonnull String line) throws Exit.ExitException, CommandException {
+        public void executeLine(@Nonnull String line) throws Exit.ExitException, CommandException {
             if (line.contains("bad")) {
                 throw new ClientException("Found a bad line");
             } else {

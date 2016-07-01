@@ -41,7 +41,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
                 }
 
                 if (!line.trim().isEmpty()) {
-                    shell.execute(line);
+                    shell.executeLine(line);
                 }
             } catch (Exit.ExitException e) {
                 // These exceptions are always fatal

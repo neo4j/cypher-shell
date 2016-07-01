@@ -61,6 +61,12 @@ abstract public class Shell {
         }
     }
 
-    abstract public void execute(@Nonnull String line) throws Exit.ExitException, CommandException;
+    /**
+     * Handle a single line of input. If this is a part of a multi-line statement, it should be handled accordingly.
+     * Otherwise it is expected to be executed immediately.
+     *
+     * @param line single line of input
+     */
+    abstract public void executeLine(@Nonnull String line) throws Exit.ExitException, CommandException;
 
 }
