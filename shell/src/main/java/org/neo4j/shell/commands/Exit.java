@@ -55,7 +55,7 @@ public class Exit implements Command {
         throw new ExitException(0);
     }
 
-    public class ExitException extends Error {
+    public static class ExitException extends Error {
         private final int code;
 
         public ExitException(int code) {

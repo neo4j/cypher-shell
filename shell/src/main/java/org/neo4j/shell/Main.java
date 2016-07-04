@@ -2,12 +2,14 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.AnsiConsole;
 
+import javax.annotation.Nonnull;
+
 public class Main {
 
     public static void main(String[] args) {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse(args);
 
-        configureTerminal(cliArgs.suppressColor());
+        configureTerminal(cliArgs.getSuppressColor());
 
         Main main = new Main();
         main.startShell(cliArgs);
@@ -19,12 +21,11 @@ public class Main {
         }
     }
 
-    private void startShell(CliArgHelper.CliArgs cliArgs) {
-        CypherShell shell = new CypherShell(cliArgs.host(), cliArgs.port(), cliArgs.username(), cliArgs.password());
+    private void startShell(@Nonnull CliArgHelper.CliArgs cliArgs) {
+        CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(),
+                cliArgs.getUsername(), cliArgs.getPassword());
 
-        // TODO: 6/21/16 Shutdown hook for recording history
-
-        int code = shell.run();
+        int code = shell.run(cliArgs);
 
         System.exit(code);
     }

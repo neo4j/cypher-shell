@@ -103,7 +103,7 @@ public class InteractiveShellRunner extends ShellRunner {
         }
 
         if (!line.trim().isEmpty()) {
-            shell.execute(line);
+            shell.executeLine(line);
         }
 
         return true;
