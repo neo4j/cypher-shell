@@ -1,1 +1,1 @@
-include 'shell'
+include 'neo4j-shell'
