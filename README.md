@@ -1,11 +1,11 @@
 ## How to build
 
-Use `./gradlew tasks` to list possible tasks. But you probably want either
+Use `make help` to list possible tasks. But you probably want either
 
-*  `installDist`
-   which will build a runnable script for you at `neo4j-shell/build/install`
+*  `make dist`
+   which will build a runnable script for you at `neo4j-shell/build/install/neo4j-shell`
 
-* `distTar` or `distZip`
-   which builds a runnable script and packages it up for you under `neo4j-shell/build/distributions`
+* `make zip`
+   which builds a runnable script and packages it up for you as: `out/neo4j-shell.zip`
 
-You can then just run the executable under `bin/`.
+You can then just run the executable under the `bin/` sub-directory.
