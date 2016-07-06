@@ -6,6 +6,7 @@ import net.sourceforge.argparse4j.inf.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +28,7 @@ public class CliArgHelper {
             Pattern.compile("\\s*((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
     @Nonnull
-    public static CliArgs parse(@Nonnull final String[] args) {
+    public static CliArgs parse(@Nonnull String... args) {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("neo4j-shell")
                 .defaultHelp(true)
                 .description("A command line shell where you can execute Cypher against an instance of Neo4j");
@@ -55,6 +56,9 @@ public class CliArgHelper {
                 .setConst(FAIL_AT_END)
                 .action(new StoreConstArgumentAction());
         parser.setDefault("fail-behavior", FAIL_FAST);
+
+        parser.addArgument("-c", "--cypher")
+                .help("specify a single string of cypher to execute and then exit");
 
         Namespace ns = null;
         try {
@@ -95,6 +99,8 @@ public class CliArgHelper {
         }
 
         // Other arguments
+        // cypher string might not be given, represented by null
+        cliArgs.setCypher(ns.getString("cypher"));
         // Fail behavior as sensible default and returns a proper type
         cliArgs.setFailBehavior(ns.get("fail-behavior"));
 
@@ -109,6 +115,7 @@ public class CliArgHelper {
         private String username = "";
         private String password = "";
         private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
+        private String cypher = null;
 
         public boolean getSuppressColor() {
             return suppressColor;
@@ -149,6 +156,12 @@ public class CliArgHelper {
             this.failBehavior = failBehavior;
         }
 
+        /**
+         * Set the specified cypher string to execute
+         */
+        public void setCypher(@Nullable String cypher) {
+            this.cypher = cypher;
+        }
 
         @Nonnull
         public String getHost() {
