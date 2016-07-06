@@ -3,18 +3,17 @@
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-zip: out/neo4j-shell/bin/neo4j-shell ## Build zip distribution file in 'out/'
-	# Temporary during dev phase, rename scripts
-	mv $< $<-alpha
-	mv $<.bat $<-alpha.bat
+zip: out/temp/cypher-shell/bin/cypher-shell ## Build zip distribution file in 'out/'
+	cd out/temp && zip -r cypher-shell.zip cypher-shell
+	mv out/temp/cypher-shell.zip out/cypher-shell.zip
+	rm -rf out/temp
 
-	cd out && zip -r neo4j-shell.zip neo4j-shell
-	rm -rf out/neo4j-shell
+out/temp/cypher-shell/bin/cypher-shell: out dist
+	rm -rf out/temp
+	mkdir -p out/temp
+	cp -r cypher-shell/build/install/cypher-shell out/temp/cypher-shell
 
-out/neo4j-shell/bin/neo4j-shell: out dist
-	cp -r neo4j-shell/build/install/neo4j-shell out/neo4j-shell
-
-dist: ## Build and test neo4j-shell
+dist: ## Build and test cypher-shell
 	./gradlew clean check installDist
 
 out:
