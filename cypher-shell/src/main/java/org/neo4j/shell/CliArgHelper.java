@@ -142,26 +142,35 @@ public class CliArgHelper {
             password = primary == null ? fallback : primary;
         }
 
-        void setFailBehavior(FailBehavior failBehavior) {
+        /**
+         * Set the desired fail behavior
+         */
+        void setFailBehavior(@Nonnull FailBehavior failBehavior) {
             this.failBehavior = failBehavior;
         }
 
+
+        @Nonnull
         public String getHost() {
             return host;
         }
 
+        @Nonnull
         public int getPort() {
             return port;
         }
 
+        @Nonnull
         public String getUsername() {
             return username;
         }
 
+        @Nonnull
         public String getPassword() {
             return password;
         }
 
+        @Nonnull
         public FailBehavior getFailBehavior() {
             return failBehavior;
         }
