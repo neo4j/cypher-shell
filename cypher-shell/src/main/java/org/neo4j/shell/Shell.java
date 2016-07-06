@@ -53,8 +53,16 @@ abstract public class Shell {
         return 1 == isatty(STDIN_FILENO);
     }
 
+    /**
+     * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
+     * @param cliArgs
+     * @return a ShellRunner
+     * @throws IOException
+     */
     ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
-        if (isInteractive()) {
+        if (cliArgs.getCypher().isPresent()) {
+            return new StringShellRunner(this, cliArgs);
+        } else if (isInteractive()) {
             return new InteractiveShellRunner(this);
         } else {
             return new NonInteractiveShellRunner(this, cliArgs);
