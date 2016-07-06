@@ -174,11 +174,10 @@ public class CliArgHelper {
         public FailBehavior getFailBehavior() {
             return failBehavior;
         }
-    }
 
-    public static class CliArgParsingException extends Exception {
-        public CliArgParsingException(String msg) {
-            super(msg);
+        @Nonnull
+        public Optional<String> getCypher() {
+            return Optional.ofNullable(cypher);
         }
     }
 }
