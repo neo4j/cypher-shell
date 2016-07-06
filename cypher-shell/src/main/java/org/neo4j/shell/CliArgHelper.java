@@ -29,28 +29,28 @@ public class CliArgHelper {
     @Nonnull
     public static CliArgs parse(@Nonnull final String[] args) {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("neo4j-shell")
-                                               .defaultHelp(true)
-                                               .description("A command line shell where you can execute Cypher against an instance of Neo4j");
+                .defaultHelp(true)
+                .description("A command line shell where you can execute Cypher against an instance of Neo4j");
 
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
-                .help("Address and port to connect to")
+                .help("address and port to connect to")
                 .setDefault("localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
-                .help("Username to connect as");
+                .help("username to connect as");
         connGroup.addArgument("-p", "--password")
                 .setDefault("")
-                .help("Password to connect with");
+                .help("password to connect with");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
         failGroup.addArgument("-ff", "--fail-fast")
-                .help("Exit and report failure on first error when reading from file")
+                .help("exit and report failure on first error when reading from file")
                 .dest("fail-behavior")
                 .setConst(FAIL_FAST)
                 .action(new StoreConstArgumentAction());
         failGroup.addArgument("-fae", "--fail-at-end")
-                .help("Exit and report failures at end of input when reading from file")
+                .help("exit and report failures at end of input when reading from file")
                 .dest("fail-behavior")
                 .setConst(FAIL_AT_END)
                 .action(new StoreConstArgumentAction());
