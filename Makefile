@@ -13,6 +13,9 @@ out/temp/cypher-shell/bin/cypher-shell: out dist
 	mkdir -p out/temp
 	cp -r cypher-shell/build/install/cypher-shell out/temp/cypher-shell
 
+run: dist ## Build and run cypher-shell with no arguments
+	cypher-shell/build/install/cypher-shell/bin/cypher-shell
+
 dist: ## Build and test cypher-shell
 	./gradlew clean check installDist
 
