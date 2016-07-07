@@ -86,8 +86,17 @@ public class Help implements Command {
 
         shell.printOut("\nAvailable commands:");
 
+        // Get longest command so we can align them nicely
+        int longestCmd = 0;
         for (Command cmd: commandHelper.getAllCommands()) {
-            shell.printOut(String.format("  @|bold %s|@ %s", cmd.getName(), cmd.getDescription()));
+            if (cmd.getName().length() > longestCmd) {
+                longestCmd = cmd.getName().length();
+            }
+        }
+
+        for (Command cmd: commandHelper.getAllCommands()) {
+            shell.printOut(String.format("  @|bold %-" + longestCmd + "s|@ %s",
+                    cmd.getName(), cmd.getDescription()));
         }
 
         shell.printOut("\nFor help on a specific command type:");
