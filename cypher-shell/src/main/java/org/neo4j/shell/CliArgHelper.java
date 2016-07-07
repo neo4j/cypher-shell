@@ -115,7 +115,7 @@ public class CliArgHelper {
         private String username = "";
         private String password = "";
         private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
-        private String cypher = null;
+        private Optional<String> cypher = Optional.empty();
 
         public boolean getSuppressColor() {
             return suppressColor;
@@ -160,7 +160,7 @@ public class CliArgHelper {
          * Set the specified cypher string to execute
          */
         public void setCypher(@Nullable String cypher) {
-            this.cypher = cypher;
+            this.cypher = Optional.ofNullable(cypher);
         }
 
         @Nonnull
@@ -190,7 +190,7 @@ public class CliArgHelper {
 
         @Nonnull
         public Optional<String> getCypher() {
-            return Optional.ofNullable(cypher);
+            return cypher;
         }
     }
 }
