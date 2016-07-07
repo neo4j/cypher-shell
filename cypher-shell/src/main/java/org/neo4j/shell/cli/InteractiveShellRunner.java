@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static java.lang.System.getProperty;
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
 /**
  * An interactive shell
@@ -82,8 +83,9 @@ public class InteractiveShellRunner extends ShellRunner {
             } catch (ExitException e) {
                 throw e;
             } catch (ClientException e) {
-                shell.printError(BoltHelper.getSensibleMsg(e));
-            } catch (CommandException e) {
+                shell.printError(getSensibleMsg(e));
+            }
+            catch (CommandException e) {
                 shell.printError(e.getMessage());
             } catch (Throwable t) {
                 // TODO: 6/21/16 Unknown errors maybe should be handled differently

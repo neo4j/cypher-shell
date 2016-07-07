@@ -28,6 +28,8 @@ import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
 
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
@@ -46,6 +48,7 @@ public class CypherShell implements Shell {
     protected Session session;
     protected ShellRunner runner = null;
     protected Transaction tx = null;
+    protected final Map<String, Object> queryParams = new HashMap<>();
 
     public CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
         super();
@@ -71,7 +74,7 @@ public class CypherShell implements Shell {
             exitCode = e.getCode();
         } catch (ClientException e) {
             // When connect throws
-            printError(BoltHelper.getSensibleMsg(e));
+            printError(getSensibleMsg(e));
             exitCode = 1;
         } catch (Throwable t) {
             printError(t.getMessage());
@@ -121,9 +124,9 @@ public class CypherShell implements Shell {
     void executeCypher(@Nonnull final String cypher) {
         final StatementResult result;
         if (tx != null) {
-            result = tx.run(cypher);
+            result = tx.run(cypher, queryParams);
         } else {
-            result = session.run(cypher);
+            result = session.run(cypher, queryParams);
         }
 
         printOut(PrettyPrinter.format(result));
@@ -317,5 +320,23 @@ public class CypherShell implements Shell {
         tx.failure();
         tx.close();
         tx = null;
+    }
+
+    @Nonnull
+    public Map<String, Object> getQueryParams() {
+        return queryParams;
+    }
+
+    /**
+     * Run a cypher statement, and return the result. Is not stored in history.
+     */
+    public StatementResult doCypherSilently(@Nonnull final String cypher) {
+        final StatementResult result;
+        if (tx != null) {
+            result = tx.run(cypher, queryParams);
+        } else {
+            result = session.run(cypher, queryParams);
+        }
+        return result;
     }
 }

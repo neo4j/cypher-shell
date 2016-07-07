@@ -13,6 +13,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+
 /**
  * A shell runner which reads from STDIN and executes commands until completion. In case of errors, the failBehavior
  * determines if the shell exits immediately, or if it should keep trying the next commands.
@@ -54,7 +56,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
             } catch (ClientException e) {
                 errorOccurred = true;
                 if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
-                    shell.printError(BoltHelper.getSensibleMsg(e));
+                    shell.printError(getSensibleMsg(e));
                 } else {
                     throw e;
                 }

@@ -4,7 +4,7 @@ import org.neo4j.shell.commands.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +26,7 @@ public class CommandHelper {
         registerCommand(new Begin(cypherShell));
         registerCommand(new Commit(cypherShell));
         registerCommand(new Rollback(cypherShell));
+        registerCommand(new Set(cypherShell));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {
