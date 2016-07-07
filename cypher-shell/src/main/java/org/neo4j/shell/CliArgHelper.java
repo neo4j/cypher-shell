@@ -45,12 +45,12 @@ public class CliArgHelper {
                 .help("password to connect with");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
-        failGroup.addArgument("-ff", "--fail-fast")
-                .help("exit and report failure on first error when reading from file")
+        failGroup.addArgument("--fail-fast")
+                .help("exit and report failure on first error when reading from file (this is the default behavior)")
                 .dest("fail-behavior")
                 .setConst(FAIL_FAST)
                 .action(new StoreConstArgumentAction());
-        failGroup.addArgument("-fae", "--fail-at-end")
+        failGroup.addArgument("--fail-at-end")
                 .help("exit and report failures at end of input when reading from file")
                 .dest("fail-behavior")
                 .setConst(FAIL_AT_END)

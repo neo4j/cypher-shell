@@ -21,7 +21,8 @@ public class NonInteractiveShellRunnerTest {
         TestShell shell = new TestShell(
                 "good1\n" +
                         "good2\n");
-        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell, CliArgHelper.parse(asArray("-ff")));
+        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
+                CliArgHelper.parse(asArray("--fail-fast")));
         runner.run();
     }
 
@@ -31,7 +32,8 @@ public class NonInteractiveShellRunnerTest {
                 "good1\n" +
                         "bad\n" +
                         "good2\n");
-        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell, CliArgHelper.parse(asArray("-ff")));
+        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
+                CliArgHelper.parse(asArray("--fail-fast")));
         try {
             runner.run();
             fail("Expected an exception to be thrown");
@@ -49,7 +51,8 @@ public class NonInteractiveShellRunnerTest {
                 "bad\n" +
                 "good2\nSuccess\n";
         TestShell shell = new TestShell(input);
-        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell, CliArgHelper.parse(asArray("-fae")));
+        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
+                CliArgHelper.parse(asArray("--fail-at-end")));
         try {
             runner.run();
             fail("Expected an exit code to be set");
