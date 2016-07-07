@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
 
@@ -13,10 +14,16 @@ import static org.junit.Assert.assertEquals;
 
 public class StringShellRunnerTest {
 
+    private SimpleShell shell;
+
+    @Before
+    public void setup() throws CommandException {
+        shell = new SimpleShell();
+        shell.connect();
+    }
+
     @Test
     public void nullCypherShouldThrowException() throws IOException {
-        String cypherString = null;
-        SimpleShell shell = new SimpleShell();
         try {
             new StringShellRunner(shell, new CliArgHelper.CliArgs());
             fail("Expected an exception");
@@ -29,16 +36,16 @@ public class StringShellRunnerTest {
     @Test
     public void cypherShouldBePassedToRun() throws IOException, CommandException {
         String cypherString = "nonsense string";
-        SimpleShell shell = new SimpleShell();
         StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse(cypherString));
+
         runner.run();
         assertEquals(cypherString, shell.cypher);
     }
 
     @Test
     public void errorsShouldThrow() throws IOException, CommandException {
-        SimpleShell shell = new SimpleShell();
         StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse(SimpleShell.ERROR));
+
         try {
             runner.run();
         } catch (ClientException e) {
@@ -51,7 +58,7 @@ public class StringShellRunnerTest {
         String cypher;
 
         @Override
-        void executeCypher(@Nonnull String cypher) {
+        protected void executeCypher(@Nonnull String cypher) {
             if (ERROR.equals(cypher)) {
                 throw new ClientException(ERROR);
             }

@@ -3,27 +3,24 @@ package org.neo4j.shell;
 
 import javax.annotation.Nonnull;
 
-public abstract class TestShell extends CypherShell {
+public class TestShell extends CypherShell {
 
-    TestShell() {
+    public TestShell() {
         super("", 1, "", "");
     }
 
-    abstract void executeCypher(@Nonnull final String cypher);
+    public void connect() throws CommandException {
+        this.connect("bla", 99, "bob", "pass");
+    }
 
     @Override
     public void connect(@Nonnull String host, int port,
                         @Nonnull String username, @Nonnull String password) throws CommandException {
-        throw new RuntimeException("Test shell can't connect");
+        this.session = new TestSession();
     }
 
     @Override
     public void disconnect() throws CommandException {
-        throw new RuntimeException("Test shell can't disconnect");
-    }
-
-    @Override
-    boolean isConnected() {
-        return true;
+        this.session = null;
     }
 }

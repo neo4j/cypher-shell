@@ -21,15 +21,16 @@ import java.util.logging.Level;
  */
 public class CypherShell extends Shell {
 
-    private static final String COMMENT_PREFIX = "//";
-    private final CommandHelper commandHelper;
-    private final String host;
-    private final int port;
-    private final String username;
-    private final String password;
-    private Driver driver;
-    private Session session;
-    private ShellRunner runner = null;
+    protected static final String COMMENT_PREFIX = "//";
+    protected final CommandHelper commandHelper;
+    protected final String host;
+    protected final int port;
+    protected final String username;
+    protected final String password;
+    protected Driver driver;
+    protected Session session;
+    protected ShellRunner runner = null;
+    protected Transaction tx = null;
 
     CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
         super();
@@ -105,15 +106,18 @@ public class CypherShell extends Shell {
      * @param cypher non-empty cypher text to executeLine
      */
     void executeCypher(@Nonnull final String cypher) {
-        // TODO: 6/22/16 Lots...
-        // TODO: 6/22/16 Expose transaction handling
-        StatementResult result = session.run(cypher);
+        final StatementResult result;
+        if (tx != null) {
+            result = tx.run(cypher);
+        } else {
+            result = session.run(cypher);
+        }
 
         printOut(PrettyPrinter.format(result));
     }
 
-    boolean isConnected() {
-        return driver != null;
+    public boolean isConnected() {
+        return session != null && session.isOpen();
     }
 
     @Nullable
@@ -224,5 +228,14 @@ public class CypherShell extends Shell {
             // Suppress echo
             return 0;
         }
+    }
+
+    @Nonnull
+    public Optional<Transaction> getCurrentTransaction() {
+        return Optional.ofNullable(tx);
+    }
+
+    public void beginTransaction() {
+        this.tx = session.beginTransaction();
     }
 }
