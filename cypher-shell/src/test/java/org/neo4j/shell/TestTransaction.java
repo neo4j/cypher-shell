@@ -8,25 +8,27 @@ import java.util.Map;
 public class TestTransaction implements Transaction {
 
     private String lastCypherStatement = null;
+    private boolean success = false;
+    private boolean open = true;
 
     @Override
     public void success() {
-
+        this.success = true;
     }
 
     @Override
     public void failure() {
-
+        this.success = false;
     }
 
     @Override
     public boolean isOpen() {
-        return false;
+        return open;
     }
 
     @Override
     public void close() {
-
+        this.open = false;
     }
 
     @Override
@@ -65,5 +67,9 @@ public class TestTransaction implements Transaction {
 
     public String getLastCypherStatement() {
         return lastCypherStatement;
+    }
+
+    public boolean isSuccess() {
+        return success;
     }
 }

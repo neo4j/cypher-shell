@@ -236,6 +236,13 @@ public class CypherShell extends Shell {
     }
 
     public void beginTransaction() {
-        this.tx = session.beginTransaction();
+        tx = session.beginTransaction();
+    }
+
+    public void commitTransaction() {
+        tx.success();
+        tx.close();
+        tx = null;
+    }
     }
 }

@@ -9,13 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This command starts a transaction.
+ * This command marks a transaction as successful and closes it.
  */
-public class Begin implements Command {
-    private static final String COMMAND_NAME = ":begin";
+public class Commit implements Command {
+    public static final String COMMAND_NAME = ":commit";
     private final CypherShell shell;
 
-    public Begin(@Nonnull final CypherShell shell) {
+    public Commit(@Nonnull final CypherShell shell) {
         this.shell = shell;
     }
 
@@ -28,7 +28,7 @@ public class Begin implements Command {
     @Nonnull
     @Override
     public String getDescription() {
-        return "Open a transaction";
+        return "Commit the currently open transaction";
     }
 
     @Nonnull
@@ -40,8 +40,7 @@ public class Begin implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return String.format("Start a transaction which will remain open until %s or rollbla is called",
-                Commit.COMMAND_NAME);
+        return "Commits and closes the currently open transaction";
     }
 
     @Nonnull
@@ -62,10 +61,10 @@ public class Begin implements Command {
             throw new CommandException("Not connected to Neo4j");
         }
 
-        if (shell.getCurrentTransaction().isPresent()) {
-            throw new CommandException("There is already an open transaction");
+        if (!shell.getCurrentTransaction().isPresent()) {
+            throw new CommandException("There is no open transaction to commit");
         }
 
-        shell.beginTransaction();
+        shell.commitTransaction();
     }
 }
