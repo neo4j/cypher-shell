@@ -23,6 +23,9 @@ public class CommandHelper {
         registerCommand(new Connect(cypherShell));
         registerCommand(new Disconnect(cypherShell));
         registerCommand(new History(cypherShell));
+        registerCommand(new Begin(cypherShell));
+        registerCommand(new Commit(cypherShell));
+        registerCommand(new Rollback(cypherShell));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {

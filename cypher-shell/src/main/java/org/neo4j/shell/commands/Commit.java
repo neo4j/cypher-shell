@@ -5,17 +5,17 @@ import org.neo4j.shell.CommandException;
 import org.neo4j.shell.CypherShell;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Command to exit the shell. Equivalent to hitting Ctrl-D.
+ * This command marks a transaction as successful and closes it.
  */
-public class Exit implements Command {
-    public static final String COMMAND_NAME = ":exit";
+public class Commit implements Command {
+    public static final String COMMAND_NAME = ":commit";
     private final CypherShell shell;
 
-    public Exit(@Nonnull final CypherShell shell) {
+    public Commit(@Nonnull final CypherShell shell) {
         this.shell = shell;
     }
 
@@ -28,7 +28,7 @@ public class Exit implements Command {
     @Nonnull
     @Override
     public String getDescription() {
-        return "Exit the shell";
+        return "Commit the currently open transaction";
     }
 
     @Nonnull
@@ -40,38 +40,31 @@ public class Exit implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Exit the shell. Corresponds to entering @|bold CTRL-D|@.";
+        return "Commits and closes the currently open transaction";
     }
 
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return Arrays.asList(":quit");
+        return new ArrayList<>();
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
+    public void execute(@Nonnull List<String> args) throws Exit.ExitException, CommandException {
         if (!args.isEmpty()) {
             throw new CommandException(
                     String.format(("Too many arguments. @|bold %s|@ does not accept any arguments"),
                             COMMAND_NAME));
         }
 
-        shell.printOut("Exiting. Bye bye.");
-
-        throw new ExitException(0);
-    }
-
-    public static class ExitException extends Error {
-        private final int code;
-
-        public ExitException(int code) {
-            super();
-            this.code = code;
+        if (!shell.isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
         }
 
-        public int getCode() {
-            return code;
+        if (!shell.getCurrentTransaction().isPresent()) {
+            throw new CommandException("There is no open transaction to commit");
         }
+
+        shell.commitTransaction();
     }
 }
