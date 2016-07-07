@@ -5,13 +5,17 @@ import org.junit.Test;
 
 import javax.annotation.Nonnull;
 
+import java.io.IOException;
+
+import static junit.framework.TestCase.fail;
+
 
 public class CypherShellTest {
-    private CypherTestShell shell;
+    private ThrowingShell shell;
 
     @Before
     public void setup() {
-        shell = new CypherTestShell();
+        shell = new ThrowingShell();
     }
 
     @Test
@@ -26,31 +30,21 @@ public class CypherShellTest {
         // If no exception was thrown, we have success
     }
 
-    class CypherTestShell extends CypherShell {
+    @Test
+    public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
+        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
-        CypherTestShell() {
-            super("", 1, "", "");
+        ShellRunner shellRunner = shell.getShellRunner(cliArgs);
+
+        if (!(shellRunner instanceof StringShellRunner)) {
+            fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
         }
+    }
 
+    class ThrowingShell extends TestShell {
         @Override
         void executeCypher(@Nonnull String line) {
             throw new RuntimeException("Unexpected cypher execution");
-        }
-
-        @Override
-        public void connect(@Nonnull String host, int port,
-                            @Nonnull String username, @Nonnull String password) throws CommandException {
-            throw new RuntimeException("Test shell can't connect");
-        }
-
-        @Override
-        public void disconnect() throws CommandException {
-            throw new RuntimeException("Test shell can't disconnect");
-        }
-
-        @Override
-        boolean isConnected() {
-            return true;
         }
     }
 }

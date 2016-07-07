@@ -6,6 +6,7 @@ import net.sourceforge.argparse4j.inf.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,34 +28,38 @@ public class CliArgHelper {
             Pattern.compile("\\s*((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
     @Nonnull
-    public static CliArgs parse(@Nonnull final String[] args) {
+    public static CliArgs parse(@Nonnull String... args) {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("neo4j-shell")
-                                               .defaultHelp(true)
-                                               .description("A command line shell where you can execute Cypher against an instance of Neo4j");
+                .defaultHelp(true)
+                .description("A command line shell where you can execute Cypher against an instance of Neo4j");
 
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
-                .help("Address and port to connect to")
+                .help("address and port to connect to")
                 .setDefault("localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
-                .help("Username to connect as");
+                .help("username to connect as");
         connGroup.addArgument("-p", "--password")
                 .setDefault("")
-                .help("Password to connect with");
+                .help("password to connect with");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
-        failGroup.addArgument("-ff", "--fail-fast")
-                .help("Exit and report failure on first error when reading from file")
+        failGroup.addArgument("--fail-fast")
+                .help("exit and report failure on first error when reading from file (this is the default behavior)")
                 .dest("fail-behavior")
                 .setConst(FAIL_FAST)
                 .action(new StoreConstArgumentAction());
-        failGroup.addArgument("-fae", "--fail-at-end")
-                .help("Exit and report failures at end of input when reading from file")
+        failGroup.addArgument("--fail-at-end")
+                .help("exit and report failures at end of input when reading from file")
                 .dest("fail-behavior")
                 .setConst(FAIL_AT_END)
                 .action(new StoreConstArgumentAction());
         parser.setDefault("fail-behavior", FAIL_FAST);
+
+        parser.addArgument("cypher")
+                .nargs("?")
+                .help("an optional string of cypher to execute and then exit");
 
         Namespace ns = null;
         try {
@@ -95,6 +100,8 @@ public class CliArgHelper {
         }
 
         // Other arguments
+        // cypher string might not be given, represented by null
+        cliArgs.setCypher(ns.getString("cypher"));
         // Fail behavior as sensible default and returns a proper type
         cliArgs.setFailBehavior(ns.get("fail-behavior"));
 
@@ -109,6 +116,7 @@ public class CliArgHelper {
         private String username = "";
         private String password = "";
         private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
+        private Optional<String> cypher = Optional.empty();
 
         public boolean getSuppressColor() {
             return suppressColor;
@@ -142,34 +150,48 @@ public class CliArgHelper {
             password = primary == null ? fallback : primary;
         }
 
-        void setFailBehavior(FailBehavior failBehavior) {
+        /**
+         * Set the desired fail behavior
+         */
+        void setFailBehavior(@Nonnull FailBehavior failBehavior) {
             this.failBehavior = failBehavior;
         }
 
+        /**
+         * Set the specified cypher string to execute
+         */
+        public void setCypher(@Nullable String cypher) {
+            this.cypher = Optional.ofNullable(cypher);
+        }
+
+        @Nonnull
         public String getHost() {
             return host;
         }
 
+        @Nonnull
         public int getPort() {
             return port;
         }
 
+        @Nonnull
         public String getUsername() {
             return username;
         }
 
+        @Nonnull
         public String getPassword() {
             return password;
         }
 
+        @Nonnull
         public FailBehavior getFailBehavior() {
             return failBehavior;
         }
-    }
 
-    public static class CliArgParsingException extends Exception {
-        public CliArgParsingException(String msg) {
-            super(msg);
+        @Nonnull
+        public Optional<String> getCypher() {
+            return cypher;
         }
     }
 }
