@@ -32,7 +32,7 @@ public class CypherShellTest {
 
     @Test
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
-        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("--cypher", "MATCH (n) RETURN n");
+        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
         ShellRunner shellRunner = shell.getShellRunner(cliArgs);
 

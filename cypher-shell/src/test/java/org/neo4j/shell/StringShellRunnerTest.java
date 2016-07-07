@@ -30,7 +30,7 @@ public class StringShellRunnerTest {
     public void cypherShouldBePassedToRun() throws IOException, CommandException {
         String cypherString = "nonsense string";
         SimpleShell shell = new SimpleShell();
-        StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse("--cypher", cypherString));
+        StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse(cypherString));
         runner.run();
         assertEquals(cypherString, shell.cypher);
     }
@@ -38,7 +38,7 @@ public class StringShellRunnerTest {
     @Test
     public void errorsShouldThrow() throws IOException, CommandException {
         SimpleShell shell = new SimpleShell();
-        StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse("--cypher", SimpleShell.ERROR));
+        StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse(SimpleShell.ERROR));
         try {
             runner.run();
         } catch (ClientException e) {

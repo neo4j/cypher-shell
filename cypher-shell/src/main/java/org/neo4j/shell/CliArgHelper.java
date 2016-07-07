@@ -57,8 +57,9 @@ public class CliArgHelper {
                 .action(new StoreConstArgumentAction());
         parser.setDefault("fail-behavior", FAIL_FAST);
 
-        parser.addArgument("-c", "--cypher")
-                .help("specify a single string of cypher to execute and then exit");
+        parser.addArgument("cypher")
+                .nargs("?")
+                .help("an optional string of cypher to execute and then exit");
 
         Namespace ns = null;
         try {

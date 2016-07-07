@@ -24,4 +24,11 @@ public class CliArgHelperTest {
         assertEquals("Unexpected fail-behavior", CliArgHelper.FailBehavior.FAIL_AT_END,
                 CliArgHelper.parse(asArray("--fail-at-end")).getFailBehavior());
     }
+
+    @Test
+    public void singlePositionalArgumentIsFine() {
+        String text = "Single string";
+        assertEquals("Did not parse cypher string", text,
+                CliArgHelper.parse(asArray(text)).getCypher().get());
+    }
 }
