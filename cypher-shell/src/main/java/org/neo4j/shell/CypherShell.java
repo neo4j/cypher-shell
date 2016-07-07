@@ -244,5 +244,10 @@ public class CypherShell extends Shell {
         tx.close();
         tx = null;
     }
+
+    public void rollbackTransaction() {
+        tx.failure();
+        tx.close();
+        tx = null;
     }
 }
