@@ -1,6 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
+import org.neo4j.shell.CommandException;
 import org.neo4j.shell.CypherShell;
 
 import javax.annotation.Nonnull;
@@ -49,7 +50,13 @@ public class Exit implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws ExitException {
+    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
+        if (!args.isEmpty()) {
+            throw new CommandException(
+                    String.format(("Too many arguments. @|bold %s|@ does not accept any arguments"),
+                            COMMAND_NAME));
+        }
+
         shell.printOut("Exiting. Bye bye.");
 
         throw new ExitException(0);
