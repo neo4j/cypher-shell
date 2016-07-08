@@ -14,6 +14,10 @@ public class StreamShell extends CypherShell {
     private final ByteArrayOutputStream errStream;
     private final ByteArrayOutputStream outStream;
 
+    public StreamShell() {
+        this("");
+    }
+
     public StreamShell(@Nonnull final String input) {
         super("bla", 99, "bob", "pass");
         in = new ByteArrayInputStream(input.getBytes());
