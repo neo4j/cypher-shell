@@ -87,9 +87,9 @@ public class CypherShell implements Shell {
     @Override
     public void executeLine(@Nonnull final String line) throws ExitException, CommandException {
         // See if it's a shell command
-        CommandExecutable cmd = getCommandExecutable(line);
-        if (cmd != null) {
-            executeCmd(cmd);
+        Optional<CommandExecutable> cmd = getCommandExecutable(line);
+        if (cmd.isPresent()) {
+            executeCmd(cmd.get());
             return;
         }
         // Comments and empty lines have to be ignored (Bolt throws errors on "empty" lines)
@@ -136,12 +136,12 @@ public class CypherShell implements Shell {
         return session != null && session.isOpen();
     }
 
-    @Nullable
-    CommandExecutable getCommandExecutable(@Nonnull final String line) {
+    @Nonnull
+    Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         String[] parts = line.trim().split("\\s");
 
         if (parts.length < 1) {
-            return null;
+            return Optional.empty();
         }
 
         String name = parts[0];
@@ -153,10 +153,10 @@ public class CypherShell implements Shell {
             for (int i = 1; i < parts.length; i++) {
                 args.add(parts[i]);
             }
-            return () -> cmd.execute(args);
+            return Optional.of(() -> cmd.execute(args));
         }
 
-        return null;
+        return Optional.empty();
     }
 
     void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
