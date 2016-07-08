@@ -79,11 +79,9 @@ public class InteractiveShellRunner extends ShellRunner {
                 throw e;
             } catch (ClientException e) {
                 shell.printError(BoltHelper.getSensibleMsg(e));
-            }
-            catch (CommandException e) {
+            } catch (CommandException e) {
                 shell.printError(e.getMessage());
-            }
-            catch (Throwable t) {
+            } catch (Throwable t) {
                 // TODO: 6/21/16 Unknown errors maybe should be handled differently
                 shell.printError(t.getMessage());
             }

@@ -4,10 +4,13 @@ import jline.console.ConsoleReader;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommandReader {
     private final ConsoleReader reader;
     private final Shell shell;
+    static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
 
     public CommandReader(ConsoleReader reader, Shell shell) {
         this.reader = reader;
@@ -16,6 +19,23 @@ public class CommandReader {
 
     @Nullable
     public String readCommand() throws IOException {
-        return reader.readLine(shell.prompt(), shell.promptMask());
+        StringBuffer stringBuffer = new StringBuffer();
+        boolean reading = true;
+        while (reading) {
+            String line = reader.readLine(shell.prompt());
+            if (line == null) {
+                reading = false;
+                if (stringBuffer.length() == 0) {
+                    return null;
+                }
+            } else {
+                Matcher matcher = MULTILINE_BREAK.matcher(line);
+                if (!matcher.find()) {
+                    reading = false;
+                }
+                stringBuffer.append(matcher.replaceAll(""));
+            }
+        }
+        return stringBuffer.toString();
     }
 }
