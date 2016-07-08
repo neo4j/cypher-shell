@@ -18,15 +18,16 @@ import static java.lang.System.getProperty;
  * An interactive shell
  */
 public class InteractiveShellRunner extends ShellRunner {
-    private final ConsoleReader reader;
     private final Shell shell;
     private final MemoryHistory history;
+    private final CommandReader commandReader;
 
     public InteractiveShellRunner(@Nonnull final Shell shell) throws IOException {
         super();
         this.shell = shell;
-        this.reader = new ConsoleReader();
-        this.history = setupHistory(this.reader, this.shell);
+        ConsoleReader reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
+        this.history = setupHistory(reader, this.shell);
+        this.commandReader = new CommandReader(reader, this.shell);
     }
 
     @Nonnull
@@ -96,7 +97,7 @@ public class InteractiveShellRunner extends ShellRunner {
     }
 
     private boolean work() throws IOException, Exit.ExitException, CommandException {
-        String line = readLine();
+        String line = commandReader.readCommand();
 
         if (null == line) {
             return false;
@@ -107,10 +108,5 @@ public class InteractiveShellRunner extends ShellRunner {
         }
 
         return true;
-    }
-
-    @Nullable
-    private String readLine() throws IOException {
-        return reader.readLine(shell.prompt(), shell.promptMask());
     }
 }

@@ -54,13 +54,11 @@ public class CypherShell extends Shell {
             exitCode = 0;
         } catch (Exit.ExitException e) {
             exitCode = e.getCode();
-        }
-        catch (ClientException e) {
+        } catch (ClientException e) {
             // When connect throws
             printError(BoltHelper.getSensibleMsg(e));
             exitCode = 1;
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             printError(t.getMessage());
             exitCode = 1;
         }
@@ -178,7 +176,8 @@ public class CypherShell extends Shell {
         } catch (Throwable t) {
             try {
                 silentDisconnect();
-            } catch (Throwable ignore) {}
+            } catch (Throwable ignore) {
+            }
             throw t;
         }
     }
