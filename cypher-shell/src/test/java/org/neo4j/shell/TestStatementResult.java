@@ -77,7 +77,7 @@ public class TestStatementResult implements StatementResult {
     public static TestStatementResult parseStatement(@Nonnull final String statement) {
 
         Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
-        Pattern returnAsPattern = Pattern.compile("^return (.*?) as (.*)$", Pattern.CASE_INSENSITIVE);
+        Pattern returnAsPattern = Pattern.compile("^return (.*) as (.*)$", Pattern.CASE_INSENSITIVE);
         for (Pattern p: Arrays.asList(returnAsPattern, returnPattern)) {
             Matcher m = returnAsPattern.matcher(statement);
             if (m.find()) {

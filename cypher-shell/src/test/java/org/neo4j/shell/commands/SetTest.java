@@ -42,20 +42,26 @@ public class SetTest {
     }
 
     @Test
-    public void shouldFailIfTooManyArgs() {
-        try {
-            cmd.execute("bob mob zob");
-            fail("Expected error");
-        } catch (CommandException e) {
-            assertTrue("Unexpected error", e.getMessage().startsWith("Incorrect number of arguments"));
-        }
-    }
-
-    @Test
     public void setValue() throws CommandException {
         shell.connect();
         cmd.execute("bob   9");
         assertEquals("Expected param to be set",
                 "9", shell.getQueryParams().get("bob").toString());
+    }
+
+    @Test
+    public void shouldNotSplitOnSpace() throws CommandException {
+        shell.connect();
+        cmd.execute("bob 'one two'");
+        assertEquals("Expected param to be set",
+                "'one two'", shell.getQueryParams().get("bob").toString());
+    }
+
+    @Test
+    public void shouldNotExecuteEscapedCypher() throws CommandException {
+        shell.connect();
+        cmd.execute("bob \"RETURN 5 as bob\"");
+        assertEquals("Expected param to be set",
+                "\"RETURN 5 as bob\"", shell.getQueryParams().get("bob").toString());
     }
 }
