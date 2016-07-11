@@ -1,6 +1,8 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -46,7 +48,6 @@ abstract public class Shell {
     abstract public Character promptMask();
 
     /**
-     *
      * @return true if the shell is a TTY, false otherwise (e.g., we are reading from a file)
      */
     boolean isInteractive() {
@@ -55,6 +56,7 @@ abstract public class Shell {
 
     /**
      * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
+     *
      * @param cliArgs
      * @return a ShellRunner
      * @throws IOException
@@ -75,6 +77,6 @@ abstract public class Shell {
      *
      * @param line single line of input
      */
-    abstract public void executeLine(@Nonnull String line) throws Exit.ExitException, CommandException;
+    abstract public void executeLine(@Nonnull String line) throws ExitException, CommandException;
 
 }

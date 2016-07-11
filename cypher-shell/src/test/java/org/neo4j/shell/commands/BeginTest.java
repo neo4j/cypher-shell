@@ -4,8 +4,8 @@ package org.neo4j.shell.commands;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
 import org.neo4j.shell.TestShell;
+import org.neo4j.shell.exception.CommandException;
 
 import java.util.ArrayList;
 import java.util.Arrays;

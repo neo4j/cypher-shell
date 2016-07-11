@@ -1,9 +1,9 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
 import org.neo4j.shell.CommandHelper;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -88,13 +88,13 @@ public class Help implements Command {
 
         // Get longest command so we can align them nicely
         int longestCmd = 0;
-        for (Command cmd: commandHelper.getAllCommands()) {
+        for (Command cmd : commandHelper.getAllCommands()) {
             if (cmd.getName().length() > longestCmd) {
                 longestCmd = cmd.getName().length();
             }
         }
 
-        for (Command cmd: commandHelper.getAllCommands()) {
+        for (Command cmd : commandHelper.getAllCommands()) {
             shell.printOut(String.format("  @|bold %-" + longestCmd + "s|@ %s",
                     cmd.getName(), cmd.getDescription()));
         }

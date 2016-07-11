@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
@@ -10,8 +10,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.neo4j.shell.CliArgHelper.FailBehavior.FAIL_AT_END;
-import static org.neo4j.shell.CliArgHelper.FailBehavior.FAIL_FAST;
+import static org.neo4j.shell.cli.CliArgHelper.FailBehavior.FAIL_AT_END;
+import static org.neo4j.shell.cli.CliArgHelper.FailBehavior.FAIL_FAST;
 
 /**
  * Command line argument parsing and related stuff

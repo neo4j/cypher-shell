@@ -2,7 +2,9 @@ package org.neo4j.shell;
 
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +30,7 @@ public class StringShellRunner extends ShellRunner {
     }
 
     @Override
-    public void run() throws IOException, Exit.ExitException, ClientException, CommandException {
+    public void run() throws IOException, ExitException, ClientException, CommandException {
         shell.executeLine(cypher.trim());
     }
 

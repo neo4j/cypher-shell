@@ -1,6 +1,8 @@
 package org.neo4j.shell;
 
 
+import org.neo4j.shell.exception.CommandException;
+
 import javax.annotation.Nonnull;
 
 public class TestShell extends CypherShell {

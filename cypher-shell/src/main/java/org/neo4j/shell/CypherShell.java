@@ -5,8 +5,10 @@ import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.commands.Disconnect;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 
 import javax.annotation.Nonnull;
@@ -52,7 +54,7 @@ public class CypherShell extends Shell {
             runner.run();
 
             exitCode = 0;
-        } catch (Exit.ExitException e) {
+        } catch (ExitException e) {
             exitCode = e.getCode();
         } catch (ClientException e) {
             // When connect throws
@@ -67,7 +69,7 @@ public class CypherShell extends Shell {
     }
 
     @Override
-    public void executeLine(@Nonnull final String line) throws Exit.ExitException, CommandException {
+    public void executeLine(@Nonnull final String line) throws ExitException, CommandException {
         // See if it's a shell command
         CommandExecutable cmd = getCommandExecutable(line);
         if (cmd != null) {
@@ -141,7 +143,7 @@ public class CypherShell extends Shell {
         return null;
     }
 
-    void executeCmd(@Nonnull final CommandExecutable cmdExe) throws Exit.ExitException, CommandException {
+    void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
         cmdExe.execute();
     }
 

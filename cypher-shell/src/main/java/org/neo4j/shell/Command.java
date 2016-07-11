@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -9,17 +10,22 @@ import java.util.List;
  * A shell command
  */
 public interface Command {
-    @Nonnull String getName();
+    @Nonnull
+    String getName();
 
     //Completer getCompleter();
 
-    @Nonnull String getDescription();
+    @Nonnull
+    String getDescription();
 
-    @Nonnull String getUsage();
+    @Nonnull
+    String getUsage();
 
-    @Nonnull String getHelp();
+    @Nonnull
+    String getHelp();
 
-    @Nonnull List<String> getAliases();
+    @Nonnull
+    List<String> getAliases();
 
-    void execute(@Nonnull final List<String> args) throws Exit.ExitException, CommandException;
+    void execute(@Nonnull final List<String> args) throws ExitException, CommandException;
 }

@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import org.fusesource.jansi.AnsiConsole;
+import org.neo4j.shell.cli.CliArgHelper;
 
 import javax.annotation.Nonnull;
 
