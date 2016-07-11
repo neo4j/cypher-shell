@@ -11,6 +11,7 @@ public class CommandReader {
     private final ConsoleReader reader;
     private final Shell shell;
     static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
+    static final Pattern COMMENTS = Pattern.compile("//.*$");
 
     public CommandReader(ConsoleReader reader, Shell shell) {
         this.reader = reader;
@@ -29,13 +30,18 @@ public class CommandReader {
                     return null;
                 }
             } else {
-                Matcher matcher = MULTILINE_BREAK.matcher(line);
+                Matcher matcher = MULTILINE_BREAK.matcher(commentSubstitutedLine(line));
                 if (!matcher.find()) {
                     reading = false;
                 }
-                stringBuffer.append(matcher.replaceAll(""));
+                stringBuffer.append(matcher.replaceAll("")).append("\n");
             }
         }
         return stringBuffer.toString();
+    }
+
+    private String commentSubstitutedLine(String line) {
+        Matcher commentsMatcher = COMMENTS.matcher(line);
+        return commentsMatcher.replaceAll("");
     }
 }

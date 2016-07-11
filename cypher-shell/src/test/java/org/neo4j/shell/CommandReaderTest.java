@@ -20,7 +20,60 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) RETURN n"));
+        assertThat(actual, is("CREATE (n:Person) RETURN n\n"));
+    }
+
+    @Test
+    public void readCommandDoesNotFiltersSingleLineCommentsFromTheConsole() throws Exception {
+        /**/
+        StreamShell streamShell = new StreamShell("CREATE (n:Person) \\\n" +
+                "//We are returning all People \\\n" +
+                "RETURN n\n");
+        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
+                streamShell.getOutputStream());
+        // given
+        CommandReader commandReader = new CommandReader(reader, streamShell);
+
+        // when
+        String actual = commandReader.readCommand();
+
+        // then
+        assertThat(actual, is("CREATE (n:Person) \n\n"));
+    }
+
+    @Test
+    public void readCommandDoesNotFiltersSingleLineCommentsFromTheConsoleScenario2() throws Exception {
+        /**/
+        StreamShell streamShell = new StreamShell("CREATE (n:Person) //We are returning all People RETURN n\n");
+        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
+                streamShell.getOutputStream());
+        // given
+        CommandReader commandReader = new CommandReader(reader, streamShell);
+
+        // when
+        String actual = commandReader.readCommand();
+
+        // then
+        assertThat(actual, is("CREATE (n:Person) \n"));
+    }
+
+    @Test
+    public void readCommandDoesNotReadMultiLineCommentsFromTheConsole() throws Exception {
+        /**/
+        StreamShell streamShell = new StreamShell("CREATE (n:Person) \\\n" +
+                "//We are returning \n" +
+                "// all People \\\n" +
+                "RETURN n\n");
+        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
+                streamShell.getOutputStream());
+        // given
+        CommandReader commandReader = new CommandReader(reader, streamShell);
+
+        // when
+        String actual = commandReader.readCommand();
+
+        // then
+        assertThat(actual, is("CREATE (n:Person) \n\n"));
     }
 
     @Test
@@ -44,7 +97,7 @@ public class CommandReaderTest {
         CommandReader commandReader = new CommandReader(reader, streamShell);
 
         // then
-        assertThat(commandReader.readCommand(), is(""));
+        assertThat(commandReader.readCommand(), is("\n"));
     }
 
     @Test
@@ -60,7 +113,7 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) RETURN n"));
+        assertThat(actual, is("CREATE (n:Person) \nRETURN n\n"));
     }
 
     @Test
@@ -76,6 +129,6 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n: Person{name :\"John \\ Smith\"})  RETURN n"));
+        assertThat(actual, is("CREATE (n: Person{name :\"John \\ Smith\"}) \n RETURN n\n"));
     }
 }
