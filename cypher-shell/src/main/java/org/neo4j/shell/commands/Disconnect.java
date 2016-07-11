@@ -9,6 +9,8 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.neo4j.shell.CommandHelper.simpleArgParse;
+
 /**
  * Command to connect to an instance of Neo4j.
  */
@@ -52,12 +54,8 @@ public class Disconnect implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
-        if (!args.isEmpty()) {
-            throw new CommandException(
-                    String.format("Too many arguments. @|bold %s|@ does not accept any arguments",
-                            COMMAND_NAME));
-        }
+    public void execute(@Nonnull final String argString) throws ExitException, CommandException {
+        simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
         shell.disconnect();
         shell.printOut("Disconnected");

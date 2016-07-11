@@ -1,14 +1,17 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.neo4j.shell.CommandHelper.simpleArgParse;
 
 /**
  * This lists all query parameters which have been set
@@ -52,13 +55,8 @@ public class Env implements Command {
     }
 
     @Override
-    public void execute(@Nonnull final List<String> args) throws CommandException {
-        if (args.size() > 0) {
-            throw new CommandException(
-                    String.format(("Incorrect number of arguments. @|bold %s|@ accepts no arguments.\n"
-                                    + "usage: @|bold %s|@ %s"),
-                            COMMAND_NAME, COMMAND_NAME, getUsage()));
-        }
+    public void execute(@Nonnull final String argString) throws ExitException, CommandException {
+        simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
         List<String> keys = shell.getQueryParams().keySet().stream().collect(Collectors.toList());
 

@@ -3,7 +3,6 @@ package org.neo4j.shell.cli;
 import jline.console.ConsoleReader;
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.BoltHelper;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
@@ -14,6 +13,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+
 
 /**
  * A shell runner which reads from STDIN and executes commands until completion. In case of errors, the failBehavior

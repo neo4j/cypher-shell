@@ -19,15 +19,16 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
-
 import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
 /**
@@ -138,25 +139,24 @@ public class CypherShell implements Shell {
 
     @Nonnull
     Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
-        String[] parts = line.trim().split("\\s");
+        Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b\\s*(?<args>.*)$");
 
-        if (parts.length < 1) {
+        Matcher m = cmdNamePattern.matcher(line);
+        if (!m.matches()) {
             return Optional.empty();
         }
 
-        String name = parts[0];
+        String name = m.group("name");
+        String args = m.group("args");
+        //String name = parts[0];
 
         Command cmd = commandHelper.getCommand(name);
 
-        if (cmd != null) {
-            List<String> args = new ArrayList<>();
-            for (int i = 1; i < parts.length; i++) {
-                args.add(parts[i]);
-            }
-            return Optional.of(() -> cmd.execute(args));
+        if (cmd == null) {
+            return Optional.empty();
         }
 
-        return Optional.empty();
+        return Optional.of(() -> cmd.execute(args));
     }
 
     void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {

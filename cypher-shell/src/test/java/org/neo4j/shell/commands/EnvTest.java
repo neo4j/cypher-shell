@@ -2,12 +2,10 @@ package org.neo4j.shell.commands;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.shell.CommandException;
 import org.neo4j.shell.StreamShell;
+import org.neo4j.shell.exception.CommandException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class EnvTest {
     private StreamShell shell;

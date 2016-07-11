@@ -9,10 +9,32 @@ import org.neo4j.shell.exception.CommandException;
 import java.io.IOException;
 import java.util.Optional;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertFalse;
 
 
 public class CypherShellTest {
+
+    @Test
+    public void commandNameShouldBeParsed() {
+        ThrowingShell shell = new ThrowingShell();
+
+        Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    ");
+
+        assertTrue(exe.isPresent());
+    }
+
+
+    @Test
+    public void commandWithArgsShouldBeParsed() {
+        ThrowingShell shell = new ThrowingShell();
+
+        Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help   arg1 arg2 ");
+
+        assertTrue(exe.isPresent());
+    }
 
     @Test
     public void commentsShouldNotBeExecuted() throws Exception {

@@ -8,8 +8,6 @@ import org.neo4j.shell.Command;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.exception.CommandException;
 
-import java.util.ArrayList;
-
 import static junit.framework.TestCase.assertTrue;
 
 public class CypherShellIntegrationTest {
@@ -32,9 +30,9 @@ public class CypherShellIntegrationTest {
     @Test
     public void rollbackScenario() throws CommandException {
         try {
-            beginCommand.execute(new ArrayList<>());
+            beginCommand.execute("");
             shell.executeLine("CREATE (:Random)");
-            rollbackCommand.execute(new ArrayList<>());
+            rollbackCommand.execute("");
             shell.executeLine("MATCH (n) RETURN n");
         } catch (CommandException e) {
             assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
@@ -44,9 +42,9 @@ public class CypherShellIntegrationTest {
     @Test
     public void commitScenario() throws CommandException {
         try {
-            beginCommand.execute(new ArrayList<>());
+            beginCommand.execute("");
             shell.executeLine("CREATE (:Person {name: \"John Smith\"})");
-            commitCommand.execute(new ArrayList<>());
+            commitCommand.execute("");
         } catch (CommandException e) {
             assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
         }

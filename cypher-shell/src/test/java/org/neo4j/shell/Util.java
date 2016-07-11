@@ -7,4 +7,10 @@ public class Util {
     static Object[] asObjectArray(Object... arguments) {
         return arguments;
     }
+
+    public static class NotImplementedYetException extends RuntimeException {
+        public NotImplementedYetException(String message) {
+            super(message);
+        }
+    }
 }

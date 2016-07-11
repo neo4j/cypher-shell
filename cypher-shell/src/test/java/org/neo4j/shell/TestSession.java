@@ -25,22 +25,22 @@ public class TestSession implements Session {
 
     @Override
     public StatementResult run(String statementTemplate, Value parameters) {
-        return new TestStatementResult();
+        return TestStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate, Map<String, Object> statementParameters) {
-        return new TestStatementResult();
+        return TestStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate, Record statementParameters) {
-        return new TestStatementResult();
+        return TestStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate) {
-        return new TestStatementResult();
+        return TestStatementResult.parseStatement(statementTemplate);
     }
 
     @Override

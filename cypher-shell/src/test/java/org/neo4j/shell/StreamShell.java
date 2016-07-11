@@ -55,4 +55,19 @@ public class StreamShell extends CypherShell {
     public String getErrLog() {
         return errStream.toString();
     }
+
+    public void connect() throws CommandException {
+        connect("", 0, "", "");
+    }
+
+    @Override
+    public void connect(@Nonnull String host, int port,
+                        @Nonnull String username, @Nonnull String password) throws CommandException {
+        this.session = new TestSession();
+    }
+
+    @Override
+    public void disconnect() throws CommandException {
+        this.session = null;
+    }
 }
