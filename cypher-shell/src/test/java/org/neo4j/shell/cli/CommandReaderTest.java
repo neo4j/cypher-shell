@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 
 public class CommandReaderTest {
+
     @Test
     public void readCommandReadsFromTheConsole() throws Exception {
         StreamShell streamShell = new StreamShell("CREATE (n:Person) RETURN n\n");

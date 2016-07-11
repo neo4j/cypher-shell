@@ -39,7 +39,8 @@ public class CypherShell implements Shell {
     protected PrintStream out = System.out;
     protected PrintStream err = System.err;
 
-    protected static final String COMMENT_PREFIX = "//";
+    // Final space to catch newline
+    protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     protected final CommandHelper commandHelper;
     protected final String host;
     protected final int port;
@@ -93,10 +94,6 @@ public class CypherShell implements Shell {
             executeCmd(cmd.get());
             return;
         }
-        // Comments and empty lines have to be ignored (Bolt throws errors on "empty" lines)
-        if (line.isEmpty() || line.startsWith(COMMENT_PREFIX)) {
-            return;
-        }
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
@@ -139,8 +136,6 @@ public class CypherShell implements Shell {
 
     @Nonnull
     Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
-        Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b\\s*(?<args>.*)$");
-
         Matcher m = cmdNamePattern.matcher(line);
         if (!m.matches()) {
             return Optional.empty();
@@ -148,7 +143,6 @@ public class CypherShell implements Shell {
 
         String name = m.group("name");
         String args = m.group("args");
-        //String name = parts[0];
 
         Command cmd = commandHelper.getCommand(name);
 

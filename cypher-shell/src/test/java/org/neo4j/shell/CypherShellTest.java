@@ -26,6 +26,14 @@ public class CypherShellTest {
         assertTrue(exe.isPresent());
     }
 
+    @Test
+    public void commandNameShouldBeParsedWithNewline() {
+        ThrowingShell shell = new ThrowingShell();
+
+        Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    \n");
+
+        assertTrue(exe.isPresent());
+    }
 
     @Test
     public void commandWithArgsShouldBeParsed() {
@@ -121,10 +129,17 @@ public class CypherShellTest {
         assertEquals("did not execute in TX correctly", cypherLine, tx.getLastCypherStatement());
     }
 
+    @Test
+    public void shouldParseCommandsAndArgs() {
+        TestShell shell = new TestShell();
+        assertTrue(shell.getCommandExecutable(":help").isPresent());
+        assertTrue(shell.getCommandExecutable(":help :set").isPresent());
+        assertTrue(shell.getCommandExecutable(":set \"A piece of string\"").isPresent());
+    }
+
     private TestShell connectedShell() throws CommandException {
         TestShell shell = new TestShell();
         shell.connect("bla", 99, "bob", "pass");
         return shell;
     }
-
 }
