@@ -1,9 +1,11 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.BoltHelper;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 

@@ -3,9 +3,9 @@ package org.neo4j.shell;
 import org.junit.Test;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.exception.CommandException;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -69,10 +69,4 @@ public class CypherShellTest {
         assertEquals("did not execute in TX correctly", cypherLine, tx.getLastCypherStatement());
     }
 
-    private class ThrowingShell extends TestShell {
-        @Override
-        protected void executeCypher(@Nonnull String line) {
-            throw new RuntimeException("Unexpected cypher execution");
-        }
-    }
 }
