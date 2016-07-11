@@ -54,13 +54,8 @@ public class Help implements Command {
 
     @Override
     public void execute(@Nonnull final String argString) throws CommandException {
-        String[] args = simpleArgParse(argString, 1, COMMAND_NAME, getUsage());
-        if (args.length > 1) {
-            throw new CommandException(
-                    String.format(("Too many arguments. @|bold %s|@ accepts a single optional argument.\n"
-                                    + "usage: @|bold %s|@ %s"),
-                            COMMAND_NAME, COMMAND_NAME, getUsage()));
-        } else if (args.length == 0) {
+        String[] args = simpleArgParse(argString, 0, 1, COMMAND_NAME, getUsage());
+        if (args.length == 0) {
             printGeneralHelp();
         } else {
             printHelpFor(args[0]);

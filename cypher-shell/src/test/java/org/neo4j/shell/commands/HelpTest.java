@@ -23,6 +23,12 @@ public class HelpTest {
     }
 
     @Test
+    public void shouldAcceptNoArgs() throws CommandException {
+        cmd.execute("");
+        // Should not throw
+    }
+
+    @Test
     public void shouldNotAcceptTooManyArgs() {
         try {
             cmd.execute("bob alice");
