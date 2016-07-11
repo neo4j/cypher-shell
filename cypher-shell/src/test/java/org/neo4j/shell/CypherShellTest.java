@@ -28,6 +28,14 @@ public class CypherShellTest {
     }
 
     @Test
+    public void secondLineCommentsShouldntBeExecuted() throws Exception {
+        ThrowingShell shell = new ThrowingShell();
+        shell.executeLine("     \\\n" +
+                "// Second line comment, first line escapes newline");
+        // If no exception was thrown, we have success
+    }
+
+    @Test
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
