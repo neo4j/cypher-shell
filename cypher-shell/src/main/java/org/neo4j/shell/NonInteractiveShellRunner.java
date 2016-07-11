@@ -16,32 +16,33 @@ import java.io.IOException;
 public class NonInteractiveShellRunner extends ShellRunner {
 
     private final Shell shell;
-    private final ConsoleReader reader;
     private final CliArgHelper.FailBehavior failBehavior;
+    private final CommandReader commandReader;
 
     public NonInteractiveShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
         super();
         failBehavior = cliArgs.getFailBehavior();
         this.shell = shell;
-        reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
+        ConsoleReader reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
+        this.commandReader = new CommandReader(reader, this.shell);
     }
 
     @Override
     public void run() throws CommandException, IOException {
-        String line;
+        String command;
         boolean running = true;
         boolean errorOccurred = false;
         while (running) {
-            line = reader.readLine();
+            command = commandReader.readCommand();
 
             try {
-                if (null == line) {
+                if (null == command) {
                     running = false;
                     continue;
                 }
 
-                if (!line.trim().isEmpty()) {
-                    shell.executeLine(line);
+                if (!command.trim().isEmpty()) {
+                    shell.executeLine(command);
                 }
             } catch (Exit.ExitException e) {
                 // These exceptions are always fatal
