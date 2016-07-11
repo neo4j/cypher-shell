@@ -1,12 +1,14 @@
 package org.neo4j.shell;
 
-import junit.framework.Assert;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 class StreamShell extends TestShell {
     private final ByteArrayOutputStream errStream;
@@ -33,7 +35,7 @@ class StreamShell extends TestShell {
     }
 
     @Override
-    public void executeLine(@Nonnull String line) throws Exit.ExitException, CommandException {
+    public void executeLine(@Nonnull String line) throws ExitException, CommandException {
         if (line.contains("bad")) {
             throw new ClientException("Found a bad line");
         } else {

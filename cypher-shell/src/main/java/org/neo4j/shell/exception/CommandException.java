@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.exception;
 
 /**
  * And exception indicating that a command invocation failed.

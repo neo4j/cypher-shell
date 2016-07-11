@@ -2,6 +2,8 @@ package org.neo4j.shell;
 
 import org.junit.Test;
 import org.neo4j.driver.v1.Transaction;
+import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
