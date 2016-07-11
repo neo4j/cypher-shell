@@ -1,6 +1,9 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.InteractiveShellRunner;
+import org.neo4j.shell.cli.NonInteractiveShellRunner;
+import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 

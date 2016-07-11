@@ -1,13 +1,12 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.SimpleShell;
 import org.neo4j.shell.exception.CommandException;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 
 import static junit.framework.TestCase.fail;
@@ -40,7 +39,7 @@ public class StringShellRunnerTest {
         StringShellRunner runner = new StringShellRunner(shell, CliArgHelper.parse(cypherString));
 
         runner.run();
-        assertEquals(cypherString, shell.cypher);
+        assertEquals(cypherString, shell.cypher());
     }
 
     @Test
@@ -51,19 +50,6 @@ public class StringShellRunnerTest {
             runner.run();
         } catch (ClientException e) {
             assertEquals(SimpleShell.ERROR, e.getMessage());
-        }
-    }
-
-    class SimpleShell extends TestShell {
-        static final String ERROR = "error";
-        String cypher;
-
-        @Override
-        protected void executeCypher(@Nonnull String cypher) {
-            if (ERROR.equals(cypher)) {
-                throw new ClientException(ERROR);
-            }
-            this.cypher = cypher;
         }
     }
 }

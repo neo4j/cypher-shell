@@ -1,6 +1,7 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
+import org.neo4j.shell.Shell;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
