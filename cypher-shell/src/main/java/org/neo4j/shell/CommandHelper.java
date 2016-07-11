@@ -30,6 +30,7 @@ public class CommandHelper {
         registerCommand(new Rollback(cypherShell));
         registerCommand(new Set(cypherShell));
         registerCommand(new Env(cypherShell));
+        registerCommand(new Unset(cypherShell));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {
@@ -93,7 +94,7 @@ public class CommandHelper {
 
         if (args.length < minCount || args.length > maxCount) {
             throw new CommandException(
-                    String.format(("Incorrect number of arguments.\nusage: @|bold %s|@ %s"),
+                    String.format("Incorrect number of arguments.\nusage: @|bold %s|@ %s",
                             commandName, usage));
         }
 

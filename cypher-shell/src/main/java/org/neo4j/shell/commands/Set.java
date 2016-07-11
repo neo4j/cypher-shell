@@ -60,7 +60,7 @@ public class Set implements Command {
 
         if (!m.matches()) {
             throw new CommandException(
-                    String.format(("Incorrect number of arguments.\nusage: @|bold %s|@ %s"),
+                    String.format("Incorrect number of arguments.\nusage: @|bold %s|@ %s",
                             COMMAND_NAME, getUsage()));
         }
 
