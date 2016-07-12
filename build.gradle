@@ -1,6 +1,10 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.9'
     }
 }
 
@@ -21,6 +25,8 @@ allprojects {
 subprojects {
     apply plugin: 'pmd'
     apply plugin: 'jacoco'
+    apply plugin: 'info.solidsoft.pitest'
+
 
     jacocoTestReport {
         reports {
@@ -28,6 +34,12 @@ subprojects {
             xml.enabled true
             csv.enabled false
         }
+    }
+
+    pitest {
+        threads = 4
+        enableDefaultIncrementalAnalysis = true
+        outputFormats = ['XML', 'HTML']
     }
 }
 
