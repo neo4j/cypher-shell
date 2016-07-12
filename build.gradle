@@ -20,6 +20,15 @@ allprojects {
 
 subprojects {
     apply plugin: 'pmd'
+    apply plugin: 'jacoco'
+
+    jacocoTestReport {
+        reports {
+            html.enabled true
+            xml.enabled true
+            csv.enabled false
+        }
+    }
 }
 
 ext {
