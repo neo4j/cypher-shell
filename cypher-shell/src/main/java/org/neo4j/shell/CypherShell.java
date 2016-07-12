@@ -174,10 +174,7 @@ public class CypherShell extends Shell {
             // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
-            try {
-                silentDisconnect();
-            } catch (Throwable ignore) {
-            }
+            silentDisconnect();
             throw t;
         }
     }
@@ -185,7 +182,7 @@ public class CypherShell extends Shell {
     /**
      * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
      */
-    void silentDisconnect() {
+    private void silentDisconnect() {
         try {
             if (session != null) {
                 session.close();

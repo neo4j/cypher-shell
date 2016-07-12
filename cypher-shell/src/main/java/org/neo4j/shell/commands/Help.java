@@ -77,7 +77,7 @@ public class Help implements Command {
             throw new CommandException(String.format("No such command: @|bold %s|@", name));
         }
 
-        shell.printOut(String.format(("\nusage: @|bold %s|@ %s\n\n%s\n"),
+        shell.printOut(String.format("\nusage: @|bold %s|@ %s\n\n%s\n",
                 cmd.getName(), cmd.getUsage(), cmd.getHelp()));
     }
 

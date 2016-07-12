@@ -53,7 +53,7 @@ public class Exit implements Command {
     public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
         if (!args.isEmpty()) {
             throw new CommandException(
-                    String.format(("Too many arguments. @|bold %s|@ does not accept any arguments"),
+                    String.format("Too many arguments. @|bold %s|@ does not accept any arguments",
                             COMMAND_NAME));
         }
 

@@ -56,7 +56,7 @@ public class History implements Command {
     public void execute(@Nonnull List<String> args) throws Exit.ExitException, CommandException {
         if (args.size() > 0) {
             throw new CommandException(
-                    String.format(("Too many arguments. @|bold %s|@ accepts no arguments."),
+                    String.format("Too many arguments. @|bold %s|@ accepts no arguments.",
                             COMMAND_NAME));
         }
 

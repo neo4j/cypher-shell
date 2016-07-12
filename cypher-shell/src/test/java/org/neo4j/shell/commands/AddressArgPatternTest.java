@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 
 import static org.junit.Assert.*;
 
-
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 public class AddressArgPatternTest {
 
     @Test

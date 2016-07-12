@@ -54,23 +54,23 @@ public class PrettyPrinter {
     private static String toString(@Nonnull final Value value) {
         try {
             return toString(value.asList(PrettyPrinter::toString));
-        } catch (Uncoercible ignored) {
+        } catch (Uncoercible ignored) {//NOPMD
         }
         try {
             return toString(value.asMap(PrettyPrinter::toString));
-        } catch (Uncoercible ignored) {
+        } catch (Uncoercible ignored) {//NOPMD
         }
         try {
             return toString(value.asNode());
-        } catch (Uncoercible ignored) {
+        } catch (Uncoercible ignored) {//NOPMD
         }
         try {
             return toString(value.asRelationship());
-        } catch (Uncoercible ignored) {
+        } catch (Uncoercible ignored) {//NOPMD
         }
         try {
             return toString(value.asPath());
-        } catch (Uncoercible ignored) {
+        } catch (Uncoercible ignored) {//NOPMD
         }
 
         return value.toString();
