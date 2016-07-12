@@ -38,6 +38,7 @@ subprojects {
 
     pitest {
         threads = 4
+        timestampedReports = false
         enableDefaultIncrementalAnalysis = true
         outputFormats = ['XML', 'HTML']
     }
