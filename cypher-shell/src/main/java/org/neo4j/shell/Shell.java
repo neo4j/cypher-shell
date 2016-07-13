@@ -44,8 +44,6 @@ public interface Shell {
 
     void disconnect() throws CommandException;
 
-    Optional<Transaction> getCurrentTransaction();
-
     void beginTransaction() throws CommandException;
 
     void commitTransaction() throws CommandException;

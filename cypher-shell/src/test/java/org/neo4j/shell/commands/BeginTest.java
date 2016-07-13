@@ -2,75 +2,72 @@ package org.neo4j.shell.commands;
 
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
 import org.neo4j.shell.Shell;
-import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+import static org.mockito.Mockito.*;
 
 public class BeginTest {
 
-    private Shell shell;
-    private Command cmd;
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+    private Command beginCommand;
+    private Shell mockShell = mock(Shell.class);
 
     @Before
     public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Begin(shell);
+        this.beginCommand = new Begin(mockShell);
     }
 
     @Test
-    public void shouldNotAcceptArgs() {
-        try {
-            cmd.execute(Arrays.asList("bob"));
-            fail("Should not accept args");
-        } catch (CommandException e) {
-            assertTrue("Unexepcted error", e.getMessage().startsWith("Too many arguments"));
-        }
+    public void shouldNotAcceptArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Too many arguments. @|bold :begin|@ does not accept any arguments");
+
+        beginCommand.execute(Arrays.asList("bob"));
+        fail("should not accept args");
     }
 
     @Test
     public void needsToBeConnected() throws CommandException {
-        shell.disconnect();
-        try {
-            cmd.execute(new ArrayList<>());
-            fail("Should throw");
-        } catch (CommandException e) {
-            assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
-        }
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        when(mockShell.isConnected()).thenReturn(false);
+
+        beginCommand.execute(new ArrayList<>());
+        fail("shell is disconnected");
     }
 
     @Test
-    public void openTransaction() throws CommandException {
-        connnectShell();
-        assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
+    public void beginTransactionOnShell() throws CommandException {
+        when(mockShell.isConnected()).thenReturn(true);
 
-        cmd.execute(new ArrayList<>());
+        beginCommand.execute(new ArrayList<>());
 
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        verify(mockShell).beginTransaction();
     }
 
     @Test
     public void nestedTransactionsAreNotSupported() throws CommandException {
-        connnectShell();
-        assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
-        cmd.execute(new ArrayList<>());
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        when(mockShell.isConnected()).thenReturn(true);
+        CommandException expectedException = new CommandException("transaction already open");
+        doThrow(expectedException).when(mockShell).beginTransaction();
 
         try {
-            cmd.execute(new ArrayList<>());
+            beginCommand.execute(new ArrayList<>());
             fail("Should throw");
-        } catch (CommandException e) {
-            assertTrue("unexpected error", e.getMessage().contains("already an open transaction"));
+        } catch (CommandException actual) {
+            assertEquals(expectedException, actual);
         }
-    }
-
-    private void connnectShell() throws CommandException {
-        shell.connect("bla", 99, "bob", "pass");
     }
 }
