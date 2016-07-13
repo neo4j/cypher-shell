@@ -2,7 +2,7 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
 import org.neo4j.shell.CommandHelper;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -14,9 +14,9 @@ import java.util.List;
  */
 public class Help implements Command {
     public static final String COMMAND_NAME = ":help";
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Help(@Nonnull final CypherShell shell) {
+    public Help(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 

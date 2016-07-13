@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -14,9 +14,9 @@ import java.util.List;
  */
 public class Begin implements Command {
     private static final String COMMAND_NAME = ":begin";
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Begin(@Nonnull final CypherShell shell) {
+    public Begin(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
@@ -61,10 +61,6 @@ public class Begin implements Command {
 
         if (!shell.isConnected()) {
             throw new CommandException("Not connected to Neo4j");
-        }
-
-        if (shell.getCurrentTransaction().isPresent()) {
-            throw new CommandException("There is already an open transaction");
         }
 
         shell.beginTransaction();

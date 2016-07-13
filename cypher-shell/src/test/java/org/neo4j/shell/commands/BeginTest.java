@@ -4,6 +4,7 @@ package org.neo4j.shell.commands;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.Command;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 
@@ -14,7 +15,7 @@ import static junit.framework.TestCase.*;
 
 public class BeginTest {
 
-    private TestShell shell;
+    private Shell shell;
     private Command cmd;
 
     @Before
@@ -46,7 +47,7 @@ public class BeginTest {
 
     @Test
     public void openTransaction() throws CommandException {
-        shell.connect();
+        connnectShell();
         assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
 
         cmd.execute(new ArrayList<>());
@@ -56,7 +57,7 @@ public class BeginTest {
 
     @Test
     public void nestedTransactionsAreNotSupported() throws CommandException {
-        shell.connect();
+        connnectShell();
         assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
         cmd.execute(new ArrayList<>());
         assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
@@ -67,5 +68,9 @@ public class BeginTest {
         } catch (CommandException e) {
             assertTrue("unexpected error", e.getMessage().contains("already an open transaction"));
         }
+    }
+
+    private void connnectShell() throws CommandException {
+        shell.connect("bla", 99, "bob", "pass");
     }
 }

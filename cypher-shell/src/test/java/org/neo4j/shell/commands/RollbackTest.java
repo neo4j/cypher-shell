@@ -4,6 +4,7 @@ package org.neo4j.shell.commands;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.Command;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.TestShell;
 import org.neo4j.shell.TestTransaction;
 import org.neo4j.shell.exception.CommandException;
@@ -15,7 +16,7 @@ import static junit.framework.TestCase.*;
 
 public class RollbackTest {
 
-    private TestShell shell;
+    private Shell shell;
     private Command cmd;
 
     @Before
@@ -47,7 +48,7 @@ public class RollbackTest {
 
     @Test
     public void rollbackTransaction() throws CommandException {
-        shell.connect();
+        connectShell();
         shell.beginTransaction();
 
         assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
@@ -63,13 +64,17 @@ public class RollbackTest {
 
     @Test
     public void closingWhenNoTXOpenShouldThrow() throws CommandException {
-        shell.connect();
+        connectShell();
         assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
         try {
             cmd.execute(new ArrayList<>());
-            fail("Can't commit when no tx is open!");
+            fail("Can't rolback when no tx is open!");
         } catch (CommandException e) {
             assertTrue("unexpected error", e.getMessage().contains("no open transaction to rollback"));
         }
+    }
+
+    private void connectShell() throws CommandException {
+        shell.connect("bla", 99, "bob", "pass");
     }
 }
