@@ -51,4 +51,5 @@ ext {
     findbugsVersion = '3.0.0'
     jansiVersion = '1.13'
     jlineVersion = '2.14.2'
+    mockitoVersion = '1.9.5'
 }
