@@ -1,7 +1,6 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -11,11 +10,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-public class StreamShell extends TestShell {
+public class StreamShell extends CypherShell {
     private final ByteArrayOutputStream errStream;
     private final ByteArrayOutputStream outStream;
 
     public StreamShell(@Nonnull final String input) {
+        super("bla", 99, "bob", "pass");
         in = new ByteArrayInputStream(input.getBytes());
         errStream = new ByteArrayOutputStream();
         err = new PrintStream(errStream);

@@ -1,5 +1,7 @@
 package org.neo4j.shell;
 
+import jline.console.history.History;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -7,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Optional;
 
 public interface Shell {
     void printOut(@Nonnull String msg);
@@ -22,6 +25,7 @@ public interface Shell {
     @Nonnull
     String prompt();
 
+    //TODO:DELETE IT - PRAVEENA
     @Nullable
     Character promptMask();
 
@@ -32,4 +36,23 @@ public interface Shell {
      * @param line single line of input
      */
     void executeLine(@Nonnull String line) throws ExitException, CommandException;
+
+    boolean isConnected();
+
+    void connect(@Nonnull String host, int port, @Nonnull String username,
+                 @Nonnull String password) throws CommandException;
+
+    void disconnect() throws CommandException;
+
+    Optional<Transaction> getCurrentTransaction();
+
+    void beginTransaction() throws CommandException;
+
+    void commitTransaction() throws CommandException;
+
+    CommandHelper getCommandHelper();
+
+    Optional<History> getHistory();
+
+    void rollbackTransaction() throws CommandException;
 }

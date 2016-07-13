@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -15,9 +15,9 @@ import java.util.List;
 public class Disconnect implements Command {
     public static final String COMMAND_NAME = ":disconnect";
 
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Disconnect(@Nonnull final CypherShell shell) {
+    public Disconnect(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 

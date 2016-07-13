@@ -163,6 +163,7 @@ public class CypherShell implements Shell {
     /**
      * Open a session to Neo4j
      */
+    @Override
     public void connect(@Nonnull final String host, final int port, @Nonnull final String username,
                         @Nonnull final String password) throws CommandException {
         if (isConnected()) {
@@ -295,17 +296,26 @@ public class CypherShell implements Shell {
         return Optional.ofNullable(tx);
     }
 
-    public void beginTransaction() {
+    public void beginTransaction() throws CommandException {
+        if (getCurrentTransaction().isPresent()) {
+            throw new CommandException("There is already an open transaction");
+        }
         tx = session.beginTransaction();
     }
 
-    public void commitTransaction() {
+    public void commitTransaction() throws CommandException {
+        if (!getCurrentTransaction().isPresent()) {
+            throw new CommandException("There is no open transaction to commit");
+        }
         tx.success();
         tx.close();
         tx = null;
     }
 
-    public void rollbackTransaction() {
+    public void rollbackTransaction() throws CommandException {
+        if (!getCurrentTransaction().isPresent()) {
+            throw new CommandException("There is no open transaction to rollback");
+        }
         tx.failure();
         tx.close();
         tx = null;

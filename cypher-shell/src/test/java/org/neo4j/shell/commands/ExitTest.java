@@ -3,6 +3,7 @@ package org.neo4j.shell.commands;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 
@@ -13,7 +14,7 @@ import static junit.framework.TestCase.fail;
 
 public class ExitTest {
 
-    private TestShell shell;
+    private Shell shell;
     private Exit cmd;
 
     @Before

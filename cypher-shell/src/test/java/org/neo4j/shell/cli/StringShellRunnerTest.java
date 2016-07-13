@@ -19,7 +19,7 @@ public class StringShellRunnerTest {
     @Before
     public void setup() throws CommandException {
         shell = new SimpleShell();
-        shell.connect();
+        connectShell();
     }
 
     @Test
@@ -51,5 +51,9 @@ public class StringShellRunnerTest {
         } catch (ClientException e) {
             assertEquals(SimpleShell.ERROR, e.getMessage());
         }
+    }
+
+    private void connectShell() throws CommandException {
+        shell.connect("bla", 99, "bob", "pass");
     }
 }

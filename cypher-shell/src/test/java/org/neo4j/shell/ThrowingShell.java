@@ -1,7 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.TestShell;
-
 import javax.annotation.Nonnull;
 
 public class ThrowingShell extends TestShell {

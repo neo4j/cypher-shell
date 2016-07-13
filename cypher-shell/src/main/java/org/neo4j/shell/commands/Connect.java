@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -17,9 +17,9 @@ import java.util.regex.Matcher;
 public class Connect implements Command {
     private static final String COMMAND_NAME = ":connect";
 
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Connect(@Nonnull final CypherShell shell) {
+    public Connect(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
