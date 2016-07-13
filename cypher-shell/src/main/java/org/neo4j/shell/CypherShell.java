@@ -31,7 +31,7 @@ import static org.fusesource.jansi.internal.CLibrary.isatty;
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements IShell {
+public class CypherShell implements Shell {
     protected InputStream in = System.in;
     protected PrintStream out = System.out;
     protected PrintStream err = System.err;

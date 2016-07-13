@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-public interface IShell {
+public interface Shell {
     void printOut(@Nonnull String msg);
 
     void printError(@Nonnull String msg);
