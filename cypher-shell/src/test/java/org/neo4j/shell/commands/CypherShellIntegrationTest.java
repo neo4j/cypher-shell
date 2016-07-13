@@ -1,11 +1,10 @@
 package org.neo4j.shell.commands;
 
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.TestShell;
+import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.TestTransaction;
 import org.neo4j.shell.exception.CommandException;
 
@@ -15,21 +14,17 @@ import java.util.Arrays;
 import static junit.framework.TestCase.*;
 
 @Ignore
-public class RollbackIntegrationTest {
+public class CypherShellIntegrationTest {
 
-    private TestShell shell;
-    private Command cmd;
-
-    @Before
-    public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Rollback(shell);
-    }
+    private CypherShell shell = new CypherShell("localhost", 7474, "neo4j", "neo");
+    private Command rollbackCommand = new Rollback(shell);
+    private Command commitCommand = new Commit(shell);
+    private Command beginCommand = new Begin(shell);
 
     @Test
     public void shouldNotAcceptArgs() {
         try {
-            cmd.execute(Arrays.asList("bob"));
+            rollbackCommand.execute(Arrays.asList("bob"));
             fail("Should not accept args");
         } catch (CommandException e) {
             assertTrue("Unexepcted error", e.getMessage().startsWith("Too many arguments"));
@@ -37,10 +32,10 @@ public class RollbackIntegrationTest {
     }
 
     @Test
-    public void needsToBeConnected() throws CommandException {
-        shell.disconnect();
+    public void connectAndDisconnect() throws CommandException {
+        shell.connect("localhost", 7474, "neo4j", "neo");
         try {
-            cmd.execute(new ArrayList<>());
+            rollbackCommand.execute(new ArrayList<>());
             fail("Should throw");
         } catch (CommandException e) {
             assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
@@ -56,7 +51,7 @@ public class RollbackIntegrationTest {
 
         TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
 
-        cmd.execute(new ArrayList<>());
+        rollbackCommand.execute(new ArrayList<>());
 
         assertFalse("Transaction should not still be open", tx.isOpen());
         assertFalse("Transaction should not be successful", tx.isSuccess());
@@ -68,7 +63,7 @@ public class RollbackIntegrationTest {
         connectShell();
         assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
         try {
-            cmd.execute(new ArrayList<>());
+            rollbackCommand.execute(new ArrayList<>());
             fail("Can't rolback when no tx is open!");
         } catch (CommandException e) {
             assertTrue("unexpected error", e.getMessage().contains("no open transaction to rollback"));
