@@ -4,7 +4,7 @@ import jline.console.ConsoleReader;
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.BoltHelper;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.IShell;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -19,11 +19,11 @@ import java.io.IOException;
  */
 public class NonInteractiveShellRunner extends ShellRunner {
 
-    private final Shell shell;
+    private final IShell shell;
     private final CliArgHelper.FailBehavior failBehavior;
     private final CommandReader commandReader;
 
-    public NonInteractiveShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
+    public NonInteractiveShellRunner(@Nonnull IShell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
         super();
         failBehavior = cliArgs.getFailBehavior();
         this.shell = shell;

@@ -2,7 +2,7 @@ package org.neo4j.shell.cli;
 
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.IShell;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -16,10 +16,10 @@ import java.util.Optional;
  * A shell runner which executes a single String and exits afterward. Any errors will throw immediately.
  */
 public class StringShellRunner extends ShellRunner {
-    private final Shell shell;
+    private final IShell shell;
     private final String cypher;
 
-    public StringShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
+    public StringShellRunner(@Nonnull IShell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
         super();
         this.shell = shell;
         Optional<String> cypherString = cliArgs.getCypher();

@@ -6,6 +6,9 @@ import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.InteractiveShellRunner;
+import org.neo4j.shell.cli.NonInteractiveShellRunner;
+import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.Disconnect;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -13,15 +16,25 @@ import org.neo4j.shell.prettyprint.PrettyPrinter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 
+import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
+import static org.fusesource.jansi.internal.CLibrary.isatty;
+
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell extends Shell {
+public class CypherShell implements IShell {
+    protected InputStream in = System.in;
+    protected PrintStream out = System.out;
+    protected PrintStream err = System.err;
 
     protected static final String COMMENT_PREFIX = "//";
     protected final CommandHelper commandHelper;
@@ -34,7 +47,7 @@ public class CypherShell extends Shell {
     protected ShellRunner runner = null;
     protected Transaction tx = null;
 
-    CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
+    public CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
         super();
         this.host = host;
         this.port = port;
@@ -44,7 +57,7 @@ public class CypherShell extends Shell {
         commandHelper = new CommandHelper(this);
     }
 
-    int run(@Nonnull CliArgHelper.CliArgs cliArgs) {
+    public int run(@Nonnull CliArgHelper.CliArgs cliArgs) {
         int exitCode;
 
         try {
@@ -225,6 +238,52 @@ public class CypherShell extends Shell {
         } else {
             // Suppress echo
             return 0;
+        }
+    }
+
+    @Override
+    public void printOut(@Nonnull final String msg) {
+        out.println(ansi().render(msg));
+    }
+
+    @Override
+    public void printError(@Nonnull final String msg) {
+        err.println(ansi().render(msg));
+    }
+
+    @Override
+    @Nonnull
+    public InputStream getInputStream() {
+        return in;
+    }
+
+    @Override
+    @Nonnull
+    public PrintStream getOutputStream() {
+        return out;
+    }
+
+    /**
+     * @return true if the shell is a TTY, false otherwise (e.g., we are reading from a file)
+     */
+    private boolean isInteractive() {
+        return 1 == isatty(STDIN_FILENO);
+    }
+
+    /**
+     * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
+     *
+     * @param cliArgs
+     * @return a ShellRunner
+     * @throws IOException
+     */
+    protected ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
+        if (cliArgs.getCypher().isPresent()) {
+            return new StringShellRunner(this, cliArgs);
+        } else if (isInteractive()) {
+            return new InteractiveShellRunner(this);
+        } else {
+            return new NonInteractiveShellRunner(this, cliArgs);
         }
     }
 
