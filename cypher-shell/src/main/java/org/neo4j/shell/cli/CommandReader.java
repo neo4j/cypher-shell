@@ -1,7 +1,7 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.IShell;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,13 +11,13 @@ import java.util.regex.Pattern;
 
 public class CommandReader {
     private final ConsoleReader reader;
-    private final Shell shell;
+    private final IShell shell;
     //Pattern matches a back slash at the end of the line for multiline commands
     static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
     //Pattern matches comments
     static final Pattern COMMENTS = Pattern.compile("//.*$");
 
-    public CommandReader(@Nonnull ConsoleReader reader, @Nonnull Shell shell) {
+    public CommandReader(@Nonnull ConsoleReader reader, @Nonnull IShell shell) {
         this.reader = reader;
         this.shell = shell;
     }

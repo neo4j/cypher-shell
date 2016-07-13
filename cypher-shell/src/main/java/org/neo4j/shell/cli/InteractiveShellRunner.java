@@ -6,7 +6,7 @@ import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.BoltHelper;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.IShell;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -22,11 +22,11 @@ import static java.lang.System.getProperty;
  * An interactive shell
  */
 public class InteractiveShellRunner extends ShellRunner {
-    private final Shell shell;
+    private final IShell shell;
     private final MemoryHistory history;
     private final CommandReader commandReader;
 
-    public InteractiveShellRunner(@Nonnull final Shell shell) throws IOException {
+    public InteractiveShellRunner(@Nonnull final IShell shell) throws IOException {
         super();
         this.shell = shell;
         ConsoleReader reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
@@ -35,7 +35,7 @@ public class InteractiveShellRunner extends ShellRunner {
     }
 
     @Nonnull
-    private MemoryHistory setupHistory(@Nonnull final ConsoleReader reader, @Nonnull final Shell shell) throws IOException {
+    private MemoryHistory setupHistory(@Nonnull final ConsoleReader reader, @Nonnull final IShell shell) throws IOException {
         try {
             final FileHistory history = new FileHistory(getHistoryFile());
             history.setIgnoreDuplicates(true);
