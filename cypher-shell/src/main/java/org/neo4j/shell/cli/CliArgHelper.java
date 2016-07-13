@@ -25,7 +25,7 @@ public class CliArgHelper {
 
 
     public static final Pattern addressArgPattern =
-            Pattern.compile("\\s*((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
+            Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
     @Nonnull
     public static CliArgs parse(@Nonnull String... args) {

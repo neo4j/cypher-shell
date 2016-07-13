@@ -72,6 +72,11 @@ public class Connect implements Command {
                          args[0], COMMAND_NAME, getUsage()));
             }
 
+            if (null != m.group("protocol") && !"bolt://".equalsIgnoreCase(m.group("protocol"))) {
+                throw new CommandException(String.format("Unsupported protocol: '%s'\nOnly 'bolt://' is supported.",
+                        m.group("protocol")));
+            }
+
             if (null != m.group("host")) {
                 host = m.group("host");
             }
