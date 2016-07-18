@@ -9,7 +9,9 @@ import org.neo4j.shell.exception.CommandException;
 import java.io.IOException;
 import java.util.Optional;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.Assert.*;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.fail;
 
 
 public class CypherShellTest {
@@ -48,40 +50,83 @@ public class CypherShellTest {
     }
 
     @Test
-    public void closeTransactionAfterRollback() throws CommandException {
-        TestShell shell = connectedShell();
+    public void successiveBeginTransactionsThrowsError() throws CommandException {
+        CypherShell shell = connectedShell();
         shell.beginTransaction();
 
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        try {
+            shell.beginTransaction();
+            fail("Should throw");
+        } catch (CommandException e) {
+            assertTrue("unexpected error", e.getMessage().contains("already an open transaction"));
+        }
+    }
 
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
+    @Test
+    public void beginTransaction() throws CommandException {
+        CypherShell shell = connectedShell();
+        shell.beginTransaction();
+
+        assertNotNull(shell.getCurrentTransaction().get());
+    }
+
+    @Test
+    public void closeTransactionAfterRollback() throws CommandException {
+        CypherShell shell = connectedShell();
+        shell.beginTransaction();
+
+        assertNotNull(shell.getCurrentTransaction().get());
+
+        TestTransaction tx = (TestTransaction) shell.tx;
 
         shell.rollbackTransaction();
 
+        assertEquals(Optional.empty(), shell.getCurrentTransaction());
         assertFalse("Transaction should not still be open", tx.isOpen());
         assertFalse("Transaction should not be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
     }
 
     @Test
     public void closeTransactionAfterCommit() throws CommandException {
-        TestShell shell = connectedShell();
+        CypherShell shell = connectedShell();
         shell.beginTransaction();
 
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        assertNotNull(shell.getCurrentTransaction().get());
 
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
+        TestTransaction tx = (TestTransaction) shell.tx;
 
         shell.commitTransaction();
 
         assertFalse("Transaction should not still be open", tx.isOpen());
         assertTrue("Transaction should be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
+        assertEquals(Optional.empty(), shell.getCurrentTransaction());
+    }
+
+    @Test
+    public void cannotCommitWhenThereIsNoTransaction() throws CommandException {
+        CypherShell shell = connectedShell();
+        try {
+            shell.commitTransaction();
+            fail("Can't commit when no tx is open!");
+        } catch (CommandException e) {
+            assertTrue("unexpected error", e.getMessage().contains("no open transaction to commit"));
+        }
+    }
+
+    @Test
+    public void cannotRollbackWhenThereIsNoTransaction() throws CommandException {
+        CypherShell shell = connectedShell();
+        try {
+            shell.rollbackTransaction();
+            fail("Can't commit when no tx is open!");
+        } catch (CommandException e) {
+            assertTrue("unexpected error", e.getMessage().contains("no open transaction to rollback"));
+        }
     }
 
     @Test
     public void shouldExecuteInTransactionIfOpen() throws CommandException {
-        TestShell shell = connectedShell();
+        CypherShell shell = connectedShell();
         shell.beginTransaction();
 
         TestTransaction tx = null;
@@ -99,8 +144,9 @@ public class CypherShellTest {
         assertEquals("did not execute in TX correctly", cypherLine, tx.getLastCypherStatement());
     }
 
-    private TestShell connectedShell() throws CommandException {
-        TestShell shell = new TestShell();
+    private CypherShell connectedShell() throws CommandException {
+        CypherShell shell = new TestShell();
+//        CypherShell shell = new CypherShell("bla", 99, "bob", "pass");
         shell.connect("bla", 99, "bob", "pass");
         return shell;
     }

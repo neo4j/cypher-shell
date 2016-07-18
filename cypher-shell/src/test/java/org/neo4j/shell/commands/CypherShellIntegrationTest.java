@@ -1,17 +1,17 @@
 package org.neo4j.shell.commands;
 
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.shell.Command;
 import org.neo4j.shell.CypherShell;
-import org.neo4j.shell.TestTransaction;
 import org.neo4j.shell.exception.CommandException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertTrue;
 
 @Ignore
 public class CypherShellIntegrationTest {
@@ -21,56 +21,37 @@ public class CypherShellIntegrationTest {
     private Command commitCommand = new Commit(shell);
     private Command beginCommand = new Begin(shell);
 
-    @Test
-    public void shouldNotAcceptArgs() {
-        try {
-            rollbackCommand.execute(Arrays.asList("bob"));
-            fail("Should not accept args");
-        } catch (CommandException e) {
-            assertTrue("Unexepcted error", e.getMessage().startsWith("Too many arguments"));
-        }
+    @Before
+    public void setUp() throws Exception {
+        shell.connect("localhost", 7474, "neo4j", "neo");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        shell.disconnect();
     }
 
     @Test
-    public void connectAndDisconnect() throws CommandException {
-        shell.connect("localhost", 7474, "neo4j", "neo");
+    public void rollbackScenario() throws CommandException {
         try {
+            beginCommand.execute(new ArrayList<>());
+            shell.executeLine("CREATE (:Random)");
             rollbackCommand.execute(new ArrayList<>());
-            fail("Should throw");
+            shell.executeLine("MATCH (n) RETURN n");
         } catch (CommandException e) {
             assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
         }
     }
 
     @Test
-    public void rollbackTransaction() throws CommandException {
-        connectShell();
-        shell.beginTransaction();
-
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
-
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
-
-        rollbackCommand.execute(new ArrayList<>());
-
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertFalse("Transaction should not be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
-    }
-
-    @Test
-    public void closingWhenNoTXOpenShouldThrow() throws CommandException {
-        connectShell();
-        assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
+    public void commitScenario() throws CommandException {
+        shell.connect("localhost", 7474, "neo4j", "neo");
         try {
-            rollbackCommand.execute(new ArrayList<>());
-            fail("Can't rolback when no tx is open!");
+            beginCommand.execute(new ArrayList<>());
+            shell.executeLine("CREATE (:Person {name: \"John Smith\"})");
+            commitCommand.execute(new ArrayList<>());
         } catch (CommandException e) {
-            assertTrue("unexpected error", e.getMessage().contains("no open transaction to rollback"));
+            assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
         }
-    }
-
-    private void connectShell() throws CommandException {
-        shell.connect("bla", 99, "bob", "pass");
     }
 }
