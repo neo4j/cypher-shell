@@ -2,74 +2,75 @@ package org.neo4j.shell.commands;
 
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
-import org.neo4j.shell.TestShell;
-import org.neo4j.shell.TestTransaction;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.exception.CommandException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+import static org.mockito.Mockito.*;
 
 public class RollbackTest {
 
-    private TestShell shell;
-    private Command cmd;
+    private Command rollbackCommand;
+
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+    private Shell mockShell = mock(Shell.class);
+
 
     @Before
     public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Rollback(shell);
+        this.rollbackCommand = new Rollback(mockShell);
     }
 
     @Test
-    public void shouldNotAcceptArgs() {
-        try {
-            cmd.execute(Arrays.asList("bob"));
-            fail("Should not accept args");
-        } catch (CommandException e) {
-            assertTrue("Unexepcted error", e.getMessage().startsWith("Too many arguments"));
-        }
+    public void shouldNotAcceptArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Too many arguments. @|bold :rollback|@ does not accept any arguments");
+
+        rollbackCommand.execute(Arrays.asList("bob"));
+        fail("should not accept args");
     }
 
     @Test
     public void needsToBeConnected() throws CommandException {
-        shell.disconnect();
-        try {
-            cmd.execute(new ArrayList<>());
-            fail("Should throw");
-        } catch (CommandException e) {
-            assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
-        }
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        when(mockShell.isConnected()).thenReturn(false);
+
+        rollbackCommand.execute(new ArrayList<>());
+        fail("shell is disconnected");
     }
 
     @Test
     public void rollbackTransaction() throws CommandException {
-        shell.connect();
-        shell.beginTransaction();
+        when(mockShell.isConnected()).thenReturn(true);
 
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        rollbackCommand.execute(new ArrayList<>());
 
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
-
-        cmd.execute(new ArrayList<>());
-
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertFalse("Transaction should not be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
+        verify(mockShell).rollbackTransaction();
     }
 
     @Test
     public void closingWhenNoTXOpenShouldThrow() throws CommandException {
-        shell.connect();
-        assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
+        when(mockShell.isConnected()).thenReturn(true);
+        CommandException expectedException = new CommandException("no open transaction");
+        doThrow(expectedException).when(mockShell).rollbackTransaction();
+
         try {
-            cmd.execute(new ArrayList<>());
+            rollbackCommand.execute(new ArrayList<>());
             fail("Can't commit when no tx is open!");
-        } catch (CommandException e ) {
-            assertTrue("unexpected error", e.getMessage().contains("no open transaction to rollback"));
+        } catch (CommandException actual) {
+            assertEquals(expectedException, actual);
         }
+
     }
 }

@@ -2,74 +2,71 @@ package org.neo4j.shell.commands;
 
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
-import org.neo4j.shell.TestShell;
-import org.neo4j.shell.TestTransaction;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.exception.CommandException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+import static org.mockito.Mockito.*;
 
 public class CommitTest {
-
-    private TestShell shell;
-    private Command cmd;
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+    private Command commitCommand;
+    private Shell mockShell = mock(Shell.class);
 
     @Before
     public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Commit(shell);
+        this.commitCommand = new Commit(mockShell);
     }
 
     @Test
-    public void shouldNotAcceptArgs() {
-        try {
-            cmd.execute(Arrays.asList("bob"));
-            fail("Should not accept args");
-        } catch (CommandException e) {
-            assertTrue("Unexepcted error", e.getMessage().startsWith("Too many arguments"));
-        }
+    public void shouldNotAcceptArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Too many arguments. @|bold :commit|@ does not accept any arguments");
+
+        commitCommand.execute(Arrays.asList("bob"));
+        fail("should not accept args");
     }
 
     @Test
-    public void needsToBeConnected() throws CommandException {
-        shell.disconnect();
-        try {
-            cmd.execute(new ArrayList<>());
-            fail("Should throw");
-        } catch (CommandException e) {
-            assertTrue("unexepcted error", e.getMessage().contains("Not connected"));
-        }
+    public void throwExceptionWhenShellIsDisconnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        when(mockShell.isConnected()).thenReturn(false);
+
+        commitCommand.execute(new ArrayList<>());
+        fail("shell is disconnected");
     }
 
     @Test
-    public void closeTransaction() throws CommandException {
-        shell.connect();
-        shell.beginTransaction();
+    public void commitTransactionOnShell() throws CommandException {
+        when(mockShell.isConnected()).thenReturn(true);
 
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
+        commitCommand.execute(new ArrayList<>());
 
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
-
-        cmd.execute(new ArrayList<>());
-
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertTrue("Transaction should be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
+        verify(mockShell).commitTransaction();
     }
 
     @Test
     public void closingWhenNoTXOpenShouldThrow() throws CommandException {
-        shell.connect();
-        assertFalse("Did not expect an open transaction here", shell.getCurrentTransaction().isPresent());
+        when(mockShell.isConnected()).thenReturn(true);
+        CommandException expectedException = new CommandException("no open transaction");
+        doThrow(expectedException).when(mockShell).commitTransaction();
+
         try {
-            cmd.execute(new ArrayList<>());
+            commitCommand.execute(new ArrayList<>());
             fail("Can't commit when no tx is open!");
-        } catch (CommandException e ) {
-            assertTrue("unexpected error", e.getMessage().contains("no open transaction to commit"));
+        } catch (CommandException actual) {
+            assertEquals(expectedException, actual);
         }
     }
 }

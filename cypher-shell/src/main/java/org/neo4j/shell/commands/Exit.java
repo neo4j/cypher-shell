@@ -1,8 +1,9 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -13,9 +14,9 @@ import java.util.List;
  */
 public class Exit implements Command {
     public static final String COMMAND_NAME = ":exit";
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Exit(@Nonnull final CypherShell shell) {
+    public Exit(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
@@ -62,16 +63,4 @@ public class Exit implements Command {
         throw new ExitException(0);
     }
 
-    public static class ExitException extends Error {
-        private final int code;
-
-        public ExitException(int code) {
-            super();
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
-    }
 }

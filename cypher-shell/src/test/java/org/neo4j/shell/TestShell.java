@@ -1,16 +1,14 @@
 package org.neo4j.shell;
 
 
+import org.neo4j.shell.exception.CommandException;
+
 import javax.annotation.Nonnull;
 
 public class TestShell extends CypherShell {
 
     public TestShell() {
         super("", 1, "", "");
-    }
-
-    public void connect() throws CommandException {
-        this.connect("bla", 99, "bob", "pass");
     }
 
     @Override

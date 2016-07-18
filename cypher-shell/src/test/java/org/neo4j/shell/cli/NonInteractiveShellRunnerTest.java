@@ -1,8 +1,9 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.StreamShell;
+import org.neo4j.shell.exception.ExitException;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
@@ -42,10 +43,10 @@ public class NonInteractiveShellRunnerTest {
 
     @Test
     public void testFailAtEnd() throws Exception {
-        final String input =  "good1\n" +
+        final String input = "good1\n" +
                 "bad\n" +
                 "good2\n";
-        final String expectedOut =  "good1\nSuccess\n" +
+        final String expectedOut = "good1\nSuccess\n" +
                 "bad\n" +
                 "good2\nSuccess\n";
         StreamShell shell = new StreamShell(input);
@@ -54,7 +55,7 @@ public class NonInteractiveShellRunnerTest {
         try {
             runner.run();
             fail("Expected an exit code to be set");
-        } catch (Exit.ExitException e) {
+        } catch (ExitException e) {
             assertEquals("Wrong exit code", 1, e.getCode());
             assertEquals("Incorrect STDERR", "Found a bad line\n", shell.getErrLog());
             assertEquals("Incorrect STDOUT", expectedOut, shell.getOutLog().replaceAll("\r", ""));

@@ -1,9 +1,10 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.CliArgHelper;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -16,9 +17,9 @@ import java.util.regex.Matcher;
 public class Connect implements Command {
     private static final String COMMAND_NAME = ":connect";
 
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Connect(@Nonnull final CypherShell shell) {
+    public Connect(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
@@ -53,7 +54,7 @@ public class Connect implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws Exit.ExitException, CommandException {
+    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
         // Default arguments
         String host = "localhost";
         int port = 7687;
@@ -63,13 +64,13 @@ public class Connect implements Command {
         if (args.size() > 1) {
             throw new CommandException(
                     String.format(("Too many arguments. @|bold %s|@ accepts a single optional argument.\n"
-                            + "usage: @|bold %s|@ %s"),
-                    COMMAND_NAME, COMMAND_NAME, getUsage()));
+                                    + "usage: @|bold %s|@ %s"),
+                            COMMAND_NAME, COMMAND_NAME, getUsage()));
         } else if (args.size() == 1) {
             Matcher m = CliArgHelper.addressArgPattern.matcher(args.get(0));
             if (!m.matches()) {
-                 throw new CommandException(String.format("Could not parse @|bold %s|@\nusage: @|bold %s|@ %s",
-                         args.get(0), COMMAND_NAME, getUsage()));
+                throw new CommandException(String.format("Could not parse @|bold %s|@\nusage: @|bold %s|@ %s",
+                        args.get(0), COMMAND_NAME, getUsage()));
             }
 
             if (null != m.group("host")) {

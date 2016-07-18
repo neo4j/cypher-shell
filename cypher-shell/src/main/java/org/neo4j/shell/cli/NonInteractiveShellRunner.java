@@ -1,9 +1,13 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.BoltHelper;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.ShellRunner;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -44,7 +48,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
                 if (!command.trim().isEmpty()) {
                     shell.executeLine(command);
                 }
-            } catch (Exit.ExitException e) {
+            } catch (ExitException e) {
                 // These exceptions are always fatal
                 throw e;
             } catch (ClientException e) {
@@ -54,8 +58,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
                 } else {
                     throw e;
                 }
-            }
-            catch (Throwable t) {
+            } catch (Throwable t) {
                 errorOccurred = true;
                 if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
                     shell.printError(t.getMessage());
@@ -67,7 +70,7 @@ public class NonInteractiveShellRunner extends ShellRunner {
 
         // End of input, in case of error, set correct exit code
         if (errorOccurred) {
-            throw new Exit.ExitException(1);
+            throw new ExitException(1);
         }
     }
 

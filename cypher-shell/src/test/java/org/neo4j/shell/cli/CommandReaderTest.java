@@ -1,7 +1,8 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 import org.junit.Test;
+import org.neo4j.shell.StreamShell;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

@@ -1,11 +1,15 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.commands.Exit;
+import org.neo4j.shell.BoltHelper;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.ShellRunner;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -75,7 +79,7 @@ public class InteractiveShellRunner extends ShellRunner {
         while (running) {
             try {
                 running = work();
-            } catch (Exit.ExitException e) {
+            } catch (ExitException e) {
                 throw e;
             } catch (ClientException e) {
                 shell.printError(BoltHelper.getSensibleMsg(e));
@@ -94,7 +98,7 @@ public class InteractiveShellRunner extends ShellRunner {
         return history;
     }
 
-    private boolean work() throws IOException, Exit.ExitException, CommandException {
+    private boolean work() throws IOException, ExitException, CommandException {
         String line = commandReader.readCommand();
 
         if (null == line) {

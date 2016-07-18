@@ -1,73 +1,33 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.commands.Exit;
+import jline.console.history.History;
+import org.neo4j.driver.v1.Transaction;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Optional;
 
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.isatty;
+public interface Shell {
+    void printOut(@Nonnull String msg);
 
-/**
- * A possibly interactive commandline shell
- */
-abstract public class Shell {
-
-    protected InputStream in = System.in;
-    protected PrintStream out = System.out;
-    protected PrintStream err = System.err;
-
-    public void printOut(@Nonnull final String msg) {
-        out.println(ansi().render(msg));
-    }
-
-    public void printError(@Nonnull final String msg) {
-        err.println(ansi().render(msg));
-    }
+    void printError(@Nonnull String msg);
 
     @Nonnull
-    public InputStream getInputStream() {
-        return in;
-    }
+    InputStream getInputStream();
 
     @Nonnull
-    public PrintStream getOutputStream() {
-        return out;
-    }
+    PrintStream getOutputStream();
 
     @Nonnull
-    abstract public String prompt();
+    String prompt();
 
+    //TODO:DELETE IT - PRAVEENA
     @Nullable
-    abstract public Character promptMask();
-
-    /**
-     *
-     * @return true if the shell is a TTY, false otherwise (e.g., we are reading from a file)
-     */
-    boolean isInteractive() {
-        return 1 == isatty(STDIN_FILENO);
-    }
-
-    /**
-     * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
-     * @param cliArgs
-     * @return a ShellRunner
-     * @throws IOException
-     */
-    ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
-        if (cliArgs.getCypher().isPresent()) {
-            return new StringShellRunner(this, cliArgs);
-        } else if (isInteractive()) {
-            return new InteractiveShellRunner(this);
-        } else {
-            return new NonInteractiveShellRunner(this, cliArgs);
-        }
-    }
+    Character promptMask();
 
     /**
      * Handle a single line of input. If this is a part of a multi-line statement, it should be handled accordingly.
@@ -75,6 +35,22 @@ abstract public class Shell {
      *
      * @param line single line of input
      */
-    abstract public void executeLine(@Nonnull String line) throws Exit.ExitException, CommandException;
+    void executeLine(@Nonnull String line) throws ExitException, CommandException;
 
+    boolean isConnected();
+
+    void connect(@Nonnull String host, int port, @Nonnull String username,
+                 @Nonnull String password) throws CommandException;
+
+    void disconnect() throws CommandException;
+
+    void beginTransaction() throws CommandException;
+
+    void commitTransaction() throws CommandException;
+
+    CommandHelper getCommandHelper();
+
+    Optional<History> getHistory();
+
+    void rollbackTransaction() throws CommandException;
 }

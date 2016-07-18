@@ -1,7 +1,7 @@
-package org.neo4j.shell.commands;
+package org.neo4j.shell.cli;
 
 import org.junit.Test;
-import org.neo4j.shell.CliArgHelper;
+import org.neo4j.shell.cli.CliArgHelper;
 
 import java.util.regex.Matcher;
 

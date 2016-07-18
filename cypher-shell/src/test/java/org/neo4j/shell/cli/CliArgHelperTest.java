@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import org.junit.Test;
 

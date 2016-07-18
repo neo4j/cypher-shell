@@ -13,4 +13,5 @@ dependencies {
         exclude(group: 'junit', module: 'junit')
     }
     testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-core:$mockitoVersion"
 }

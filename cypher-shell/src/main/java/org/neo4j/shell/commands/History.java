@@ -1,8 +1,9 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandException;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -15,10 +16,10 @@ import java.util.Optional;
 public class History implements Command {
     private static final String COMMAND_NAME = ":history";
 
-    private final CypherShell shell;
+    private final Shell shell;
     private final List<String> aliases = new ArrayList<>();
 
-    public History(@Nonnull final CypherShell shell) {
+    public History(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
@@ -53,7 +54,7 @@ public class History implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws Exit.ExitException, CommandException {
+    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
         if (args.size() > 0) {
             throw new CommandException(
                     String.format("Too many arguments. @|bold %s|@ accepts no arguments.",
@@ -68,7 +69,6 @@ public class History implements Command {
         }
 
         jline.console.history.History history = possibleHistory.get();
-
 
 
         // Calculate starting position
