@@ -19,8 +19,11 @@ run: dist ## Build and run cypher-shell with no arguments
 dist: ## Build and test cypher-shell
 	./gradlew installDist
 
-test: ## Run all tests
-	./gradlew check jacocoTestReport pitest
+test: ## Run all unit tests
+	./gradlew check pitest
+
+integration-test: ## Run all integration tests
+	./gradlew integrationTest
 
 out:
 	mkdir -p out
