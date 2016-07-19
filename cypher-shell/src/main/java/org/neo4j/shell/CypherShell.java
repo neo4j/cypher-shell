@@ -105,6 +105,7 @@ public class CypherShell implements Shell {
     }
 
     @Nonnull
+    @Override
     public Optional<History> getHistory() {
         if (runner == null) {
             return Optional.empty();
@@ -130,6 +131,7 @@ public class CypherShell implements Shell {
         printOut(PrettyPrinter.format(result));
     }
 
+    @Override
     public boolean isConnected() {
         return session != null && session.isOpen();
     }
@@ -209,6 +211,7 @@ public class CypherShell implements Shell {
         }
     }
 
+    @Override
     public void disconnect() throws CommandException {
         if (!isConnected()) {
             throw new CommandException("Not connected, nothing to disconnect from.");
@@ -291,6 +294,7 @@ public class CypherShell implements Shell {
         return Optional.ofNullable(tx);
     }
 
+    @Override
     public void beginTransaction() throws CommandException {
         if (getCurrentTransaction().isPresent()) {
             throw new CommandException("There is already an open transaction");
@@ -298,6 +302,7 @@ public class CypherShell implements Shell {
         tx = session.beginTransaction();
     }
 
+    @Override
     public void commitTransaction() throws CommandException {
         if (!getCurrentTransaction().isPresent()) {
             throw new CommandException("There is no open transaction to commit");
@@ -307,6 +312,7 @@ public class CypherShell implements Shell {
         tx = null;
     }
 
+    @Override
     public void rollbackTransaction() throws CommandException {
         if (!getCurrentTransaction().isPresent()) {
             throw new CommandException("There is no open transaction to rollback");
@@ -317,14 +323,21 @@ public class CypherShell implements Shell {
     }
 
     @Nonnull
+    @Override
     public Map<String, Object> getQueryParams() {
         return queryParams;
+    }
+
+    @Override
+    public void set(@Nonnull String name, String valueString) {
+        Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
+        getQueryParams().put(name, record.get(name).asObject());
     }
 
     /**
      * Run a cypher statement, and return the result. Is not stored in history.
      */
-    public StatementResult doCypherSilently(@Nonnull final String cypher) {
+    private StatementResult doCypherSilently(@Nonnull final String cypher) {
         final StatementResult result;
         if (tx != null) {
             result = tx.run(cypher, queryParams);

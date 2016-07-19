@@ -1,7 +1,6 @@
 package org.neo4j.shell;
 
 import jline.console.history.History;
-import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -9,6 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Map;
 import java.util.Optional;
 
 public interface Shell {
@@ -53,4 +53,9 @@ public interface Shell {
     Optional<History> getHistory();
 
     void rollbackTransaction() throws CommandException;
+
+    @Nonnull
+    Map<String, Object> getQueryParams();
+
+    void set(@Nonnull String name, String valueString);
 }
