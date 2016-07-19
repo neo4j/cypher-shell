@@ -1,7 +1,6 @@
 package org.neo4j.shell.cli;
 
 import org.junit.Test;
-import org.neo4j.shell.cli.CliArgHelper;
 
 import java.util.regex.Matcher;
 
@@ -9,6 +8,34 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 public class AddressArgPatternTest {
+
+    @Test
+    public void testUserPassProtocolHostPort() {
+        Matcher m = CliArgHelper.addressArgPattern.matcher("   bolt://bob1:pass@localhost:123");
+        assertTrue("Expected a match: " + "   bolt://bob1:pass@:123", m.matches());
+        assertEquals("123", m.group("port"));
+        assertEquals("bob1", m.group("username"));
+        assertEquals("pass", m.group("password"));
+        assertEquals("bolt://", m.group("protocol"));
+        assertEquals("localhost", m.group("host"));
+
+        Matcher m1 = CliArgHelper.addressArgPattern.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1  ");
+        assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1  ", m1.matches());
+        assertEquals("1", m1.group("port"));
+        assertEquals("bob1", m1.group("username"));
+        assertEquals("h@rdp@ss:w0rd", m1.group("password"));
+        assertEquals("bolt://", m1.group("protocol"));
+        assertEquals("99.99.99.99", m1.group("host"));
+
+        Matcher m2 = CliArgHelper.addressArgPattern.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1");
+        assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1", m2.matches());
+        assertEquals("1", m2.group("port"));
+        assertEquals("bob1", m2.group("username"));
+        assertEquals("h@rdp@ss:w0rd", m2.group("password"));
+        assertEquals("bolt://", m2.group("protocol"));
+        assertEquals("99.99.99.99", m2.group("host"));
+
+    }
 
     @Test
     public void testHosts() {
@@ -96,13 +123,6 @@ public class AddressArgPatternTest {
         verifyUserPassHostPort("bob1", "h@rdp@ss:w0rd", "99.99.99.99", "1");
     }
 
-    @Test
-    public void testUserPassProtocolHostPort() {
-        verifyUserPassProtocolHostPort("bolt://", "bob1", "pass", "localhost", "123  ");
-        verifyUserPassProtocolHostPort("bolt://", "bob1", "h@rdp@ss:w0rd", "99.99.99.99", "1");
-        verifyUserPassProtocolHostPort("bolt://", "bob1", "h@rdp@ss:w0rd", "99.99.99.99", "1");
-    }
-
     private void verifyUserPassHostPort(String user, String pass, String host, String port) {
         String args = user + ":" + pass + "@" + host + ":" + port;
         Matcher m = CliArgHelper.addressArgPattern.matcher(args);
@@ -112,17 +132,6 @@ public class AddressArgPatternTest {
         assertEquals(user.trim(), m.group("username"));
         assertEquals(pass.trim(), m.group("password"));
         assertNull("Did not expect match for protocol group", m.group("protocol"));
-    }
-
-    private void verifyUserPassProtocolHostPort(String protocol, String user, String pass, String host, String port) {
-        String args = protocol +  user + ":" + pass + "@" + host + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-        assertEquals(protocol.trim(), m.group("protocol"));
     }
 
     private void verifyUserPassPort(String user, String pass, String port) {
