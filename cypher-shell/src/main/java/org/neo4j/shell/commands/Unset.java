@@ -1,9 +1,8 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -12,14 +11,13 @@ import java.util.List;
 import static org.neo4j.shell.CommandHelper.simpleArgParse;
 
 /**
- * Command to connect to an instance of Neo4j.
+ * This command clears a previously set variable, or does nothing in case it is already cleared.
  */
-public class Disconnect implements Command {
-    public static final String COMMAND_NAME = ":disconnect";
+public class Unset implements Command {
+    public static final String COMMAND_NAME = ":unset";
+    private final CypherShell shell;
 
-    private final Shell shell;
-
-    public Disconnect(@Nonnull final Shell shell) {
+    public Unset(@Nonnull final CypherShell shell) {
         this.shell = shell;
     }
 
@@ -32,19 +30,19 @@ public class Disconnect implements Command {
     @Nonnull
     @Override
     public String getDescription() {
-        return "Disconnect from neo4j";
+        return "Unset the value of a query parameter";
     }
 
     @Nonnull
     @Override
     public String getUsage() {
-        return "";
+        return "name";
     }
 
     @Nonnull
     @Override
     public String getHelp() {
-        return "Disconnect from neo4j without quitting the shell.";
+        return "Clear the specified query parameter, or do nothing in case it is not set";
     }
 
     @Nonnull
@@ -54,10 +52,10 @@ public class Disconnect implements Command {
     }
 
     @Override
-    public void execute(@Nonnull final String argString) throws ExitException, CommandException {
-        simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
+    public void execute(@Nonnull final String argString) throws CommandException {
+        String[] args = simpleArgParse(argString, 1, COMMAND_NAME, getUsage());
 
-        shell.disconnect();
-        shell.printOut("Disconnected");
+        shell.getQueryParams().remove(args[0]);
     }
+
 }

@@ -9,11 +9,7 @@ import org.neo4j.shell.Command;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.*;
 
 public class BeginTest {
@@ -31,10 +27,9 @@ public class BeginTest {
     @Test
     public void shouldNotAcceptArgs() throws CommandException {
         thrown.expect(CommandException.class);
-        thrown.expectMessage("Too many arguments. @|bold :begin|@ does not accept any arguments");
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
 
-        beginCommand.execute(Arrays.asList("bob"));
-        fail("should not accept args");
+        beginCommand.execute("bob");
     }
 
     @Test
@@ -44,30 +39,15 @@ public class BeginTest {
 
         when(mockShell.isConnected()).thenReturn(false);
 
-        beginCommand.execute(new ArrayList<>());
-        fail("shell is disconnected");
+        beginCommand.execute("");
     }
 
     @Test
     public void beginTransactionOnShell() throws CommandException {
         when(mockShell.isConnected()).thenReturn(true);
 
-        beginCommand.execute(new ArrayList<>());
+        beginCommand.execute("");
 
         verify(mockShell).beginTransaction();
-    }
-
-    @Test
-    public void nestedTransactionsAreNotSupported() throws CommandException {
-        when(mockShell.isConnected()).thenReturn(true);
-        CommandException expectedException = new CommandException("transaction already open");
-        doThrow(expectedException).when(mockShell).beginTransaction();
-
-        try {
-            beginCommand.execute(new ArrayList<>());
-            fail("Should throw");
-        } catch (CommandException actual) {
-            assertEquals(expectedException, actual);
-        }
     }
 }

@@ -14,6 +14,10 @@ public class StreamShell extends CypherShell {
     private final ByteArrayOutputStream errStream;
     private final ByteArrayOutputStream outStream;
 
+    public StreamShell() {
+        this("");
+    }
+
     public StreamShell(@Nonnull final String input) {
         super("bla", 99, "bob", "pass");
         in = new ByteArrayInputStream(input.getBytes());
@@ -50,5 +54,20 @@ public class StreamShell extends CypherShell {
 
     public String getErrLog() {
         return errStream.toString();
+    }
+
+    public void connect() throws CommandException {
+        connect("", 0, "", "");
+    }
+
+    @Override
+    public void connect(@Nonnull String host, int port,
+                        @Nonnull String username, @Nonnull String password) throws CommandException {
+        this.session = new TestSession();
+    }
+
+    @Override
+    public void disconnect() throws CommandException {
+        this.session = null;
     }
 }

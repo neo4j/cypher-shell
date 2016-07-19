@@ -27,5 +27,5 @@ public interface Command {
     @Nonnull
     List<String> getAliases();
 
-    void execute(@Nonnull final List<String> args) throws ExitException, CommandException;
+    void execute(@Nonnull final String args) throws ExitException, CommandException;
 }

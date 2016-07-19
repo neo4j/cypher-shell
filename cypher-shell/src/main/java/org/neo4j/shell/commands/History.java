@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.neo4j.shell.CommandHelper.simpleArgParse;
+
 /**
  * Show command history
  */
@@ -54,12 +56,8 @@ public class History implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
-        if (args.size() > 0) {
-            throw new CommandException(
-                    String.format("Too many arguments. @|bold %s|@ accepts no arguments.",
-                            COMMAND_NAME));
-        }
+    public void execute(@Nonnull String argString) throws ExitException, CommandException {
+        simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
         Optional<jline.console.history.History> possibleHistory = shell.getHistory();
 

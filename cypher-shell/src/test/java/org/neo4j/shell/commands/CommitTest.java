@@ -9,12 +9,9 @@ import org.neo4j.shell.Command;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.*;
+
 
 public class CommitTest {
     @Rule
@@ -30,43 +27,27 @@ public class CommitTest {
     @Test
     public void shouldNotAcceptArgs() throws CommandException {
         thrown.expect(CommandException.class);
-        thrown.expectMessage("Too many arguments. @|bold :commit|@ does not accept any arguments");
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
 
-        commitCommand.execute(Arrays.asList("bob"));
-        fail("should not accept args");
+        commitCommand.execute("bob");
     }
 
     @Test
-    public void throwExceptionWhenShellIsDisconnected() throws CommandException {
+    public void needsToBeConnected() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Not connected to Neo4j");
 
         when(mockShell.isConnected()).thenReturn(false);
 
-        commitCommand.execute(new ArrayList<>());
-        fail("shell is disconnected");
+        commitCommand.execute("");
     }
 
     @Test
     public void commitTransactionOnShell() throws CommandException {
         when(mockShell.isConnected()).thenReturn(true);
 
-        commitCommand.execute(new ArrayList<>());
+        commitCommand.execute("");
 
         verify(mockShell).commitTransaction();
-    }
-
-    @Test
-    public void closingWhenNoTXOpenShouldThrow() throws CommandException {
-        when(mockShell.isConnected()).thenReturn(true);
-        CommandException expectedException = new CommandException("no open transaction");
-        doThrow(expectedException).when(mockShell).commitTransaction();
-
-        try {
-            commitCommand.execute(new ArrayList<>());
-            fail("Can't commit when no tx is open!");
-        } catch (CommandException actual) {
-            assertEquals(expectedException, actual);
-        }
     }
 }

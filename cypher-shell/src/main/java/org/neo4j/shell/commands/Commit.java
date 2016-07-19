@@ -9,6 +9,8 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.neo4j.shell.CommandHelper.simpleArgParse;
+
 /**
  * This command marks a transaction as successful and closes it.
  */
@@ -51,12 +53,8 @@ public class Commit implements Command {
     }
 
     @Override
-    public void execute(@Nonnull List<String> args) throws ExitException, CommandException {
-        if (!args.isEmpty()) {
-            throw new CommandException(
-                    String.format("Too many arguments. @|bold %s|@ does not accept any arguments",
-                            COMMAND_NAME));
-        }
+    public void execute(@Nonnull final String argString) throws ExitException, CommandException {
+        simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
         if (!shell.isConnected()) {
             throw new CommandException("Not connected to Neo4j");

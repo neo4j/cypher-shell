@@ -1,10 +1,12 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.commands.*;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.DuplicateCommandException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +28,9 @@ public class CommandHelper {
         registerCommand(new Begin(cypherShell));
         registerCommand(new Commit(cypherShell));
         registerCommand(new Rollback(cypherShell));
+        registerCommand(new Set(cypherShell));
+        registerCommand(new Env(cypherShell));
+        registerCommand(new Unset(cypherShell));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {
@@ -63,9 +68,36 @@ public class CommandHelper {
         return commands.values().stream().distinct().collect(Collectors.toList());
     }
 
-    private class DuplicateCommandException extends RuntimeException {
-        public DuplicateCommandException(String s) {
-            super(s);
+    /**
+     * Split an argument string on whitespace
+     */
+    @Nonnull
+    public static String[] simpleArgParse(@Nonnull final String argString, int expectedCount,
+                                          @Nonnull final String commandName, @Nonnull final String usage)
+            throws CommandException {
+        return simpleArgParse(argString, expectedCount, expectedCount, commandName, usage);
+    }
+
+    /**
+     * Split an argument string on whitespace
+     */
+    @Nonnull
+    public static String[] simpleArgParse(@Nonnull final String argString, int minCount, int maxCount,
+                                          @Nonnull final String commandName, @Nonnull final String usage)
+            throws CommandException {
+        final String[] args;
+        if (argString.trim().isEmpty()) {
+            args = new String[] {};
+        } else {
+            args = argString.trim().split("\\s+");
         }
+
+        if (args.length < minCount || args.length > maxCount) {
+            throw new CommandException(
+                    String.format("Incorrect number of arguments.\nusage: @|bold %s|@ %s",
+                            commandName, usage));
+        }
+
+        return args;
     }
 }

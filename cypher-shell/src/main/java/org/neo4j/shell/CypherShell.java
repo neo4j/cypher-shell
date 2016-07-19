@@ -19,14 +19,17 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
 /**
  * A possibly interactive shell for evaluating cypher statements.
@@ -36,7 +39,8 @@ public class CypherShell implements Shell {
     protected PrintStream out = System.out;
     protected PrintStream err = System.err;
 
-    protected static final String COMMENT_PREFIX = "//";
+    // Final space to catch newline
+    protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     protected final CommandHelper commandHelper;
     protected final String host;
     protected final int port;
@@ -46,6 +50,7 @@ public class CypherShell implements Shell {
     protected Session session;
     protected ShellRunner runner = null;
     protected Transaction tx = null;
+    protected final Map<String, Object> queryParams = new HashMap<>();
 
     public CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
         super();
@@ -71,7 +76,7 @@ public class CypherShell implements Shell {
             exitCode = e.getCode();
         } catch (ClientException e) {
             // When connect throws
-            printError(BoltHelper.getSensibleMsg(e));
+            printError(getSensibleMsg(e));
             exitCode = 1;
         } catch (Throwable t) {
             printError(t.getMessage());
@@ -84,13 +89,9 @@ public class CypherShell implements Shell {
     @Override
     public void executeLine(@Nonnull final String line) throws ExitException, CommandException {
         // See if it's a shell command
-        CommandExecutable cmd = getCommandExecutable(line);
-        if (cmd != null) {
-            executeCmd(cmd);
-            return;
-        }
-        // Comments and empty lines have to be ignored (Bolt throws errors on "empty" lines)
-        if (line.isEmpty() || line.startsWith(COMMENT_PREFIX)) {
+        Optional<CommandExecutable> cmd = getCommandExecutable(line);
+        if (cmd.isPresent()) {
+            executeCmd(cmd.get());
             return;
         }
 
@@ -121,9 +122,9 @@ public class CypherShell implements Shell {
     void executeCypher(@Nonnull final String cypher) {
         final StatementResult result;
         if (tx != null) {
-            result = tx.run(cypher);
+            result = tx.run(cypher, queryParams);
         } else {
-            result = session.run(cypher);
+            result = session.run(cypher, queryParams);
         }
 
         printOut(PrettyPrinter.format(result));
@@ -133,27 +134,23 @@ public class CypherShell implements Shell {
         return session != null && session.isOpen();
     }
 
-    @Nullable
-    CommandExecutable getCommandExecutable(@Nonnull final String line) {
-        String[] parts = line.trim().split("\\s");
-
-        if (parts.length < 1) {
-            return null;
+    @Nonnull
+    Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
+        Matcher m = cmdNamePattern.matcher(line);
+        if (!m.matches()) {
+            return Optional.empty();
         }
 
-        String name = parts[0];
+        String name = m.group("name");
+        String args = m.group("args");
 
         Command cmd = commandHelper.getCommand(name);
 
-        if (cmd != null) {
-            List<String> args = new ArrayList<>();
-            for (int i = 1; i < parts.length; i++) {
-                args.add(parts[i]);
-            }
-            return () -> cmd.execute(args);
+        if (cmd == null) {
+            return Optional.empty();
         }
 
-        return null;
+        return Optional.of(() -> cmd.execute(args));
     }
 
     void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
@@ -317,5 +314,23 @@ public class CypherShell implements Shell {
         tx.failure();
         tx.close();
         tx = null;
+    }
+
+    @Nonnull
+    public Map<String, Object> getQueryParams() {
+        return queryParams;
+    }
+
+    /**
+     * Run a cypher statement, and return the result. Is not stored in history.
+     */
+    public StatementResult doCypherSilently(@Nonnull final String cypher) {
+        final StatementResult result;
+        if (tx != null) {
+            result = tx.run(cypher, queryParams);
+        } else {
+            result = session.run(cypher, queryParams);
+        }
+        return result;
     }
 }
