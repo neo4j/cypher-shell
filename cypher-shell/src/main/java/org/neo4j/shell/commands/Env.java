@@ -51,16 +51,14 @@ public class Env implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return Arrays.asList();
+        return Collections.EMPTY_LIST;
     }
 
     @Override
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        List<String> keys = shell.getQueryParams().keySet().stream().collect(Collectors.toList());
-
-        Collections.sort(keys);
+        List<String> keys = shell.getQueryParams().keySet().stream().sorted().collect(Collectors.toList());
 
         int leftColWidth = 0;
         // Get longest name for alignment
