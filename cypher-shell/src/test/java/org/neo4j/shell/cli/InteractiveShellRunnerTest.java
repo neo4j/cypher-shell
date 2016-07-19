@@ -12,7 +12,7 @@ public class InteractiveShellRunnerTest {
         StreamShell shell = new StreamShell("good1\n" +
                 "good2\n");
         InteractiveShellRunner runner = new InteractiveShellRunner(shell);
-        runner.run();
+        runner.runUntilEnd();
 
         assertThat(shell.getErrLog(), is(""));
     }

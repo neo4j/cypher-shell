@@ -16,7 +16,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();
@@ -34,7 +34,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();
@@ -50,7 +50,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();
@@ -69,7 +69,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();
@@ -84,7 +84,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // then
         assertNull(commandReader.readCommand());
@@ -96,7 +96,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // then
         assertThat(commandReader.readCommand(), is("\n"));
@@ -109,7 +109,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();
@@ -125,7 +125,7 @@ public class CommandReaderTest {
         ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
                 streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell);
+        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
 
         // when
         String actual = commandReader.readCommand();

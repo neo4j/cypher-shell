@@ -1,14 +1,14 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.cli.CommandReader;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.neo4j.shell.CommandHelper.simpleArgParse;
 
@@ -18,11 +18,13 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
 public class History implements Command {
     private static final String COMMAND_NAME = ":history";
 
-    private final Shell shell;
+    private final Logger logger;
     private final List<String> aliases = new ArrayList<>();
+    private final CommandReader commandReader;
 
-    public History(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public History(@Nonnull final Logger logger, @Nonnull final CommandReader commandReader) {
+        this.logger = logger;
+        this.commandReader = commandReader;
     }
 
     @Nonnull
@@ -59,20 +61,10 @@ public class History implements Command {
     public void execute(@Nonnull String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        Optional<jline.console.history.History> possibleHistory = shell.getHistory();
-
-        if (!possibleHistory.isPresent()) {
-            // Nothing to print
-            return;
-        }
-
-        jline.console.history.History history = possibleHistory.get();
-
-
         // Calculate starting position
         int lineCount = 16;
 
-        shell.printOut(printHistory(history, lineCount));
+        logger.printOut(printHistory(commandReader.getHistory(), lineCount));
     }
 
     /**
@@ -80,8 +72,8 @@ public class History implements Command {
      *
      * @param lineCount number of entries to print
      */
-    private String printHistory(@Nonnull final jline.console.history.History history, final int lineCount) {
-        // for alignment
+    private String printHistory(@Nonnull final List<String> history, final int lineCount) {
+        // for alignment, check the string length of history size
         int colWidth = Integer.toString(history.size()).length();
         String fmt = " %-" + colWidth + "d  %s\n";
 
@@ -89,7 +81,7 @@ public class History implements Command {
         int count = 0;
 
         for (int i = history.size() - 1; i >= 0 && count < lineCount; i--, count++) {
-            String line = String.valueOf(history.get(i));
+            String line = history.get(i);
             // Executing old commands with !N actually starts from 1, and not 0, hence increment index by one
             result = String.format(fmt, i + 1, line) + result;
         }

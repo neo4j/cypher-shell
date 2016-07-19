@@ -1,16 +1,12 @@
 package org.neo4j.shell.cli;
 
-import jline.console.ConsoleReader;
-import jline.console.history.History;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.CommandExecuter;
 import org.neo4j.shell.ShellRunner;
-import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.IOException;
 
 import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
@@ -21,64 +17,53 @@ import static org.neo4j.shell.BoltHelper.getSensibleMsg;
  */
 public class NonInteractiveShellRunner implements ShellRunner {
 
-    private final Shell shell;
     private final CliArgHelper.FailBehavior failBehavior;
     private final CommandReader commandReader;
+    private final Logger logger;
 
-    public NonInteractiveShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
-        super();
-        failBehavior = cliArgs.getFailBehavior();
-        this.shell = shell;
-        ConsoleReader reader = new ConsoleReader(shell.getInputStream(), shell.getOutputStream());
-        this.commandReader = new CommandReader(reader, this.shell);
+    public NonInteractiveShellRunner(@Nonnull CliArgHelper.FailBehavior failBehavior,
+                                     @Nonnull CommandReader commandReader,
+                                     @Nonnull Logger logger) {
+        this.failBehavior = failBehavior;
+        this.logger = logger;
+        this.commandReader = commandReader;
     }
 
     @Override
-    public void run() throws CommandException, IOException {
+    public int runUntilEnd(@Nonnull CommandExecuter executer) {
         String command;
         boolean running = true;
-        boolean errorOccurred = false;
+        int exitCode = 0;
         while (running) {
-            command = commandReader.readCommand();
-
             try {
+                command = commandReader.readCommand();
                 if (null == command) {
                     running = false;
                     continue;
                 }
 
                 if (!command.trim().isEmpty()) {
-                    shell.executeLine(command);
+                    executer.execute(command);
                 }
             } catch (ExitException e) {
                 // These exceptions are always fatal
-                throw e;
+                exitCode = 1;
+                running = false;
             } catch (ClientException e) {
-                errorOccurred = true;
-                if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
-                    shell.printError(getSensibleMsg(e));
-                } else {
-                    throw e;
+                exitCode = 1;
+                logger.printError(getSensibleMsg(e));
+                if (CliArgHelper.FailBehavior.FAIL_AT_END != failBehavior) {
+                    running = false;
                 }
             } catch (Throwable t) {
-                errorOccurred = true;
-                if (CliArgHelper.FailBehavior.FAIL_AT_END == failBehavior) {
-                    shell.printError(t.getMessage());
-                } else {
-                    throw t;
+                exitCode = 1;
+                logger.printError(t.getMessage());
+                if (CliArgHelper.FailBehavior.FAIL_AT_END != failBehavior) {
+                    running = false;
                 }
             }
         }
 
-        // End of input, in case of error, set correct exit code
-        if (errorOccurred) {
-            throw new ExitException(1);
-        }
-    }
-
-    @Nullable
-    @Override
-    public History getHistory() {
-        return null;
+        return exitCode;
     }
 }

@@ -1,22 +1,14 @@
 package org.neo4j.shell;
 
-import jline.console.history.History;
-import org.fusesource.jansi.AnsiRenderer;
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
-import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.cli.CliArgHelper;
-import org.neo4j.shell.cli.InteractiveShellRunner;
-import org.neo4j.shell.cli.NonInteractiveShellRunner;
-import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.Disconnect;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -26,64 +18,31 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.isatty;
-import static org.neo4j.shell.BoltHelper.getSensibleMsg;
-
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements Shell {
-    private final ConnectionConfig connectionConfig;
+public class CypherShell implements Shell, CommandExecuter, Connector, TransactionHandler, VariableHolder {
+    private final Logger logger;
     protected InputStream in = System.in;
     protected PrintStream out = System.out;
     protected PrintStream err = System.err;
 
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
-    protected final CommandHelper commandHelper;
+    protected CommandHelper commandHelper;
     protected Driver driver;
     protected Session session;
-    protected ShellRunner runner = null;
     protected Transaction tx = null;
     protected final Map<String, Object> queryParams = new HashMap<>();
 
-    public CypherShell(@Nonnull ConnectionConfig connectionConfig) {
-        super();
-        this.connectionConfig = connectionConfig;
-
-        commandHelper = new CommandHelper(this);
-    }
-
-    public int run(@Nonnull CliArgHelper.CliArgs cliArgs) {
-        int exitCode;
-
-        try {
-            connect(connectionConfig);
-
-            runner = getShellRunner(cliArgs);
-            runner.run();
-
-            exitCode = 0;
-        } catch (ExitException e) {
-            exitCode = e.getCode();
-        } catch (ClientException e) {
-            // When connect throws
-            printError(getSensibleMsg(e));
-            exitCode = 1;
-        } catch (Throwable t) {
-            printError(t.getMessage());
-            exitCode = 1;
-        }
-
-        return exitCode;
+    public CypherShell(@Nonnull Logger logger) {
+        this.logger = logger;
     }
 
     @Override
-    public void executeLine(@Nonnull final String line) throws ExitException, CommandException {
+    public void execute(@Nonnull final String cmdString) throws ExitException, CommandException {
         // See if it's a shell command
-        Optional<CommandExecutable> cmd = getCommandExecutable(line);
+        Optional<CommandExecutable> cmd = getCommandExecutable(cmdString);
         if (cmd.isPresent()) {
             executeCmd(cmd.get());
             return;
@@ -91,21 +50,11 @@ public class CypherShell implements Shell {
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
-            printError("Not connected to Neo4j");
+            logger.printError("Not connected to Neo4j");
             return;
         }
 
-        executeCypher(line);
-    }
-
-    @Nonnull
-    @Override
-    public Optional<History> getHistory() {
-        if (runner == null) {
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(runner.getHistory());
-        }
+        executeCypher(cmdString);
     }
 
     /**
@@ -122,7 +71,7 @@ public class CypherShell implements Shell {
             result = session.run(cypher, queryParams);
         }
 
-        printOut(PrettyPrinter.format(result));
+        logger.printOut(PrettyPrinter.format(result));
     }
 
     @Override
@@ -133,7 +82,7 @@ public class CypherShell implements Shell {
     @Nonnull
     Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         Matcher m = cmdNamePattern.matcher(line);
-        if (!m.matches()) {
+        if (commandHelper == null || !m.matches()) {
             return Optional.empty();
         }
 
@@ -159,7 +108,7 @@ public class CypherShell implements Shell {
      * @param connectionConfig
      */
     @Override
-    public void connect(ConnectionConfig connectionConfig) throws CommandException {
+    public void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException {
         if (isConnected()) {
             throw new CommandException(String.format("Already connected. Call @|bold %s|@ first.",
                     Disconnect.COMMAND_NAME));
@@ -171,7 +120,6 @@ public class CypherShell implements Shell {
         } else if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
             authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
         } else if (connectionConfig.username().isEmpty()) {
-            //TODO PRAVEENA : When does this get called?
             throw new CommandException("Specified password but no username");
         } else {
             throw new CommandException("Specified username but no password");
@@ -182,7 +130,7 @@ public class CypherShell implements Shell {
             driver = GraphDatabase.driver(connectionConfig.driverUrl(), authToken, Config.build()
                     .withLogging(new ConsoleLogging(Level.OFF)).toConfig());
             session = driver.session();
-            // Bug in Java driver forces us to run a statement to make it actually connect
+            // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
             silentDisconnect();
@@ -215,39 +163,6 @@ public class CypherShell implements Shell {
         silentDisconnect();
     }
 
-    @Nonnull
-    public CommandHelper getCommandHelper() {
-        return commandHelper;
-    }
-
-    @Override
-    @Nonnull
-    public String prompt() {
-        return AnsiRenderer.render("@|bold neo4j>|@ ");
-    }
-
-    @Override
-    @Nullable
-    public Character promptMask() {
-        // If STDIN is a TTY, then echo what user types
-        if (isInteractive()) {
-            return null;
-        } else {
-            // Suppress echo
-            return 0;
-        }
-    }
-
-    @Override
-    public void printOut(@Nonnull final String msg) {
-        out.println(ansi().render(msg));
-    }
-
-    @Override
-    public void printError(@Nonnull final String msg) {
-        err.println(ansi().render(msg));
-    }
-
     @Override
     @Nonnull
     public InputStream getInputStream() {
@@ -258,30 +173,6 @@ public class CypherShell implements Shell {
     @Nonnull
     public PrintStream getOutputStream() {
         return out;
-    }
-
-    /**
-     * @return true if the shell is a TTY, false otherwise (e.g., we are reading from a file)
-     */
-    private boolean isInteractive() {
-        return 1 == isatty(STDIN_FILENO);
-    }
-
-    /**
-     * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
-     *
-     * @param cliArgs
-     * @return a ShellRunner
-     * @throws IOException
-     */
-    protected ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
-        if (cliArgs.getCypher().isPresent()) {
-            return new StringShellRunner(this, cliArgs);
-        } else if (isInteractive()) {
-            return new InteractiveShellRunner(this);
-        } else {
-            return new NonInteractiveShellRunner(this, cliArgs);
-        }
     }
 
     @Nonnull
@@ -318,16 +209,25 @@ public class CypherShell implements Shell {
         tx = null;
     }
 
-    @Nonnull
     @Override
-    public Map<String, Object> getQueryParams() {
+    @Nonnull
+    public Optional set(@Nonnull String name, @Nonnull String valueString) {
+        Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
+        Object value = record.get(name).asObject();
+        queryParams.put(name, value);
+        return Optional.ofNullable(value);
+    }
+
+    @Override
+    @Nonnull
+    public Map<String, Object> getAll() {
         return queryParams;
     }
 
     @Override
-    public void set(@Nonnull String name, String valueString) {
-        Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
-        getQueryParams().put(name, record.get(name).asObject());
+    @Nonnull
+    public Optional remove(@Nonnull String name) {
+        return Optional.ofNullable(queryParams.remove(name));
     }
 
     /**
@@ -341,5 +241,9 @@ public class CypherShell implements Shell {
             result = session.run(cypher, queryParams);
         }
         return result;
+    }
+
+    public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
+        this.commandHelper = commandHelper;
     }
 }

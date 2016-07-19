@@ -1,15 +1,14 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import static org.neo4j.shell.CommandHelper.simpleArgParse;
@@ -19,10 +18,12 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Env implements Command {
     public static final String COMMAND_NAME = ":env";
-    private final Shell shell;
+    private final Logger logger;
+    private final VariableHolder variableHolder;
 
-    public Env(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Env(@Nonnull Logger logger, @Nonnull VariableHolder variableHolder) {
+        this.logger = logger;
+        this.variableHolder = variableHolder;
     }
 
     @Nonnull
@@ -59,13 +60,12 @@ public class Env implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        List<String> keys = shell.getQueryParams().keySet().stream().sorted().collect(Collectors.toList());
+        List<String> keys = variableHolder.getAll().keySet().stream().sorted().collect(Collectors.toList());
 
         int leftColWidth = getMaxLeftColumnWidth(keys);
 
-        keys.stream().forEach(k -> {
-            shell.printOut(String.format("%-" + leftColWidth + "s: %s", k, shell.getQueryParams().get(k)));
-        });
+        keys.stream().forEach(k -> logger.printOut(String.format("%-" + leftColWidth + "s: %s", k,
+                variableHolder.getAll().get(k))));
     }
 
     private static int getMaxLeftColumnWidth(List<String> keys) {

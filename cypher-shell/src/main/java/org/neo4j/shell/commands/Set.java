@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * This command sets a variable to a name, for use as query parameter.
  */
@@ -17,10 +18,10 @@ public class Set implements Command {
     // Match arguments such as "(key) (value with possible spaces)" where key and value are any strings
     private static final Pattern argPattern = Pattern.compile("^\\s*(?<key>[^\\s]+)\\s+(?<value>.+)$");
     public static final String COMMAND_NAME = ":set";
-    private final Shell shell;
+    private final VariableHolder variableHolder;
 
-    public Set(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Set(@Nonnull final VariableHolder variableHolder) {
+        this.variableHolder = variableHolder;
     }
 
     @Nonnull
@@ -63,10 +64,6 @@ public class Set implements Command {
                             COMMAND_NAME, getUsage()));
         }
 
-        if (!shell.isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-
-        shell.set(m.group("key"), m.group("value"));
+        variableHolder.set(m.group("key"), m.group("value"));
     }
 }

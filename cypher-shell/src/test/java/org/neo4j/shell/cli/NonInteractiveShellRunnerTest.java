@@ -20,7 +20,7 @@ public class NonInteractiveShellRunnerTest {
                         "good2\n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
                 CliArgHelper.parse(asArray("--fail-fast")));
-        runner.run();
+        runner.runUntilEnd();
 
         assertThat(shell.getErrLog(), is(""));
     }
@@ -34,7 +34,7 @@ public class NonInteractiveShellRunnerTest {
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
                 CliArgHelper.parse(asArray("--fail-fast")));
         try {
-            runner.run();
+            runner.runUntilEnd();
             fail("Expected an exception to be thrown");
         } catch (ClientException e) {
             assertEquals(e.getMessage(), "Found a bad line");
@@ -53,7 +53,7 @@ public class NonInteractiveShellRunnerTest {
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(shell,
                 CliArgHelper.parse(asArray("--fail-at-end")));
         try {
-            runner.run();
+            runner.runUntilEnd();
             fail("Expected an exit code to be set");
         } catch (ExitException e) {
             assertEquals("Wrong exit code", 1, e.getCode());

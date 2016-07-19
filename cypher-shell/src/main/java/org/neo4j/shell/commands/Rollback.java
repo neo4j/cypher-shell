@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -16,10 +16,10 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Rollback implements Command {
     public static final String COMMAND_NAME = ":rollback";
-    private final Shell shell;
+    private final TransactionHandler transactionHandler;
 
-    public Rollback(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Rollback(@Nonnull final TransactionHandler transactionHandler) {
+        this.transactionHandler = transactionHandler;
     }
 
     @Nonnull
@@ -56,10 +56,6 @@ public class Rollback implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        if (!shell.isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-
-        shell.rollbackTransaction();
+        transactionHandler.rollbackTransaction();
     }
 }

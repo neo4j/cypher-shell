@@ -1,9 +1,10 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.Connector;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -16,11 +17,12 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Disconnect implements Command {
     public static final String COMMAND_NAME = ":disconnect";
+    private final Logger logger;
+    private final Connector connector;
 
-    private final Shell shell;
-
-    public Disconnect(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Disconnect(@Nonnull final Logger logger, @Nonnull final Connector connector) {
+        this.logger = logger;
+        this.connector = connector;
     }
 
     @Nonnull
@@ -57,7 +59,7 @@ public class Disconnect implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        shell.disconnect();
-        shell.printOut("Disconnected");
+        connector.disconnect();
+        logger.printOut("Disconnected");
     }
 }

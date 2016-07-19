@@ -2,8 +2,8 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
 import org.neo4j.shell.CommandHelper;
-import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -16,10 +16,12 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Help implements Command {
     public static final String COMMAND_NAME = ":help";
-    private final Shell shell;
+    private final Logger logger;
+    private final CommandHelper commandHelper;
 
-    public Help(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Help(@Nonnull final Logger shell, @Nonnull final CommandHelper commandHelper) {
+        this.logger = shell;
+        this.commandHelper = commandHelper;
     }
 
     @Nonnull
@@ -63,8 +65,6 @@ public class Help implements Command {
     }
 
     private void printHelpFor(@Nonnull final String name) throws CommandException {
-        CommandHelper commandHelper = shell.getCommandHelper();
-
         Command cmd = commandHelper.getCommand(name);
         if (cmd == null && !name.startsWith(":")) {
             // Be friendly to users and don't force them to type colons for help if possible
@@ -75,14 +75,12 @@ public class Help implements Command {
             throw new CommandException(String.format("No such command: @|bold %s|@", name));
         }
 
-        shell.printOut(String.format("\nusage: @|bold %s|@ %s\n\n%s\n",
+        logger.printOut(String.format("\nusage: @|bold %s|@ %s\n\n%s\n",
                 cmd.getName(), cmd.getUsage(), cmd.getHelp()));
     }
 
     private void printGeneralHelp() {
-        CommandHelper commandHelper = shell.getCommandHelper();
-
-        shell.printOut("\nAvailable commands:");
+        logger.printOut("\nAvailable commands:");
 
         // Get longest command so we can align them nicely
         List<Command> allCommands = commandHelper.getAllCommands();
@@ -90,12 +88,12 @@ public class Help implements Command {
         int leftColWidth = longestCmdLength(allCommands);
 
         allCommands.stream().forEach(cmd -> {
-            shell.printOut(String.format("  @|bold %-" + leftColWidth + "s|@ %s",
+            logger.printOut(String.format("  @|bold %-" + leftColWidth + "s|@ %s",
                     cmd.getName(), cmd.getDescription()));
         });
 
-        shell.printOut("\nFor help on a specific command type:");
-        shell.printOut(String.format("    %s @|bold command|@\n", COMMAND_NAME));
+        logger.printOut("\nFor help on a specific command type:");
+        logger.printOut(String.format("    %s @|bold command|@\n", COMMAND_NAME));
     }
 
     private int longestCmdLength(List<Command> allCommands) {
