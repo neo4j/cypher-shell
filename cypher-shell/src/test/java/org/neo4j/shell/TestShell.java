@@ -11,10 +11,6 @@ public class TestShell extends CypherShell {
         super("", 1, "", "");
     }
 
-    public void connect() throws CommandException {
-        connect("", 0, "", "");
-    }
-
     @Override
     public void connect(@Nonnull String host, int port,
                         @Nonnull String username, @Nonnull String password) throws CommandException {
