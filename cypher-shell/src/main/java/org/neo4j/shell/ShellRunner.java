@@ -8,12 +8,12 @@ import org.neo4j.shell.exception.ExitException;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
-public abstract class ShellRunner {
+public interface ShellRunner {
     /**
      * Run and handle user input until end of file
      */
-    abstract public void run() throws IOException, ExitException, ClientException, CommandException;
+    void run() throws IOException, ExitException, ClientException, CommandException;
 
     @Nullable
-    public abstract History getHistory();
+    History getHistory();
 }

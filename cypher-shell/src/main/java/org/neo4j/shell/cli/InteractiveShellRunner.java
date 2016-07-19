@@ -5,7 +5,6 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.BoltHelper;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
@@ -22,7 +21,7 @@ import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 /**
  * An interactive shell
  */
-public class InteractiveShellRunner extends ShellRunner {
+public class InteractiveShellRunner implements ShellRunner {
     private final Shell shell;
     private final MemoryHistory history;
     private final CommandReader commandReader;

@@ -19,7 +19,7 @@ import static org.neo4j.shell.BoltHelper.getSensibleMsg;
  * A shell runner which reads from STDIN and executes commands until completion. In case of errors, the failBehavior
  * determines if the shell exits immediately, or if it should keep trying the next commands.
  */
-public class NonInteractiveShellRunner extends ShellRunner {
+public class NonInteractiveShellRunner implements ShellRunner {
 
     private final Shell shell;
     private final CliArgHelper.FailBehavior failBehavior;

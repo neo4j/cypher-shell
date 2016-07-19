@@ -15,7 +15,7 @@ import java.util.Optional;
 /**
  * A shell runner which executes a single String and exits afterward. Any errors will throw immediately.
  */
-public class StringShellRunner extends ShellRunner {
+public class StringShellRunner implements ShellRunner {
     private final Shell shell;
     private final String cypher;
 
