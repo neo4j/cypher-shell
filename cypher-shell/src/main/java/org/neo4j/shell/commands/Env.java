@@ -6,9 +6,10 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import static org.neo4j.shell.CommandHelper.simpleArgParse;
@@ -60,16 +61,15 @@ public class Env implements Command {
 
         List<String> keys = shell.getQueryParams().keySet().stream().sorted().collect(Collectors.toList());
 
-        int leftColWidth = 0;
-        // Get longest name for alignment
-        for (String k : keys) {
-            if (k.length() > leftColWidth) {
-                leftColWidth = k.length();
-            }
-        }
+        int leftColWidth = getMaxLeftColumnWidth(keys);
 
-        for (String k : keys) {
+        keys.stream().forEach(k -> {
             shell.printOut(String.format("%-" + leftColWidth + "s: %s", k, shell.getQueryParams().get(k)));
-        }
+        });
+    }
+
+    private static int getMaxLeftColumnWidth(List<String> keys) {
+        String reduce = keys.stream().reduce("", (s1, s2) -> s1.length() > s2.length() ? s1 : s2);
+        return reduce.length();
     }
 }

@@ -9,6 +9,7 @@ import org.neo4j.shell.Command;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Matchers.anyInt;

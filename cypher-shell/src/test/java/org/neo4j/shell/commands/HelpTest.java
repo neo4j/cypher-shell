@@ -6,12 +6,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
+import org.neo4j.shell.CommandHelper;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class HelpTest {
 

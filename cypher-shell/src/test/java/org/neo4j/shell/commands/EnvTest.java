@@ -7,6 +7,8 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.shell.StreamShell;
 import org.neo4j.shell.exception.CommandException;
 
+import java.util.Arrays;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
