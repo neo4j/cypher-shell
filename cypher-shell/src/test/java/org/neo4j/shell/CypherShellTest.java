@@ -9,9 +9,7 @@ import org.neo4j.shell.exception.CommandException;
 import java.io.IOException;
 import java.util.Optional;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-import static junit.framework.TestCase.fail;
+import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertFalse;
 
 
@@ -139,7 +137,7 @@ public class CypherShellTest {
 
     private TestShell connectedShell() throws CommandException {
         TestShell shell = new TestShell();
-        shell.connect("bla", 99, "bob", "pass");
+        shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
         return shell;
     }
 }

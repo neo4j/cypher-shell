@@ -39,8 +39,7 @@ public interface Shell {
 
     boolean isConnected();
 
-    void connect(@Nonnull String host, int port, @Nonnull String username,
-                 @Nonnull String password) throws CommandException;
+    void connect(ConnectionConfig connectionConfig) throws CommandException;
 
     void disconnect() throws CommandException;
 

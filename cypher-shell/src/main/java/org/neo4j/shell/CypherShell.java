@@ -35,6 +35,7 @@ import static org.neo4j.shell.BoltHelper.getSensibleMsg;
  * A possibly interactive shell for evaluating cypher statements.
  */
 public class CypherShell implements Shell {
+    private final ConnectionConfig connectionConfig;
     protected InputStream in = System.in;
     protected PrintStream out = System.out;
     protected PrintStream err = System.err;
@@ -42,22 +43,15 @@ public class CypherShell implements Shell {
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     protected final CommandHelper commandHelper;
-    protected final String host;
-    protected final int port;
-    protected final String username;
-    protected final String password;
     protected Driver driver;
     protected Session session;
     protected ShellRunner runner = null;
     protected Transaction tx = null;
     protected final Map<String, Object> queryParams = new HashMap<>();
 
-    public CypherShell(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
+    public CypherShell(@Nonnull ConnectionConfig connectionConfig) {
         super();
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
+        this.connectionConfig = connectionConfig;
 
         commandHelper = new CommandHelper(this);
     }
@@ -66,7 +60,7 @@ public class CypherShell implements Shell {
         int exitCode;
 
         try {
-            connect(host, port, username, password);
+            connect(connectionConfig);
 
             runner = getShellRunner(cliArgs);
             runner.run();
@@ -161,21 +155,23 @@ public class CypherShell implements Shell {
 
     /**
      * Open a session to Neo4j
+     *
+     * @param connectionConfig
      */
     @Override
-    public void connect(@Nonnull final String host, final int port, @Nonnull final String username,
-                        @Nonnull final String password) throws CommandException {
+    public void connect(ConnectionConfig connectionConfig) throws CommandException {
         if (isConnected()) {
             throw new CommandException(String.format("Already connected. Call @|bold %s|@ first.",
                     Disconnect.COMMAND_NAME));
         }
 
         final AuthToken authToken;
-        if (username.isEmpty() && password.isEmpty()) {
+        if (connectionConfig.username().isEmpty() && connectionConfig.password().isEmpty()) {
             authToken = null;
-        } else if (!username.isEmpty() && !password.isEmpty()) {
-            authToken = AuthTokens.basic(username, password);
-        } else if (username.isEmpty()) {
+        } else if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
+            authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
+        } else if (connectionConfig.username().isEmpty()) {
+            //TODO PRAVEENA : When does this get called?
             throw new CommandException("Specified password but no username");
         } else {
             throw new CommandException("Specified username but no password");
@@ -183,8 +179,8 @@ public class CypherShell implements Shell {
 
         try {
             // TODO: 6/23/16 Expose some connection config functionality via cmdline arguments
-            driver = GraphDatabase.driver(String.format("bolt://%s:%d", host, port),
-                    authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
+            driver = GraphDatabase.driver(connectionConfig.driverUrl(), authToken, Config.build()
+                    .withLogging(new ConsoleLogging(Level.OFF)).toConfig());
             session = driver.session();
             // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();

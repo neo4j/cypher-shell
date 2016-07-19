@@ -4,6 +4,7 @@ package org.neo4j.shell.cli;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.SimpleShell;
 import org.neo4j.shell.exception.CommandException;
 
@@ -54,6 +55,6 @@ public class StringShellRunnerTest {
     }
 
     private void connectShell() throws CommandException {
-        shell.connect("bla", 99, "bob", "pass");
+        shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
     }
 }

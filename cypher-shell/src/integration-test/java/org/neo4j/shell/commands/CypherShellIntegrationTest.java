@@ -5,6 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.Command;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.exception.CommandException;
 
@@ -12,14 +13,14 @@ import static junit.framework.TestCase.assertTrue;
 
 public class CypherShellIntegrationTest {
 
-    private CypherShell shell = new CypherShell("localhost", 7687, "neo4j", "neo");
+    private CypherShell shell = new CypherShell(new ConnectionConfig("localhost", 7687, "neo4j", "neo"));
     private Command rollbackCommand = new Rollback(shell);
     private Command commitCommand = new Commit(shell);
     private Command beginCommand = new Begin(shell);
 
     @Before
     public void setUp() throws Exception {
-        shell.connect("localhost", 7687, "", "");
+        shell.connect(new ConnectionConfig("localhost", 7687, "neo4j", "neo"));
     }
 
     @After

@@ -1,6 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Shell;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.exception.CommandException;
@@ -68,8 +69,8 @@ public class Connect implements Command {
         if (args.length == 1) {
             Matcher m = CliArgHelper.addressArgPattern.matcher(args[0]);
             if (!m.matches()) {
-                 throw new CommandException(String.format("Could not parse @|bold %s|@\nusage: @|bold %s|@ %s",
-                         args[0], COMMAND_NAME, getUsage()));
+                throw new CommandException(String.format("Could not parse @|bold %s|@\nusage: @|bold %s|@ %s",
+                        args[0], COMMAND_NAME, getUsage()));
             }
 
             if (null != m.group("protocol") && !"bolt://".equalsIgnoreCase(m.group("protocol"))) {
@@ -92,7 +93,7 @@ public class Connect implements Command {
             }
         }
 
-        shell.connect(host, port, username, password);
+        shell.connect(new ConnectionConfig(host, port, username, password));
         shell.printOut("Connected to neo4j at @|bold " + host + ":" + port + "|@");
     }
 }
