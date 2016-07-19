@@ -286,8 +286,8 @@ public class CypherShell implements Shell {
     }
 
     @Nonnull
-    //TODO:DELETE IT - PRAVEENA
-    public Optional<Transaction> getCurrentTransaction() {
+        //TODO:DELETE IT - PRAVEENA
+    Optional<Transaction> getCurrentTransaction() {
         return Optional.ofNullable(tx);
     }
 
