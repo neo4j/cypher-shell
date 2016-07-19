@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -18,9 +18,9 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Env implements Command {
     public static final String COMMAND_NAME = ":env";
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Env(@Nonnull final CypherShell shell) {
+    public Env(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 
@@ -64,13 +64,13 @@ public class Env implements Command {
 
         int leftColWidth = 0;
         // Get longest name for alignment
-        for (String k: keys) {
+        for (String k : keys) {
             if (k.length() > leftColWidth) {
                 leftColWidth = k.length();
             }
         }
 
-        for (String k: keys) {
+        for (String k : keys) {
             shell.printOut(String.format("%-" + leftColWidth + "s: %s", k, shell.getQueryParams().get(k)));
         }
     }
