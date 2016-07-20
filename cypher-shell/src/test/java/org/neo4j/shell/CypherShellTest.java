@@ -1,7 +1,9 @@
 package org.neo4j.shell;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
@@ -18,6 +20,8 @@ import static org.mockito.Mockito.mock;
 
 
 public class CypherShellTest {
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
 
     Logger logger = mock(Logger.class);
     private ThrowingShell shell;
@@ -150,6 +154,42 @@ public class CypherShellTest {
         // when
         // then
         assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
+    }
+
+    @Test
+    public void beginNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.beginTransaction();
+    }
+
+    @Test
+    public void commitNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.commitTransaction();
+    }
+
+    @Test
+    public void rollbackNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.rollbackTransaction();
     }
 
     private TestShell connectedShell() throws CommandException {

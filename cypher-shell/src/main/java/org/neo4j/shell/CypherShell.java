@@ -166,6 +166,9 @@ public class CypherShell implements CommandExecuter, Connector, TransactionHandl
 
     @Override
     public void beginTransaction() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
         if (getCurrentTransaction().isPresent()) {
             throw new CommandException("There is already an open transaction");
         }
@@ -174,6 +177,9 @@ public class CypherShell implements CommandExecuter, Connector, TransactionHandl
 
     @Override
     public void commitTransaction() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
         if (!getCurrentTransaction().isPresent()) {
             throw new CommandException("There is no open transaction to commit");
         }
@@ -184,6 +190,9 @@ public class CypherShell implements CommandExecuter, Connector, TransactionHandl
 
     @Override
     public void rollbackTransaction() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
         if (!getCurrentTransaction().isPresent()) {
             throw new CommandException("There is no open transaction to rollback");
         }
