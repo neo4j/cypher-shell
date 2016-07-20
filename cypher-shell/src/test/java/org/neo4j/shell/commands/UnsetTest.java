@@ -52,22 +52,4 @@ public class UnsetTest {
         // then
         verify(mockShell).remove("bob");
     }
-
-    // TODO move this test to implementation of VariableHolder
-    /*
-    @Test
-    public void unsetAlreadyClearedValue() throws CommandException {
-        // given
-        when(mockShell.isConnected()).thenReturn(true);
-
-        HashMap<String, Object> value = new HashMap<>();
-        value.put("bob", "9");
-        when(mockShell.getQueryParams()).thenReturn(value);
-
-        // when
-        unsetCommand.execute("nob");
-        // then
-        assertNull("Expected param to be unset", value.get("nob"));
-    }
-    */
 }

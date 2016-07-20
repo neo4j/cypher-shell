@@ -145,6 +145,13 @@ public class CypherShellTest {
         assertTrue(shell.getCommandExecutable(":set \"A piece of string\"").isPresent());
     }
 
+    @Test
+    public void unsetAlreadyClearedValue() throws CommandException {
+        // when
+        // then
+        assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
+    }
+
     private TestShell connectedShell() throws CommandException {
         TestShell shell = new TestShell(logger);
         shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
