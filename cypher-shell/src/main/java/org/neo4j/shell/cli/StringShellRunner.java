@@ -1,6 +1,6 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.log.Logger;
@@ -29,7 +29,7 @@ public class StringShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull CommandExecuter executer) {
+    public int runUntilEnd(@Nonnull StatementExecuter executer) {
         int exitCode = 0;
         try {
             executer.execute(cypher.trim());

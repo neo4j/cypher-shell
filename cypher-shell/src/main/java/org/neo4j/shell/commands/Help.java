@@ -1,7 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Command;
-import org.neo4j.shell.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -9,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.neo4j.shell.CommandHelper.simpleArgParse;
+import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
  * Help command, which prints help documentation.

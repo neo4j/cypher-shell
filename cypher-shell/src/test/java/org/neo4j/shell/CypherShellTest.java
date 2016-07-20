@@ -7,6 +7,8 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
+import org.neo4j.shell.commands.CommandExecutable;
+import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 

@@ -2,6 +2,9 @@ package org.neo4j.shell;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
+import org.neo4j.shell.commands.Command;
+import org.neo4j.shell.commands.CommandExecutable;
+import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.commands.Disconnect;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -19,7 +22,7 @@ import java.util.regex.Pattern;
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements CommandExecuter, Connector, TransactionHandler, VariableHolder {
+public class CypherShell implements StatementExecuter, Connector, TransactionHandler, VariableHolder {
     private final Logger logger;
 
     // Final space to catch newline

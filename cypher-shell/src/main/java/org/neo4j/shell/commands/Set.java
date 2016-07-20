@@ -1,6 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Command;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 

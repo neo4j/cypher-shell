@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.Command;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.exception.CommandException;

@@ -1,6 +1,6 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
@@ -26,7 +26,7 @@ public class InteractiveShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull CommandExecuter executer) {
+    public int runUntilEnd(@Nonnull StatementExecuter executer) {
         int exitCode = 0;
         boolean running = true;
         while (running) {
@@ -47,7 +47,7 @@ public class InteractiveShellRunner implements ShellRunner {
         return commandReader;
     }
 
-    private boolean work(@Nonnull CommandExecuter runner) throws IOException, ExitException, CommandException {
+    private boolean work(@Nonnull StatementExecuter runner) throws IOException, ExitException, CommandException {
         String line = commandReader.readCommand();
 
         if (null == line) {
