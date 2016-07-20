@@ -2,8 +2,12 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.log.StdLogger;
 
 import javax.annotation.Nonnull;
+
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
 public class Main {
 
@@ -27,10 +31,23 @@ public class Main {
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
                 cliArgs.getPassword());
-        CypherShell shell = new CypherShell(connectionConfig);
 
-        int code = shell.run(cliArgs);
+        Logger logger = new StdLogger();
+        try {
+            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
-        System.exit(code);
+            CypherShell shell = new CypherShell(logger);
+
+            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
+
+            shell.setCommandHelper(commandHelper);
+            shell.connect(connectionConfig);
+
+            int code = shellRunner.runUntilEnd(shell);
+            System.exit(code);
+        } catch (Throwable e) {
+            logger.printError(getSensibleMsg(e));
+            System.exit(1);
+        }
     }
 }

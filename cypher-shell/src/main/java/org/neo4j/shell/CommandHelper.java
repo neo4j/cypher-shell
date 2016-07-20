@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import org.neo4j.shell.commands.*;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,22 +17,23 @@ import java.util.stream.Collectors;
 public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>();
 
-    public CommandHelper(@Nonnull final CypherShell cypherShell) {
-        registerAllCommands(cypherShell);
+    public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
+        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell);
     }
 
-    public void registerAllCommands(@Nonnull final CypherShell cypherShell) {
-        registerCommand(new Help(cypherShell));
-        registerCommand(new Exit(cypherShell));
-        registerCommand(new Connect(cypherShell));
-        registerCommand(new Disconnect(cypherShell));
-        registerCommand(new History(cypherShell));
-        registerCommand(new Begin(cypherShell));
-        registerCommand(new Commit(cypherShell));
-        registerCommand(new Rollback(cypherShell));
-        registerCommand(new Set(cypherShell));
-        registerCommand(new Env(cypherShell));
-        registerCommand(new Unset(cypherShell));
+    private void registerAllCommands(Logger logger, Historian historian, Connector connector,
+                                     TransactionHandler transactionHandler, VariableHolder variableHolder) {
+        registerCommand(new Exit(logger));
+        registerCommand(new Help(logger, this));
+        registerCommand(new History(logger, historian));
+        registerCommand(new Connect(logger, connector));
+        registerCommand(new Disconnect(logger, connector));
+        registerCommand(new Begin(transactionHandler));
+        registerCommand(new Commit(transactionHandler));
+        registerCommand(new Rollback(transactionHandler));
+        registerCommand(new Set(variableHolder));
+        registerCommand(new Env(logger, variableHolder));
+        registerCommand(new Unset(variableHolder));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {

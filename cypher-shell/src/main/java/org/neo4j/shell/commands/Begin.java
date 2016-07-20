@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
@@ -16,10 +16,10 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Begin implements Command {
     private static final String COMMAND_NAME = ":begin";
-    private final Shell shell;
+    private final TransactionHandler transactionHandler;
 
-    public Begin(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Begin(@Nonnull final TransactionHandler transactionHandler) {
+        this.transactionHandler = transactionHandler;
     }
 
     @Nonnull
@@ -57,10 +57,6 @@ public class Begin implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        if (!shell.isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-
-        shell.beginTransaction();
+        transactionHandler.beginTransaction();
     }
 }

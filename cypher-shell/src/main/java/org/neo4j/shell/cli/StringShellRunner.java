@@ -1,27 +1,25 @@
 package org.neo4j.shell.cli;
 
-import jline.console.history.History;
-import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
-import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.Optional;
+
+import static org.neo4j.shell.BoltHelper.getSensibleMsg;
 
 /**
  * A shell runner which executes a single String and exits afterward. Any errors will throw immediately.
  */
-public class StringShellRunner extends ShellRunner {
-    private final Shell shell;
+public class StringShellRunner implements ShellRunner {
     private final String cypher;
+    private final Logger logger;
 
-    public StringShellRunner(@Nonnull Shell shell, @Nonnull CliArgHelper.CliArgs cliArgs) throws IOException {
-        super();
-        this.shell = shell;
+    public StringShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs,
+                             @Nonnull Logger logger) {
+        this.logger = logger;
         Optional<String> cypherString = cliArgs.getCypher();
         if (cypherString.isPresent()) {
             this.cypher = cypherString.get();
@@ -31,13 +29,19 @@ public class StringShellRunner extends ShellRunner {
     }
 
     @Override
-    public void run() throws IOException, ExitException, ClientException, CommandException {
-        shell.executeLine(cypher.trim());
+    public int runUntilEnd(@Nonnull CommandExecuter executer) {
+        int exitCode = 0;
+        try {
+            executer.execute(cypher.trim());
+        } catch (Throwable t) {
+            logger.printError(getSensibleMsg(t));
+            exitCode = 1;
+        }
+        return exitCode;
     }
 
-    @Nullable
     @Override
-    public History getHistory() {
-        return null;
+    public Historian getHistorian() {
+        return Historian.empty;
     }
 }

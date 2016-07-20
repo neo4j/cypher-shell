@@ -1,9 +1,9 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -12,14 +12,14 @@ import java.util.List;
 import static org.neo4j.shell.CommandHelper.simpleArgParse;
 
 /**
- * Command to exit the shell. Equivalent to hitting Ctrl-D.
+ * Command to exit the logger. Equivalent to hitting Ctrl-D.
  */
 public class Exit implements Command {
     public static final String COMMAND_NAME = ":exit";
-    private final Shell shell;
+    private final Logger logger;
 
-    public Exit(@Nonnull final Shell shell) {
-        this.shell = shell;
+    public Exit(@Nonnull final Logger logger) {
+        this.logger = logger;
     }
 
     @Nonnull
@@ -31,7 +31,7 @@ public class Exit implements Command {
     @Nonnull
     @Override
     public String getDescription() {
-        return "Exit the shell";
+        return "Exit the logger";
     }
 
     @Nonnull
@@ -43,7 +43,7 @@ public class Exit implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Exit the shell. Corresponds to entering @|bold CTRL-D|@.";
+        return "Exit the logger. Corresponds to entering @|bold CTRL-D|@.";
     }
 
     @Nonnull
@@ -56,7 +56,7 @@ public class Exit implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        shell.printOut("Exiting. Bye bye.");
+        logger.printOut("Exiting. Bye bye.");
 
         throw new ExitException(0);
     }

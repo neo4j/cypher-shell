@@ -1,23 +1,43 @@
 package org.neo4j.shell;
 
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 
 public class CypherShellTest {
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
+    Logger logger = mock(Logger.class);
+    private ThrowingShell shell;
+
+    @Before
+    public void setup() {
+        doReturn(System.out).when(logger).getOutputStream();
+        shell = new ThrowingShell(logger);
+
+        CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, shell);
+
+        shell.setCommandHelper(commandHelper);
+    }
 
     @Test
     public void commandNameShouldBeParsed() {
-        ThrowingShell shell = new ThrowingShell();
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    ");
 
@@ -26,7 +46,6 @@ public class CypherShellTest {
 
     @Test
     public void commandNameShouldBeParsedWithNewline() {
-        ThrowingShell shell = new ThrowingShell();
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    \n");
 
@@ -35,7 +54,6 @@ public class CypherShellTest {
 
     @Test
     public void commandWithArgsShouldBeParsed() {
-        ThrowingShell shell = new ThrowingShell();
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help   arg1 arg2 ");
 
@@ -44,22 +62,19 @@ public class CypherShellTest {
 
     @Test
     public void commentsShouldNotBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("// Hi, I'm a comment!");
+        shell.execute("// Hi, I'm a comment!");
         // If no exception was thrown, we have success
     }
 
     @Test
     public void emptyLinesShouldNotBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("");
+        shell.execute("");
         // If no exception was thrown, we have success
     }
 
     @Test
     public void secondLineCommentsShouldntBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("     \\\n" +
+        shell.execute("     \\\n" +
                 "// Second line comment, first line escapes newline");
         // If no exception was thrown, we have success
     }
@@ -68,7 +83,7 @@ public class CypherShellTest {
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
-        ShellRunner shellRunner = new TestShell().getShellRunner(cliArgs);
+        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
         if (!(shellRunner instanceof StringShellRunner)) {
             fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
@@ -129,14 +144,56 @@ public class CypherShellTest {
 
     @Test
     public void shouldParseCommandsAndArgs() {
-        TestShell shell = new TestShell();
         assertTrue(shell.getCommandExecutable(":help").isPresent());
         assertTrue(shell.getCommandExecutable(":help :set").isPresent());
         assertTrue(shell.getCommandExecutable(":set \"A piece of string\"").isPresent());
     }
 
+    @Test
+    public void unsetAlreadyClearedValue() throws CommandException {
+        // when
+        // then
+        assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
+    }
+
+    @Test
+    public void beginNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.beginTransaction();
+    }
+
+    @Test
+    public void commitNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.commitTransaction();
+    }
+
+    @Test
+    public void rollbackNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        TestShell shell = new TestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        shell.rollbackTransaction();
+    }
+
     private TestShell connectedShell() throws CommandException {
-        TestShell shell = new TestShell();
+        TestShell shell = new TestShell(logger);
         shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
         return shell;
     }

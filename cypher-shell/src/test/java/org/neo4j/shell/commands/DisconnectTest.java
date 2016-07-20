@@ -5,14 +5,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.Shell;
-import org.neo4j.shell.TestShell;
+import org.neo4j.shell.Connector;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -20,12 +18,13 @@ public class DisconnectTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private Shell shell = mock(Shell.class);
     private Disconnect cmd;
+    private Logger logger = mock(Logger.class);
+    private Connector connector = mock(Connector.class);
 
     @Before
     public void setup() {
-        this.cmd = new Disconnect(shell);
+        this.cmd = new Disconnect(logger, connector);
     }
 
     @Test
@@ -41,6 +40,6 @@ public class DisconnectTest {
     public void shouldDisconnectShell() throws CommandException {
         cmd.execute("");
 
-        verify(shell).disconnect();
+        verify(connector).disconnect();
     }
 }

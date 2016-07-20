@@ -6,29 +6,29 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
-import java.util.Optional;
+import java.util.Arrays;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class HistoryTest {
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private Shell shell = mock(Shell.class);
+    private Logger logger = mock(Logger.class);
+    private Historian historian = mock(Historian.class);
     private Command cmd;
 
     @Before
     public void setup() {
-        this.cmd = new History(shell);
+        this.cmd = new History(logger, historian);
     }
 
     @Test
@@ -42,10 +42,10 @@ public class HistoryTest {
 
     @Test
     public void shouldPrintHistory() throws CommandException {
-        when(shell.getHistory()).thenReturn(Optional.ofNullable(mock(jline.console.history.History.class)));
+        when(historian.getHistory()).thenReturn(Arrays.asList(":help", ":exit"));
 
         cmd.execute("");
 
-        verify(shell).printOut(anyString());
+        verify(logger).printOut(anyString());
     }
 }
