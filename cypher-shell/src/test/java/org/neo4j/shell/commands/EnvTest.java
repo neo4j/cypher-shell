@@ -12,9 +12,7 @@ import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class EnvTest {
     @Rule
@@ -40,18 +38,21 @@ public class EnvTest {
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("var: 9\n");
+        verify(logger).printOut("var: 9");
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandAlignment() throws CommandException {
         // given
         vars.put("var", 9);
-        vars.put("var", 99999);
+        vars.put("param", 99999);
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("param: 99999\nvar  : 9\n");
+        verify(logger).printOut("param: 99999");
+        verify(logger).printOut("var  : 9");
+        verifyNoMoreInteractions(logger);
     }
 
     @Test

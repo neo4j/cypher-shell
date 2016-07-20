@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,4 +14,12 @@ public interface Historian {
      */
     @Nonnull
     List<String> getHistory();
+
+    Historian empty = new Historian() {
+        @Nonnull
+        @Override
+        public List<String> getHistory() {
+            return new ArrayList<>();
+        }
+    };
 }

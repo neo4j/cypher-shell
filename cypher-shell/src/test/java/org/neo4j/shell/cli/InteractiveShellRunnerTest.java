@@ -1,18 +1,22 @@
 package org.neo4j.shell.cli;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.CommandExecuter;
 import org.neo4j.shell.log.Logger;
 
 import java.io.ByteArrayInputStream;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 public class InteractiveShellRunnerTest {
     Logger logger = mock(Logger.class);
     CommandExecuter cmdExecuter = mock(CommandExecuter.class);
+
+    @Before
+    public void setup() {
+        doReturn(System.out).when(logger).getOutputStream();
+    }
 
     @Test
     public void testSimple() throws Exception {

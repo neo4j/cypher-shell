@@ -1,5 +1,6 @@
 package org.neo4j.shell.cli;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.log.Logger;
 
@@ -9,11 +10,17 @@ import java.io.InputStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 public class CommandReaderTest {
 
     Logger logger = mock(Logger.class);
+
+    @Before
+    public void setup() {
+        doReturn(System.out).when(logger).getOutputStream();
+    }
 
     @Test
     public void readCommandReadsFromTheConsole() throws Exception {

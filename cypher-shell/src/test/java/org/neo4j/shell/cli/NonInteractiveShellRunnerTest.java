@@ -1,5 +1,6 @@
 package org.neo4j.shell.cli;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.CommandExecuter;
@@ -19,6 +20,11 @@ public class NonInteractiveShellRunnerTest {
     Logger logger = mock(Logger.class);
     CommandExecuter cmdExecuter = new GoodBadExecuter();
 
+    @Before
+    public void setup() {
+        doReturn(System.out).when(logger).getOutputStream();
+    }
+
     @Test
     public void testSimple() throws Exception {
         String input = "good1\n" +
@@ -33,7 +39,7 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd(cmdExecuter);
 
         assertEquals("Exit code incorrect", 0, code);
-        verifyZeroInteractions(logger);
+        verify(logger, times(0)).printError(anyString());
     }
 
     @Test
@@ -55,7 +61,6 @@ public class NonInteractiveShellRunnerTest {
 
         assertEquals("Exit code incorrect", 1, code);
         verify(logger).printError(eq("Found a bad line"));
-        verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -76,9 +81,7 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd(cmdExecuter);
 
         assertEquals("Exit code incorrect", 1, code);
-        verify(logger).printError(eq("Found a bad line"));
-        verify(logger).printError(eq("Found a bad line"));
-        verifyNoMoreInteractions(logger);
+        verify(logger, times(2)).printError(eq("Found a bad line"));
     }
 
     private class GoodBadExecuter implements CommandExecuter {
