@@ -9,8 +9,6 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 
 import javax.annotation.Nonnull;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,11 +19,8 @@ import java.util.regex.Pattern;
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements Shell, CommandExecuter, Connector, TransactionHandler, VariableHolder {
+public class CypherShell implements CommandExecuter, Connector, TransactionHandler, VariableHolder {
     private final Logger logger;
-    protected InputStream in = System.in;
-    protected PrintStream out = System.out;
-    protected PrintStream err = System.err;
 
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
@@ -161,18 +156,6 @@ public class CypherShell implements Shell, CommandExecuter, Connector, Transacti
             throw new CommandException("Not connected, nothing to disconnect from.");
         }
         silentDisconnect();
-    }
-
-    @Override
-    @Nonnull
-    public InputStream getInputStream() {
-        return in;
-    }
-
-    @Override
-    @Nonnull
-    public PrintStream getOutputStream() {
-        return out;
     }
 
     @Nonnull
