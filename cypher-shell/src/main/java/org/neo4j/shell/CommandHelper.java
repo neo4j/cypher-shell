@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.cli.CommandReader;
 import org.neo4j.shell.commands.*;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
@@ -18,14 +17,15 @@ import java.util.stream.Collectors;
 public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>();
 
-    public CommandHelper(Logger logger, CommandReader commandReader, Connector connector, TransactionHandler transactionHandler, VariableHolder variableHolder) {
-        registerAllCommands(logger, commandReader, connector, transactionHandler, variableHolder);
+    public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
+        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell);
     }
 
-    private void registerAllCommands(Logger logger, CommandReader commandReader, Connector connector, TransactionHandler transactionHandler, VariableHolder variableHolder) {
+    private void registerAllCommands(Logger logger, Historian historian, Connector connector,
+                                     TransactionHandler transactionHandler, VariableHolder variableHolder) {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));
-        registerCommand(new History(logger, commandReader));
+        registerCommand(new History(logger, historian));
         registerCommand(new Connect(logger, connector));
         registerCommand(new Disconnect(logger, connector));
         registerCommand(new Begin(transactionHandler));

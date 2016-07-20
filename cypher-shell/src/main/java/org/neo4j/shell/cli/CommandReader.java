@@ -5,6 +5,7 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.fusesource.jansi.AnsiRenderer;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -19,7 +20,7 @@ import java.util.regex.Pattern;
 
 import static java.lang.System.getProperty;
 
-public class CommandReader {
+public class CommandReader implements Historian {
     private final ConsoleReader reader;
     //Pattern matches a back slash at the end of the line for multiline commands
     static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");

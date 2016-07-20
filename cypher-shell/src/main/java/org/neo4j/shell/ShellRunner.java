@@ -18,6 +18,12 @@ public interface ShellRunner {
     int runUntilEnd(@Nonnull CommandExecuter executer);
 
     /**
+     *
+     * @return an object which can provide the history of commands executed
+     */
+    Historian getHistorian();
+
+    /**
      * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
      *
      * @param cliArgs

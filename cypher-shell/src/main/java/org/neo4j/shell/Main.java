@@ -35,10 +35,13 @@ public class Main {
         Logger logger = new StdLogger();
         try {
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
-            CypherShell shell = new CypherShell(logger, connectionConfig);
 
-            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getCommandReader(), shell, shell, shell);
+            CypherShell shell = new CypherShell(logger);
+
+            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
+            
             shell.setCommandHelper(commandHelper);
+            shell.connect(connectionConfig);
 
             int code = shellRunner.runUntilEnd(shell);
             System.exit(code);

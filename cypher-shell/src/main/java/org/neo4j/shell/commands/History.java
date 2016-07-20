@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.cli.CommandReader;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
@@ -19,12 +19,12 @@ public class History implements Command {
     private static final String COMMAND_NAME = ":history";
 
     private final Logger logger;
+    private final Historian historian;
     private final List<String> aliases = new ArrayList<>();
-    private final CommandReader commandReader;
 
-    public History(@Nonnull final Logger logger, @Nonnull final CommandReader commandReader) {
+    public History(@Nonnull final Logger logger, @Nonnull final Historian historian) {
         this.logger = logger;
-        this.commandReader = commandReader;
+        this.historian = historian;
     }
 
     @Nonnull
@@ -64,7 +64,7 @@ public class History implements Command {
         // Calculate starting position
         int lineCount = 16;
 
-        logger.printOut(printHistory(commandReader.getHistory(), lineCount));
+        logger.printOut(printHistory(historian.getHistory(), lineCount));
     }
 
     /**

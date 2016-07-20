@@ -1,10 +1,13 @@
 package org.neo4j.shell.cli;
 
 import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.neo4j.shell.BoltHelper.getSensibleMsg;
@@ -37,5 +40,16 @@ public class StringShellRunner implements ShellRunner {
             exitCode = 1;
         }
         return exitCode;
+    }
+
+    @Override
+    public Historian getHistorian() {
+        return new Historian() {
+            @Nonnull
+            @Override
+            public List<String> getHistory() {
+                return new ArrayList<>();
+            }
+        };
     }
 }

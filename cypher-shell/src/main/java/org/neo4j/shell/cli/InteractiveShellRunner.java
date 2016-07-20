@@ -2,6 +2,7 @@ package org.neo4j.shell.cli;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -52,6 +53,11 @@ public class InteractiveShellRunner implements ShellRunner {
             }
         }
         return exitCode;
+    }
+
+    @Override
+    public Historian getHistorian() {
+        return commandReader;
     }
 
     private boolean work(@Nonnull CommandExecuter runner) throws IOException, ExitException, CommandException {
