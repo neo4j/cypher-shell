@@ -38,18 +38,12 @@ public class InteractiveShellRunner implements ShellRunner {
                 running = false;
             } catch (ClientException e) {
                 logger.printError(getSensibleMsg(e));
-                exitCode = 1;
-                running = false;
             }
             catch (CommandException e) {
                 logger.printError(e.getMessage());
-                exitCode = 1;
-                running = false;
             } catch (Throwable t) {
                 // TODO: 6/21/16 Unknown errors maybe should be handled differently
                 logger.printError(t.getMessage());
-                exitCode = 1;
-                running = false;
             }
         }
         return exitCode;
