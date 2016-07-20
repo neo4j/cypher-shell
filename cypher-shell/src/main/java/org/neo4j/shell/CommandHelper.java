@@ -6,6 +6,7 @@ import org.neo4j.shell.exception.DuplicateCommandException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -64,7 +65,7 @@ public class CommandHelper {
      * Get a list of all registered commands
      */
     @Nonnull
-    public Iterable<Command> getAllCommands() {
+    public List<Command> getAllCommands() {
         return commands.values().stream().distinct().collect(Collectors.toList());
     }
 

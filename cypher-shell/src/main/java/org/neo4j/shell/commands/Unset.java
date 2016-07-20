@@ -1,7 +1,7 @@
 package org.neo4j.shell.commands;
 
 import org.neo4j.shell.Command;
-import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -15,9 +15,9 @@ import static org.neo4j.shell.CommandHelper.simpleArgParse;
  */
 public class Unset implements Command {
     public static final String COMMAND_NAME = ":unset";
-    private final CypherShell shell;
+    private final Shell shell;
 
-    public Unset(@Nonnull final CypherShell shell) {
+    public Unset(@Nonnull final Shell shell) {
         this.shell = shell;
     }
 

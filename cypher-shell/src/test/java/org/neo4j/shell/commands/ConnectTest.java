@@ -6,48 +6,48 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Shell;
-import org.neo4j.shell.TestShell;
 import org.neo4j.shell.exception.CommandException;
 
-import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class ConnectTest {
-
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private Shell shell;
-    private Command cmd;
+    private Shell shell = mock(Shell.class);
+    private Command connectCommand;
 
     @Before
     public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Connect(shell);
+        this.connectCommand = new Connect(shell);
     }
 
     @Test
-    public void shouldNotAcceptTooManyArgs() {
-        try {
-            cmd.execute("bob alice");
-            fail("Should not accept too many args");
-        } catch (CommandException e) {
-            assertTrue("Unexpected error", e.getMessage().startsWith("Incorrect number of arguments"));
-        }
+    public void shouldNotAcceptTooManyArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        connectCommand.execute("bob alice");
+        fail("Should not accept too many args");
     }
 
     @Test
-    public void shouldAcceptBoltProtocol() throws CommandException {
-        cmd.execute("bolt://localhost");
-        assertTrue(shell.isConnected());
+    public void shouldConnectShell() throws CommandException {
+        connectCommand.execute("bolt://localhost");
+
+        verify(shell).connect(any(ConnectionConfig.class));
     }
 
     @Test
     public void shouldOnlyAcceptBoltProtocol() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage(containsString("Unsupported protocol"));
-        cmd.execute("http://localhost");
+        connectCommand.execute("http://localhost");
     }
 }

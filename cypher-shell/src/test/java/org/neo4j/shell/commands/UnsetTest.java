@@ -1,72 +1,78 @@
 package org.neo4j.shell.commands;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
-import org.neo4j.shell.TestShell;
+import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 
+import java.util.HashMap;
+
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class UnsetTest {
 
-    private TestShell shell;
-    private Command cmd;
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
+    private Shell mockShell;
+    private Command unsetCommand;
 
     @Before
     public void setup() {
-        this.shell = new TestShell();
-        this.cmd = new Unset(shell);
+        this.mockShell = mock(Shell.class);
+        this.unsetCommand = new Unset(mockShell);
     }
 
     @Test
-    public void shouldFailIfNoArgs() {
-        try {
-            cmd.execute("");
-            fail("Expected error");
-        } catch (CommandException e) {
-            assertTrue("Unexpected error", e.getMessage().startsWith("Incorrect number of arguments"));
-        }
+    public void shouldFailIfNoArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        unsetCommand.execute("");
+        fail("Expected error");
     }
 
     @Test
-    public void shouldFailIfMoreThanOneArg() {
-        try {
-            cmd.execute("bob nob");
-            fail("Expected error");
-        } catch (CommandException e) {
-            assertTrue("Unexpected error", e.getMessage().startsWith("Incorrect number of arguments"));
-        }
+    public void shouldFailIfMoreThanOneArg() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        unsetCommand.execute("bob nob");
+        fail("Expected error");
     }
 
     @Test
     public void unsetValue() throws CommandException {
         // given
-        shell.connect();
-        new Set(shell).execute("bob 9");
-
-        assertEquals("Expected param to be set",
-                "9", shell.getQueryParams().get("bob"));
+        when(mockShell.isConnected()).thenReturn(true);
+        HashMap<String, Object> value = new HashMap<>();
+        value.put("bob", "9");
+        when(mockShell.getQueryParams()).thenReturn(value);
 
         // when
-        cmd.execute("bob");
+        unsetCommand.execute("bob");
         // then
-        assertFalse("Expected param to be unset",
-                shell.getQueryParams().containsKey("bob"));
+        assertTrue("Expected param to be unset", value.isEmpty());
     }
 
     @Test
     public void unsetAlreadyClearedValue() throws CommandException {
         // given
-        shell.connect();
+        when(mockShell.isConnected()).thenReturn(true);
 
-        assertFalse("Expected param to be unset",
-                shell.getQueryParams().containsKey("nob"));
+        HashMap<String, Object> value = new HashMap<>();
+        value.put("bob", "9");
+        when(mockShell.getQueryParams()).thenReturn(value);
 
         // when
-        cmd.execute("nob");
+        unsetCommand.execute("nob");
         // then
-        assertFalse("Expected a no-op",
-                shell.getQueryParams().containsKey("nob"));
+        assertNull("Expected param to be unset", value.get("nob"));
     }
 }

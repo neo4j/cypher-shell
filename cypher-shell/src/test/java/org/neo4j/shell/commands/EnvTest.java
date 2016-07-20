@@ -1,13 +1,22 @@
 package org.neo4j.shell.commands;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.neo4j.shell.StreamShell;
 import org.neo4j.shell.exception.CommandException;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class EnvTest {
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
     private StreamShell shell;
     private Env cmd;
 
@@ -42,12 +51,11 @@ public class EnvTest {
     }
 
     @Test
-    public void shouldNotAcceptArgs() {
-        try {
-            cmd.execute("bob");
-            fail("Should not accept args");
-        } catch (CommandException e) {
-            assertTrue("Unexpected error", e.getMessage().startsWith("Incorrect number of arguments"));
-        }
+    public void shouldNotAcceptArgs() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        cmd.execute("bob");
+        fail("Should not accept args");
     }
 }

@@ -23,8 +23,11 @@ public class Main {
     }
 
     private void startShell(@Nonnull CliArgHelper.CliArgs cliArgs) {
-        CypherShell shell = new CypherShell(cliArgs.getHost(), cliArgs.getPort(),
-                cliArgs.getUsername(), cliArgs.getPassword());
+        ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
+                cliArgs.getPort(),
+                cliArgs.getUsername(),
+                cliArgs.getPassword());
+        CypherShell shell = new CypherShell(connectionConfig);
 
         int code = shell.run(cliArgs);
 

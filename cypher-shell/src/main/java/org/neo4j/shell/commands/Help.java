@@ -85,19 +85,23 @@ public class Help implements Command {
         shell.printOut("\nAvailable commands:");
 
         // Get longest command so we can align them nicely
-        int longestCmd = 0;
-        for (Command cmd : commandHelper.getAllCommands()) {
-            if (cmd.getName().length() > longestCmd) {
-                longestCmd = cmd.getName().length();
-            }
-        }
+        List<Command> allCommands = commandHelper.getAllCommands();
 
-        for (Command cmd : commandHelper.getAllCommands()) {
-            shell.printOut(String.format("  @|bold %-" + longestCmd + "s|@ %s",
+        int leftColWidth = longestCmdLength(allCommands);
+
+        allCommands.stream().forEach(cmd -> {
+            shell.printOut(String.format("  @|bold %-" + leftColWidth + "s|@ %s",
                     cmd.getName(), cmd.getDescription()));
-        }
+        });
 
         shell.printOut("\nFor help on a specific command type:");
         shell.printOut(String.format("    %s @|bold command|@\n", COMMAND_NAME));
+    }
+
+    private int longestCmdLength(List<Command> allCommands) {
+        String longestCommand = allCommands.stream()
+                                        .map(Command::getName)
+                                        .reduce("", (s1, s2) -> s1.length() > s2.length() ? s1 : s2);
+        return longestCommand.length();
     }
 }
