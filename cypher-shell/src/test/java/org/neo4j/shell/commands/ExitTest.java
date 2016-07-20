@@ -5,9 +5,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.Shell;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.Logger;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -19,12 +19,12 @@ public class ExitTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private Shell shell = mock(Shell.class);
+    Logger logger = mock(Logger.class);
     private Exit cmd;
 
     @Before
     public void setup() {
-        this.cmd = new Exit(shell);
+        this.cmd = new Exit(logger);
     }
 
     @Test
@@ -42,6 +42,6 @@ public class ExitTest {
 
         cmd.execute("");
 
-        verify(shell).printOut("Exiting. Bye bye.");
+        verify(logger).printOut("Exiting. Bye bye.");
     }
 }

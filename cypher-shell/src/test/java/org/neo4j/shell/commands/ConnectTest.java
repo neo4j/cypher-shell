@@ -7,8 +7,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.Command;
 import org.neo4j.shell.ConnectionConfig;
-import org.neo4j.shell.Shell;
+import org.neo4j.shell.Connector;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -20,12 +21,13 @@ public class ConnectTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private Shell shell = mock(Shell.class);
     private Command connectCommand;
+    private Logger logger = mock(Logger.class);
+    private Connector connector = mock(Connector.class);
 
     @Before
     public void setup() {
-        this.connectCommand = new Connect(shell);
+        this.connectCommand = new Connect(logger, connector);
     }
 
     @Test
@@ -41,7 +43,7 @@ public class ConnectTest {
     public void shouldConnectShell() throws CommandException {
         connectCommand.execute("bolt://localhost");
 
-        verify(shell).connect(any(ConnectionConfig.class));
+        verify(connector).connect(any(ConnectionConfig.class));
     }
 
     @Test

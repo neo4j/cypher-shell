@@ -5,19 +5,23 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
 
 
 public class CypherShellTest {
 
+    Logger logger = mock(Logger.class);
+
     @Test
     public void commandNameShouldBeParsed() {
-        ThrowingShell shell = new ThrowingShell();
+        ThrowingShell shell = new ThrowingShell(logger);
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    ");
 
@@ -26,7 +30,7 @@ public class CypherShellTest {
 
     @Test
     public void commandNameShouldBeParsedWithNewline() {
-        ThrowingShell shell = new ThrowingShell();
+        ThrowingShell shell = new ThrowingShell(logger);
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    \n");
 
@@ -35,7 +39,7 @@ public class CypherShellTest {
 
     @Test
     public void commandWithArgsShouldBeParsed() {
-        ThrowingShell shell = new ThrowingShell();
+        ThrowingShell shell = new ThrowingShell(logger);
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help   arg1 arg2 ");
 
@@ -44,22 +48,22 @@ public class CypherShellTest {
 
     @Test
     public void commentsShouldNotBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("// Hi, I'm a comment!");
+        ThrowingShell shell = new ThrowingShell(logger);
+        shell.execute("// Hi, I'm a comment!");
         // If no exception was thrown, we have success
     }
 
     @Test
     public void emptyLinesShouldNotBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("");
+        ThrowingShell shell = new ThrowingShell(logger);
+        shell.execute("");
         // If no exception was thrown, we have success
     }
 
     @Test
     public void secondLineCommentsShouldntBeExecuted() throws Exception {
-        ThrowingShell shell = new ThrowingShell();
-        shell.executeLine("     \\\n" +
+        ThrowingShell shell = new ThrowingShell(logger);
+        shell.execute("     \\\n" +
                 "// Second line comment, first line escapes newline");
         // If no exception was thrown, we have success
     }
@@ -68,7 +72,7 @@ public class CypherShellTest {
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
-        ShellRunner shellRunner = new TestShell().getShellRunner(cliArgs);
+        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
         if (!(shellRunner instanceof StringShellRunner)) {
             fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
@@ -129,14 +133,14 @@ public class CypherShellTest {
 
     @Test
     public void shouldParseCommandsAndArgs() {
-        TestShell shell = new TestShell();
+        TestShell shell = new TestShell(logger);
         assertTrue(shell.getCommandExecutable(":help").isPresent());
         assertTrue(shell.getCommandExecutable(":help :set").isPresent());
         assertTrue(shell.getCommandExecutable(":set \"A piece of string\"").isPresent());
     }
 
     private TestShell connectedShell() throws CommandException {
-        TestShell shell = new TestShell();
+        TestShell shell = new TestShell(logger);
         shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
         return shell;
     }

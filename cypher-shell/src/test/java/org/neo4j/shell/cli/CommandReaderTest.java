@@ -1,22 +1,26 @@
 package org.neo4j.shell.cli;
 
-import jline.console.ConsoleReader;
 import org.junit.Test;
-import org.neo4j.shell.StreamShell;
+import org.neo4j.shell.log.Logger;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 public class CommandReaderTest {
 
+    Logger logger = mock(Logger.class);
+
     @Test
     public void readCommandReadsFromTheConsole() throws Exception {
-        StreamShell streamShell = new StreamShell("CREATE (n:Person) RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "CREATE (n:Person) RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();
@@ -27,14 +31,12 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandDoesNotFiltersSingleLineCommentsFromTheConsole() throws Exception {
-        /**/
-        StreamShell streamShell = new StreamShell("CREATE (n:Person) \\\n" +
-                "//We are returning all People \\\n" +
-                "RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "CREATE (n:Person) \\\n" +
+                "//We are returning all People \\\n" +
+                "RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();
@@ -45,12 +47,10 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandDoesNotFiltersSingleLineCommentsFromTheConsoleScenario2() throws Exception {
-        /**/
-        StreamShell streamShell = new StreamShell("CREATE (n:Person) //We are returning all People RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "CREATE (n:Person) //We are returning all People RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();
@@ -61,15 +61,13 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandDoesNotReadMultiLineCommentsFromTheConsole() throws Exception {
-        /**/
-        StreamShell streamShell = new StreamShell("CREATE (n:Person) \\\n" +
+        // given
+        String inputString = "CREATE (n:Person) \\\n" +
                 "//We are returning \n" +
                 "// all People \\\n" +
-                "RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
-        // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+                "RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();
@@ -80,11 +78,10 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandReturnsNullForEOF() throws Exception {
-        StreamShell streamShell = new StreamShell("");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // then
         assertNull(commandReader.readCommand());
@@ -92,11 +89,10 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandReturnsEmptyStringForNewLine() throws Exception {
-        StreamShell streamShell = new StreamShell("\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // then
         assertThat(commandReader.readCommand(), is("\n"));
@@ -104,12 +100,11 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandAcceptsMultilineInputs() throws Exception {
-        StreamShell streamShell = new StreamShell("CREATE (n:Person) \\\n" +
-                "RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "CREATE (n:Person) \\\n" +
+                "RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();
@@ -120,12 +115,11 @@ public class CommandReaderTest {
 
     @Test
     public void readCommandAcceptsMultilineInputsWithWhiteSpace() throws Exception {
-        StreamShell streamShell = new StreamShell("CREATE (n: Person{name :\"John \\ Smith\"}) \\ \n" +
-                " RETURN n\n");
-        ConsoleReader reader = new ConsoleReader(streamShell.getInputStream(),
-                streamShell.getOutputStream());
         // given
-        CommandReader commandReader = new CommandReader(reader, streamShell, prompt);
+        String inputString = "CREATE (n: Person{name :\"John \\ Smith\"}) \\ \n" +
+                " RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when
         String actual = commandReader.readCommand();

@@ -4,50 +4,54 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.StreamShell;
+import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
-import java.util.Arrays;
+import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class EnvTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private StreamShell shell;
+    private HashMap<String, Object> vars;
+    private Logger logger;
     private Env cmd;
 
     @Before
     public void setup() throws CommandException {
-        shell = new StreamShell();
-        shell.connect();
-        cmd = new Env(shell);
+        vars = new HashMap<>();
+        logger = mock(Logger.class);
+        VariableHolder shell = mock(VariableHolder.class);
+        when(shell.getAll()).thenReturn(vars);
+        cmd = new Env(logger, shell);
     }
 
     @Test
     public void runCommand() throws CommandException {
         // given
-        Set set = new Set(shell);
-        set.execute("var 9");
+        vars.put("var", 9);
         // when
         cmd.execute("");
         // then
-        assertEquals("var: 9\n", shell.getOutLog());
+        verify(logger).printOut("var: 9\n");
     }
 
     @Test
     public void runCommandAlignment() throws CommandException {
         // given
-        Set set = new Set(shell);
-        set.execute("var 9");
-        set.execute("param 99999");
+        vars.put("var", 9);
+        vars.put("var", 99999);
         // when
         cmd.execute("");
         // then
-        assertEquals("param: 99999\nvar  : 9\n", shell.getOutLog());
+        verify(logger).printOut("param: 99999\nvar  : 9\n");
     }
 
     @Test

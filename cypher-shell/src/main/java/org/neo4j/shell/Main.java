@@ -39,7 +39,7 @@ public class Main {
             CypherShell shell = new CypherShell(logger);
 
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
-            
+
             shell.setCommandHelper(commandHelper);
             shell.connect(connectionConfig);
 

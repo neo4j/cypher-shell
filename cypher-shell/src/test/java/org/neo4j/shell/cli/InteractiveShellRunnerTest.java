@@ -1,19 +1,31 @@
 package org.neo4j.shell.cli;
 
 import org.junit.Test;
-import org.neo4j.shell.StreamShell;
+import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.log.Logger;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.io.ByteArrayInputStream;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class InteractiveShellRunnerTest {
+    Logger logger = mock(Logger.class);
+    CommandExecuter cmdExecuter = mock(CommandExecuter.class);
+
     @Test
     public void testSimple() throws Exception {
-        StreamShell shell = new StreamShell("good1\n" +
-                "good2\n");
-        InteractiveShellRunner runner = new InteractiveShellRunner(shell);
-        runner.runUntilEnd();
+        String input = "good1\n" +
+                "good2\n";
+        CommandReader commandReader = new CommandReader(
+                new ByteArrayInputStream(input.getBytes()),
+                logger);
+        InteractiveShellRunner runner = new InteractiveShellRunner(commandReader, logger);
+        runner.runUntilEnd(cmdExecuter);
 
-        assertThat(shell.getErrLog(), is(""));
+        verify(cmdExecuter).execute("good1\n");
+        verify(cmdExecuter).execute("good2\n");
+        verifyNoMoreInteractions(cmdExecuter);
     }
 }
