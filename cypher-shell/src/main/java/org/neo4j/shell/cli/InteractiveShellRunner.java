@@ -1,6 +1,5 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.CommandExecuter;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
@@ -36,14 +35,8 @@ public class InteractiveShellRunner implements ShellRunner {
             } catch (ExitException e) {
                 exitCode = e.getCode();
                 running = false;
-            } catch (ClientException e) {
+            } catch (Throwable e) {
                 logger.printError(getSensibleMsg(e));
-            }
-            catch (CommandException e) {
-                logger.printError(e.getMessage());
-            } catch (Throwable t) {
-                // TODO: 6/21/16 Unknown errors maybe should be handled differently
-                logger.printError(t.getMessage());
             }
         }
         return exitCode;
