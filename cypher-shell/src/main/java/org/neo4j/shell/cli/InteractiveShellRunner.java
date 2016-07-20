@@ -10,7 +10,7 @@ import org.neo4j.shell.log.Logger;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 
-import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getSensibleMsg;
 
 /**
  * An interactive shell

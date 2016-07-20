@@ -7,7 +7,7 @@ import org.neo4j.shell.log.StdLogger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getSensibleMsg;
 
 public class Main {
 
