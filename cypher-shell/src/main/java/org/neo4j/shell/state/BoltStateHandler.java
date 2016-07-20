@@ -95,8 +95,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
 
         try {
-            driver = GraphDatabase.driver(connectionConfig.driverUrl(),
-                    authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
+            driver = getDriver(connectionConfig, authToken);
             session = driver.session();
             // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
             session.run("RETURN 1").consume();
@@ -104,6 +103,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             silentDisconnect();
             throw t;
         }
+    }
+
+    /**
+     * Get a driver to connect with
+     * @param connectionConfig
+     * @param authToken
+     * @return
+     */
+    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
+        return GraphDatabase.driver(connectionConfig.driverUrl(),
+                authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
     }
 
     @Override

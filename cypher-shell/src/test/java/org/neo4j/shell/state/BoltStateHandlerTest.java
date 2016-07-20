@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Transaction;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TestTransaction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
@@ -104,5 +105,50 @@ public class BoltStateHandlerTest {
 
         assertEquals("Transaction should be the runner",
                 boltStateHandler.getCurrentSession(), boltStateHandler.getStatementRunner());
+    }
+
+    @Test
+    public void onlyUserWillThrow() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Specified username but no password");
+
+        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "user", ""));
+    }
+
+    @Test
+    public void onlyPassWillThrow() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Specified password but no username");
+
+        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "", "pass"));
+    }
+
+    @Test
+    public void canOnlyDisconnectOnce() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected, nothing to disconnect from.");
+
+        try {
+            boltStateHandler.connect();
+            boltStateHandler.disconnect();
+        } catch (Throwable e) {
+            fail("Should not throw here: " + e);
+        }
+
+        boltStateHandler.disconnect();
+    }
+
+    @Test
+    public void canOnlyConnectOnce() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Already connected.");
+
+        try {
+            boltStateHandler.connect();
+        } catch (Throwable e) {
+            fail("Should not throw here: " + e);
+        }
+
+        boltStateHandler.connect();
     }
 }

@@ -8,7 +8,7 @@ import java.util.Map;
 public class TestTransaction implements Transaction {
 
     private String lastCypherStatement = null;
-    private boolean success = false;
+    private Boolean success = null;
     private boolean open = true;
 
     @Override
@@ -70,6 +70,9 @@ public class TestTransaction implements Transaction {
     }
 
     public boolean isSuccess() {
+        if (success == null) {
+            throw new NullPointerException("Success/Failure was never called");
+        }
         return success;
     }
 }

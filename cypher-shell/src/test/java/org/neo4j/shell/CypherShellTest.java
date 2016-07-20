@@ -105,10 +105,4 @@ public class CypherShellTest {
         // then
         assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
     }
-
-    private TestShell connectedShell() throws CommandException {
-        TestShell shell = new TestShell(logger);
-        shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
-        return shell;
-    }
 }
