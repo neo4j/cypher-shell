@@ -4,7 +4,7 @@ import org.fusesource.jansi.AnsiConsole;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.log.StdLogger;
+import org.neo4j.shell.log.AnsiLogger;
 
 import javax.annotation.Nonnull;
 
@@ -33,7 +33,7 @@ public class Main {
                 cliArgs.getUsername(),
                 cliArgs.getPassword());
 
-        Logger logger = new StdLogger();
+        Logger logger = new AnsiLogger();
         try {
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 

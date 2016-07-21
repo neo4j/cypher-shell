@@ -10,4 +10,7 @@ public interface Logger {
     void printError(@Nonnull String s);
 
     void printOut(@Nonnull String s);
+
+    @Nonnull
+    PrintStream getErrorStream();
 }
