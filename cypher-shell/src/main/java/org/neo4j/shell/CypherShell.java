@@ -50,8 +50,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
-            logger.printError("Not connected to Neo4j");
-            return;
+            throw new CommandException("Not connected to Neo4j");
         }
 
         executeCypher(cmdString);

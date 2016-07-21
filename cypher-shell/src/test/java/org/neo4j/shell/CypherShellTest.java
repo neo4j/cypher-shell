@@ -100,6 +100,26 @@ public class CypherShellTest {
     }
 
     @Test
+    public void executeOfflineThrows() throws CommandException {
+        TestShell shell = new TestShell(logger);
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        shell.execute("RETURN 999");
+    }
+
+    @Test
+    public void executeShouldPrintResult() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        TestShell shell = new TestShell(logger);
+        shell.connect(cc);
+
+        shell.execute("RETURN 999");
+        verify(logger).printOut(contains("999"));
+    }
+
+    @Test
     public void commandNameShouldBeParsed() {
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help    ");
@@ -116,30 +136,31 @@ public class CypherShellTest {
     }
 
     @Test
-    public void commandWithArgsShouldBeParsed() {
+    public void commandWithArgsShouldBeParsed() throws CommandException {
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help   arg1 arg2 ");
 
         assertTrue(exe.isPresent());
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Incorrect number of arguments");
+
+        shell.executeCmd(exe.get());
     }
 
     @Test
-    public void commentsShouldNotBeExecuted() throws Exception {
-        shell.execute("// Hi, I'm a comment!");
-        // If no exception was thrown, we have success
+    public void commandWithArgsShouldBeParsedAndExecuted() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Incorrect number of arguments");
+
+        shell.execute("   :help   arg1 arg2 ");
     }
 
     @Test
-    public void emptyLinesShouldNotBeExecuted() throws Exception {
-        shell.execute("");
-        // If no exception was thrown, we have success
-    }
+    public void shouldReturnNothingOnStrangeCommand() {
+        Optional<CommandExecutable> exe = shell.getCommandExecutable("   :aklxjde   arg1 arg2 ");
 
-    @Test
-    public void secondLineCommentsShouldntBeExecuted() throws Exception {
-        shell.execute("     \\\n" +
-                "// Second line comment, first line escapes newline");
-        // If no exception was thrown, we have success
+        assertFalse(exe.isPresent());
     }
 
     @Test

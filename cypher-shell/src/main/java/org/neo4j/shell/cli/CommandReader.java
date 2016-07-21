@@ -90,6 +90,12 @@ public class CommandReader implements Historian {
         return new File(dir, ".neo4j_history");
     }
 
+    /**
+     * Reads from the InputStream until a non-empty statement can be found.
+     * Empty statements are either lines consisting of all whitespace, or comments (prefixed by //)
+     * @return a command string, or null if EOF
+     * @throws IOException
+     */
     @Nullable
     public String readCommand() throws IOException {
         StringBuffer stringBuffer = new StringBuffer();
@@ -102,11 +108,17 @@ public class CommandReader implements Historian {
                     return null;
                 }
             } else {
-                Matcher matcher = MULTILINE_BREAK.matcher(commentSubstitutedLine(line));
-                if (!matcher.find()) {
+                String withoutComments = commentSubstitutedLine(line);
+                Matcher m = MULTILINE_BREAK.matcher(withoutComments);
+                boolean isMultiline = m.find();
+                String parsedString = m.replaceAll("");
+
+                if (!parsedString.trim().isEmpty()) {
+                    stringBuffer.append(parsedString).append("\n");
+                }
+                if (!isMultiline && stringBuffer.length() > 0) {
                     reading = false;
                 }
-                stringBuffer.append(matcher.replaceAll("")).append("\n");
             }
         }
         return stringBuffer.toString();

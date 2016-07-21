@@ -12,10 +12,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TestStatementResult implements StatementResult {
 
     private final List<Record> records;
+    private int currentRecord = -1;
 
     public TestStatementResult() {
         records = new ArrayList<>();
@@ -27,17 +29,18 @@ public class TestStatementResult implements StatementResult {
 
     @Override
     public List<String> keys() {
-        throw new Util.NotImplementedYetException("Not implemented yet");
+        return records.stream().map(r -> r.keys().get(0)).collect(Collectors.toList());
     }
 
     @Override
     public boolean hasNext() {
-        return false;
+        return currentRecord + 1 < records.size();
     }
 
     @Override
     public Record next() {
-        throw new Util.NotImplementedYetException("Not implemented yet");
+        currentRecord += 1;
+        return records.get(currentRecord);
     }
 
     @Override

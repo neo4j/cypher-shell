@@ -10,6 +10,12 @@ import java.util.Map;
 
 
 public class TestValue implements Value {
+
+    @Override
+    public String toString() {
+        return asString();
+    }
+
     @Override
     public int size() {
         return 0;
@@ -32,7 +38,7 @@ public class TestValue implements Value {
 
     @Override
     public <T> Map<String, T> asMap(Function<Value, T> mapFunction) {
-        return null;
+        throw new Uncoercible(getClass().getSimpleName(), "Map");
     }
 
     @Override

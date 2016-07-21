@@ -49,7 +49,52 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) \n\n"));
+        assertThat(actual, is("CREATE (n:Person) \n"));
+    }
+
+    @Test
+    public void readCommandIgnoresComment() throws Exception {
+        // given
+        String inputString = "// Hi, I'm a comment!\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresEmptyLines() throws Exception {
+        // given
+        String inputString = "\n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresWhitespacedLines() throws Exception {
+        // given
+        String inputString = "     \n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresEmptyMultiLines() throws Exception {
+        // given
+        String inputString = "     \\\n" +
+                "// Second line comment, first line escapes newline";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
     }
 
     @Test
@@ -80,7 +125,7 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) \n\n"));
+        assertThat(actual, is("CREATE (n:Person) \n"));
     }
 
     @Test
@@ -95,14 +140,14 @@ public class CommandReaderTest {
     }
 
     @Test
-    public void readCommandReturnsEmptyStringForNewLine() throws Exception {
+    public void readCommandReturnsNullForNewLine() throws Exception {
         // given
         String inputString = "\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
         CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // then
-        assertThat(commandReader.readCommand(), is("\n"));
+        assertNull(commandReader.readCommand());
     }
 
     @Test
