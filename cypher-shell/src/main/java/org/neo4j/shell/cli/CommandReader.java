@@ -21,16 +21,13 @@ import java.util.regex.Pattern;
 import static java.lang.System.getProperty;
 
 public class CommandReader implements Historian {
+    private final static File DEFAULT_HISTORY_FILE = getDefaultHistoryFile();
     private final ConsoleReader reader;
     //Pattern matches a back slash at the end of the line for multiline commands
     static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
     //Pattern matches comments
     static final Pattern COMMENTS = Pattern.compile("//.*$");
     private final String prompt = AnsiRenderer.render("@|bold neo4j>|@ ");
-
-    public CommandReader(@Nonnull Logger logger) throws IOException {
-        this(System.in, logger);
-    }
 
     public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
         this(System.in, logger, useHistoryFile);
@@ -42,9 +39,14 @@ public class CommandReader implements Historian {
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, final boolean useHistoryFile)
             throws IOException {
+        this(inputStream, logger, useHistoryFile ? DEFAULT_HISTORY_FILE : null);
+    }
+
+    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger,
+                         @Nullable File historyFile) throws IOException {
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
-        if (useHistoryFile) {
-            setupHistoryFile(reader, logger);
+        if (historyFile != null) {
+            setupHistoryFile(reader, logger, historyFile);
         }
     }
 
@@ -59,9 +61,14 @@ public class CommandReader implements Historian {
     }
 
     private void setupHistoryFile(@Nonnull final ConsoleReader reader,
-                                  @Nonnull final Logger logger) throws IOException {
+                                  @Nonnull final Logger logger,
+                                  @Nonnull final File historyFile) throws IOException {
         try {
-            final FileHistory history = new FileHistory(getHistoryFile());
+            File dir = historyFile.getParentFile();
+            if (!dir.isDirectory() && !dir.mkdir()) {
+                throw new IOException("Failed to create directory for history: " + dir.getAbsolutePath());
+            }
+            final FileHistory history = new FileHistory(historyFile);
             reader.setHistory(history);
 
             // Make sure we flush history on exit
@@ -83,12 +90,9 @@ public class CommandReader implements Historian {
     }
 
     @Nonnull
-    private File getHistoryFile() throws IOException {
+    private static File getDefaultHistoryFile() {
         // Storing in same directory as driver uses
         File dir = new File(getProperty("user.home"), ".neo4j");
-        if (!dir.isDirectory() && !dir.mkdir()) {
-            throw new IOException("Failed to create directory for history: " + dir.getAbsolutePath());
-        }
         return new File(dir, ".neo4j_history");
     }
 
