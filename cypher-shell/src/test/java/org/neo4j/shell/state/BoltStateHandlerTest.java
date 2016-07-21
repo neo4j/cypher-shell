@@ -100,6 +100,7 @@ public class BoltStateHandlerTest {
 
     @Test
     public void shouldExecuteInSessionByDefault() throws CommandException {
+        boltStateHandler.connect();
         Transaction tx = boltStateHandler.getCurrentTransaction();
         assertNull("Did not expect a transaction", tx);
 

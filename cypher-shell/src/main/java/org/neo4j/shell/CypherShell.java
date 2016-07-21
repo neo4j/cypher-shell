@@ -63,7 +63,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      *
      * @param cypher non-empty cypher text to executeLine
      */
-    void executeCypher(@Nonnull final String cypher) {
+    void executeCypher(@Nonnull final String cypher) throws CommandException {
         final StatementResult result = doCypherSilently(cypher);
         logger.printOut(PrettyPrinter.format(result));
     }
@@ -128,7 +128,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     @Override
     @Nonnull
-    public Optional set(@Nonnull String name, @Nonnull String valueString) {
+    public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
         Object value = record.get(name).asObject();
         queryParams.put(name, value);
@@ -150,7 +150,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     /**
      * Run a cypher statement, and return the result. Is not stored in history.
      */
-    private StatementResult doCypherSilently(@Nonnull final String cypher) {
+    private StatementResult doCypherSilently(@Nonnull final String cypher) throws CommandException {
         return boltStateHandler.getStatementRunner().run(cypher, queryParams);
     }
 

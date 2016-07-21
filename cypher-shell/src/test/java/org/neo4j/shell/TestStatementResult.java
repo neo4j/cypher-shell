@@ -73,10 +73,11 @@ public class TestStatementResult implements StatementResult {
      */
     public static TestStatementResult parseStatement(@Nonnull final String statement) {
 
-        Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
         Pattern returnAsPattern = Pattern.compile("^return (.*) as (.*)$", Pattern.CASE_INSENSITIVE);
+        Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
 
-        for (Pattern p: Arrays.asList(returnPattern, returnAsPattern)) {
+        // Be careful with order here
+        for (Pattern p: Arrays.asList(returnAsPattern, returnPattern)) {
             Matcher m = p.matcher(statement);
             if (m.find()) {
                 String value = m.group(1);

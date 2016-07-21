@@ -25,9 +25,13 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     /**
      * Returns an appropriate runner, depending on the current transaction state.
      *
-     * @return a statementrunner to execute cypher
+     * @return a statementrunner to execute cypher, or throws an exception if not connected
      */
-    public StatementRunner getStatementRunner() {
+    @Nonnull
+    public StatementRunner getStatementRunner() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
         if (tx != null) {
             return tx;
         }
