@@ -40,11 +40,11 @@ public class CommandReader implements Historian {
         this(inputStream, logger, false);
     }
 
-    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, final boolean useHistory)
+    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, final boolean useHistoryFile)
             throws IOException {
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
-        if (useHistory) {
-            setupHistory(reader, logger);
+        if (useHistoryFile) {
+            setupHistoryFile(reader, logger);
         }
     }
 
@@ -52,16 +52,14 @@ public class CommandReader implements Historian {
     public List<String> getHistory() {
         History history = reader.getHistory();
         List<String> result =  new ArrayList<>();
-        if (history == null) {
-            return result;
-        }
 
-        history.forEach(entry -> result.add(String.valueOf(entry)));
+        history.forEach(entry -> result.add(String.valueOf(entry.value())));
 
         return result;
     }
 
-    private void setupHistory(@Nonnull final ConsoleReader reader, @Nonnull final Logger logger) throws IOException {
+    private void setupHistoryFile(@Nonnull final ConsoleReader reader,
+                                  @Nonnull final Logger logger) throws IOException {
         try {
             final FileHistory history = new FileHistory(getHistoryFile());
             reader.setHistory(history);

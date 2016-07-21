@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -95,6 +95,19 @@ public class CommandReaderTest {
 
         // when then
         assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void noHistoryFileGivesMemoryHistory() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("yo\n".getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger, false);
+
+        assertTrue(commandReader.getHistory().isEmpty());
+
+        assertEquals("yo\n", commandReader.readCommand());
+
+        assertEquals(1, commandReader.getHistory().size());
+        assertEquals("yo", commandReader.getHistory().get(0));
     }
 
     @Test
