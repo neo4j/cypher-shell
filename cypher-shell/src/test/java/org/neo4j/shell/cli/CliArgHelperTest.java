@@ -3,7 +3,7 @@ package org.neo4j.shell.cli;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.neo4j.shell.Util.asArray;
+import static org.neo4j.shell.test.Util.asArray;
 
 public class CliArgHelperTest {
 

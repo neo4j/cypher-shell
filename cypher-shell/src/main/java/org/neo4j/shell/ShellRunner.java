@@ -31,7 +31,7 @@ public interface ShellRunner {
      * @throws IOException
      */
     static ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs, @Nonnull Logger logger) throws IOException {
-        CommandReader commandReader = new CommandReader(logger);
+        CommandReader commandReader = new CommandReader(logger, true);
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);
         } else if (isInteractive()) {

@@ -10,15 +10,20 @@ import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.state.BoltStateHandler;
+import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 public class CypherShellTest {
@@ -26,16 +31,96 @@ public class CypherShellTest {
     public final ExpectedException thrown = ExpectedException.none();
 
     Logger logger = mock(Logger.class);
-    private ThrowingShell shell;
+    private OfflineTestShell shell;
+    private BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
 
     @Before
     public void setup() {
         doReturn(System.out).when(logger).getOutputStream();
-        shell = new ThrowingShell(logger);
+        shell = new OfflineTestShell(logger);
 
         CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, shell);
 
         shell.setCommandHelper(commandHelper);
+    }
+
+    @Test
+    public void verifyDelegationOfConnectionMethods() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler);
+
+        shell.connect(cc);
+        verify(mockedBoltStateHandler).connect(cc);
+
+        shell.disconnect();
+        verify(mockedBoltStateHandler).disconnect();
+
+        shell.isConnected();
+        verify(mockedBoltStateHandler).isConnected();
+    }
+
+    @Test
+    public void verifyDelegationOfTransactionMethods() throws CommandException {
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler);
+
+        shell.beginTransaction();
+        verify(mockedBoltStateHandler).beginTransaction();
+
+        shell.commitTransaction();
+        verify(mockedBoltStateHandler).commitTransaction();
+
+        shell.rollbackTransaction();
+        verify(mockedBoltStateHandler).rollbackTransaction();
+    }
+
+    @Test
+    public void setWhenDisconnectedShouldThrow() throws CommandException {
+        CypherShell shell = new OfflineTestShell(logger);
+
+        assertFalse(shell.isConnected());
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        shell.set("bob", "99");
+        assertEquals("99", shell.getAll().get("bob"));
+    }
+
+    @Test
+    public void verifyVariableMethods() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        OfflineTestShell shell = new OfflineTestShell(logger);
+        shell.connect(cc);
+
+        assertTrue(shell.isConnected());
+
+        assertTrue(shell.getAll().isEmpty());
+
+        assertEquals("99", shell.set("bob", "99").get());
+        assertEquals("99", shell.getAll().get("bob"));
+
+        shell.remove("bob");
+        assertTrue(shell.getAll().isEmpty());
+    }
+
+    @Test
+    public void executeOfflineThrows() throws CommandException {
+        OfflineTestShell shell = new OfflineTestShell(logger);
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        shell.execute("RETURN 999");
+    }
+
+    @Test
+    public void executeShouldPrintResult() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        OfflineTestShell shell = new OfflineTestShell(logger);
+        shell.connect(cc);
+
+        shell.execute("RETURN 999");
+        verify(logger).printOut(contains("999"));
     }
 
     @Test
@@ -55,30 +140,31 @@ public class CypherShellTest {
     }
 
     @Test
-    public void commandWithArgsShouldBeParsed() {
+    public void commandWithArgsShouldBeParsed() throws CommandException {
 
         Optional<CommandExecutable> exe = shell.getCommandExecutable("   :help   arg1 arg2 ");
 
         assertTrue(exe.isPresent());
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Incorrect number of arguments");
+
+        shell.executeCmd(exe.get());
     }
 
     @Test
-    public void commentsShouldNotBeExecuted() throws Exception {
-        shell.execute("// Hi, I'm a comment!");
-        // If no exception was thrown, we have success
+    public void commandWithArgsShouldBeParsedAndExecuted() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Incorrect number of arguments");
+
+        shell.execute("   :help   arg1 arg2 ");
     }
 
     @Test
-    public void emptyLinesShouldNotBeExecuted() throws Exception {
-        shell.execute("");
-        // If no exception was thrown, we have success
-    }
+    public void shouldReturnNothingOnStrangeCommand() {
+        Optional<CommandExecutable> exe = shell.getCommandExecutable("   :aklxjde   arg1 arg2 ");
 
-    @Test
-    public void secondLineCommentsShouldntBeExecuted() throws Exception {
-        shell.execute("     \\\n" +
-                "// Second line comment, first line escapes newline");
-        // If no exception was thrown, we have success
+        assertFalse(exe.isPresent());
     }
 
     @Test

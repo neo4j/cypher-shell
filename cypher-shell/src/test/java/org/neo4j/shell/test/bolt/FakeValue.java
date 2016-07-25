@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.exceptions.value.Uncoercible;
@@ -8,8 +8,16 @@ import org.neo4j.driver.v1.util.Function;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A fake value
+ */
+class FakeValue implements Value {
 
-public class TestValue implements Value {
+    @Override
+    public String toString() {
+        return asString();
+    }
+
     @Override
     public int size() {
         return 0;
@@ -32,7 +40,7 @@ public class TestValue implements Value {
 
     @Override
     public <T> Map<String, T> asMap(Function<Value, T> mapFunction) {
-        return null;
+        throw new Uncoercible(getClass().getSimpleName(), "Map");
     }
 
     @Override

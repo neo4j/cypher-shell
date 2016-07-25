@@ -13,7 +13,6 @@ import java.util.Arrays;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class HistoryTest {
@@ -40,11 +39,12 @@ public class HistoryTest {
     }
 
     @Test
-    public void shouldPrintHistory() throws CommandException {
+    public void shouldPrintHistoryCorrectlyNumberedFrom1() throws CommandException {
         when(historian.getHistory()).thenReturn(Arrays.asList(":help", ":exit"));
 
         cmd.execute("");
 
-        verify(logger).printOut(anyString());
+        verify(logger).printOut(eq(" 1  :help\n" +
+                " 2  :exit\n"));
     }
 }

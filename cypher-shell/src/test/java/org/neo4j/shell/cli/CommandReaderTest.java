@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -49,7 +49,65 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) \n\n"));
+        assertThat(actual, is("CREATE (n:Person) \n"));
+    }
+
+    @Test
+    public void readCommandIgnoresComment() throws Exception {
+        // given
+        String inputString = "// Hi, I'm a comment!\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresEmptyLines() throws Exception {
+        // given
+        String inputString = "\n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresWhitespacedLines() throws Exception {
+        // given
+        String inputString = "     \n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void readCommandIgnoresEmptyMultiLines() throws Exception {
+        // given
+        String inputString = "     \\\n" +
+                "// Second line comment, first line escapes newline";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertNull(commandReader.readCommand());
+    }
+
+    @Test
+    public void noHistoryFileGivesMemoryHistory() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("yo\n".getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger, false);
+
+        assertTrue(commandReader.getHistory().isEmpty());
+
+        assertEquals("yo\n", commandReader.readCommand());
+
+        assertEquals(1, commandReader.getHistory().size());
+        assertEquals("yo", commandReader.getHistory().get(0));
     }
 
     @Test
@@ -80,7 +138,7 @@ public class CommandReaderTest {
         String actual = commandReader.readCommand();
 
         // then
-        assertThat(actual, is("CREATE (n:Person) \n\n"));
+        assertThat(actual, is("CREATE (n:Person) \n"));
     }
 
     @Test
@@ -95,14 +153,14 @@ public class CommandReaderTest {
     }
 
     @Test
-    public void readCommandReturnsEmptyStringForNewLine() throws Exception {
+    public void readCommandReturnsNullForNewLine() throws Exception {
         // given
         String inputString = "\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
         CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // then
-        assertThat(commandReader.readCommand(), is("\n"));
+        assertNull(commandReader.readCommand());
     }
 
     @Test

@@ -1,14 +1,15 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.summary.*;
+import org.neo4j.shell.test.Util;
 
 import java.util.List;
 
 /**
  * A fake result summary
  */
-public class TestResultSummary implements ResultSummary {
+class FakeResultSummary implements ResultSummary {
     @Override
     public Statement statement() {
         throw new Util.NotImplementedYetException("Not implemented yet");

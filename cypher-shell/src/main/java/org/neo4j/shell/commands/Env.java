@@ -52,7 +52,7 @@ public class Env implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     @Override

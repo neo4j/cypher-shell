@@ -1,13 +1,19 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Statement;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.types.TypeSystem;
 
 import java.util.Map;
 
-public class TestTransaction implements Transaction {
+/**
+ * A fake transaction
+ */
+public class FakeTransaction implements Transaction {
 
-    private String lastCypherStatement = null;
     private Boolean success = null;
     private boolean open = true;
 
@@ -33,40 +39,32 @@ public class TestTransaction implements Transaction {
 
     @Override
     public StatementResult run(String cypher, Value parameters) {
-        lastCypherStatement = cypher;
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override
     public StatementResult run(String cypher, Map<String, Object> statementParameters) {
-        lastCypherStatement = cypher;
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override
     public StatementResult run(String cypher, Record statementParameters) {
-        lastCypherStatement = cypher;
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override
     public StatementResult run(String cypher) {
-        lastCypherStatement = cypher;
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override
     public StatementResult run(Statement statement) {
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override
     public TypeSystem typeSystem() {
         return null;
-    }
-
-    public String getLastCypherStatement() {
-        return lastCypherStatement;
     }
 
     public boolean isSuccess() {

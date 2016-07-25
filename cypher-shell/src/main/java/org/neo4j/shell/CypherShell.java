@@ -34,7 +34,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         this(logger, new BoltStateHandler());
     }
 
-    CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
+    protected CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
     }
@@ -50,8 +50,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
         // Else it will be parsed as Cypher, but for that we need to be connected
         if (!isConnected()) {
-            logger.printError("Not connected to Neo4j");
-            return;
+            throw new CommandException("Not connected to Neo4j");
         }
 
         executeCypher(cmdString);
@@ -63,7 +62,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      *
      * @param cypher non-empty cypher text to executeLine
      */
-    void executeCypher(@Nonnull final String cypher) {
+    protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final StatementResult result = doCypherSilently(cypher);
         logger.printOut(PrettyPrinter.format(result));
     }
@@ -74,7 +73,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Nonnull
-    Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
+    protected Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         Matcher m = cmdNamePattern.matcher(line);
         if (commandHelper == null || !m.matches()) {
             return Optional.empty();
@@ -92,7 +91,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return Optional.of(() -> cmd.execute(args));
     }
 
-    void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
+    protected void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
         cmdExe.execute();
     }
 
@@ -128,7 +127,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     @Override
     @Nonnull
-    public Optional set(@Nonnull String name, @Nonnull String valueString) {
+    public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
         Object value = record.get(name).asObject();
         queryParams.put(name, value);
@@ -150,7 +149,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     /**
      * Run a cypher statement, and return the result. Is not stored in history.
      */
-    private StatementResult doCypherSilently(@Nonnull final String cypher) {
+    private StatementResult doCypherSilently(@Nonnull final String cypher) throws CommandException {
         return boltStateHandler.getStatementRunner().run(cypher, queryParams);
     }
 
