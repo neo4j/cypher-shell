@@ -1,16 +1,19 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.TypeSystem;
 
 import java.util.Map;
 
-public class TestSession implements Session {
+/**
+ * A fake session which returns fake StatementResults
+ */
+class FakeSession implements Session {
     private boolean open = true;
 
     @Override
     public Transaction beginTransaction() {
-        return new TestTransaction();
+        return new FakeTransaction();
     }
 
     @Override
@@ -25,27 +28,27 @@ public class TestSession implements Session {
 
     @Override
     public StatementResult run(String statementTemplate, Value parameters) {
-        return TestStatementResult.parseStatement(statementTemplate);
+        return FakeStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate, Map<String, Object> statementParameters) {
-        return TestStatementResult.parseStatement(statementTemplate);
+        return FakeStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate, Record statementParameters) {
-        return TestStatementResult.parseStatement(statementTemplate);
+        return FakeStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(String statementTemplate) {
-        return TestStatementResult.parseStatement(statementTemplate);
+        return FakeStatementResult.parseStatement(statementTemplate);
     }
 
     @Override
     public StatementResult run(Statement statement) {
-        return new TestStatementResult();
+        return new FakeStatementResult();
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
-import org.neo4j.shell.TestDriver;
+import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -29,6 +29,6 @@ public class OfflineBoltStateHandler extends BoltStateHandler {
 
     @Override
     protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
-        return new TestDriver();
+        return new FakeDriver();
     }
 }

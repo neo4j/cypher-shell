@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
-import org.neo4j.shell.TestTransaction;
+import org.neo4j.shell.test.bolt.FakeTransaction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -33,7 +33,7 @@ public class BoltStateHandlerTest {
 
         assertNotNull("Expected an open transaction", boltStateHandler.getCurrentTransaction());
 
-        TestTransaction tx = (TestTransaction) boltStateHandler.getCurrentTransaction();
+        FakeTransaction tx = (FakeTransaction) boltStateHandler.getCurrentTransaction();
 
         boltStateHandler.rollbackTransaction();
 
@@ -46,7 +46,7 @@ public class BoltStateHandlerTest {
     public void closeTransactionAfterCommit() throws CommandException {
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
-        TestTransaction tx = (TestTransaction) boltStateHandler.getCurrentTransaction();
+        FakeTransaction tx = (FakeTransaction) boltStateHandler.getCurrentTransaction();
 
         assertNotNull("Expected an open transaction", tx);
 

@@ -1,9 +1,10 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.util.Function;
 import org.neo4j.driver.v1.util.Pair;
+import org.neo4j.shell.test.Util;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -11,12 +12,14 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+/**
+ * A fake record of fake values
+ */
+class FakeRecord implements Record {
 
-public class TestRecord implements Record {
+    private final TreeMap<String, Value> valueMap = new TreeMap<>();
 
-    final TreeMap<String, Value> valueMap = new TreeMap<>();
-
-    public TestRecord() {
+    private FakeRecord() {
     }
 
     @Override
@@ -69,8 +72,8 @@ public class TestRecord implements Record {
         throw new Util.NotImplementedYetException("Not implemented as no test has required it yet");
     }
 
-    public static TestRecord of(@Nonnull String key, @Nonnull String value) {
-        return of(key, new TestValue() {
+    public static FakeRecord of(@Nonnull String key, @Nonnull String value) {
+        return of(key, new FakeValue() {
             @Override
             public Object asObject() {
                 return value;
@@ -83,8 +86,8 @@ public class TestRecord implements Record {
         });
     }
 
-    public static TestRecord of(@Nonnull String key, @Nonnull Value value) {
-        TestRecord record = new TestRecord();
+    public static FakeRecord of(@Nonnull String key, @Nonnull Value value) {
+        FakeRecord record = new FakeRecord();
         record.valueMap.put(key, value);
 
         return record;

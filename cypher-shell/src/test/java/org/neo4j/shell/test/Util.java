@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test;
 
 public class Util {
     public static String[] asArray(String... arguments) {

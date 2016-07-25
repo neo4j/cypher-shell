@@ -34,7 +34,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         this(logger, new BoltStateHandler());
     }
 
-    CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
+    protected CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
     }
@@ -62,7 +62,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      *
      * @param cypher non-empty cypher text to executeLine
      */
-    void executeCypher(@Nonnull final String cypher) throws CommandException {
+    protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final StatementResult result = doCypherSilently(cypher);
         logger.printOut(PrettyPrinter.format(result));
     }
@@ -73,7 +73,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Nonnull
-    Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
+    protected Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         Matcher m = cmdNamePattern.matcher(line);
         if (commandHelper == null || !m.matches()) {
             return Optional.empty();
@@ -91,7 +91,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return Optional.of(() -> cmd.execute(args));
     }
 
-    void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
+    protected void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
         cmdExe.execute();
     }
 

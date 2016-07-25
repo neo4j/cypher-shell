@@ -11,6 +11,7 @@ import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.state.BoltStateHandler;
+import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -19,7 +20,10 @@ import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 public class CypherShellTest {
@@ -27,13 +31,13 @@ public class CypherShellTest {
     public final ExpectedException thrown = ExpectedException.none();
 
     Logger logger = mock(Logger.class);
-    private ThrowingShell shell;
+    private OfflineTestShell shell;
     private BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
 
     @Before
     public void setup() {
         doReturn(System.out).when(logger).getOutputStream();
-        shell = new ThrowingShell(logger);
+        shell = new OfflineTestShell(logger);
 
         CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, shell);
 
@@ -71,7 +75,7 @@ public class CypherShellTest {
 
     @Test
     public void setWhenDisconnectedShouldThrow() throws CommandException {
-        CypherShell shell = new TestShell(logger);
+        CypherShell shell = new OfflineTestShell(logger);
 
         assertFalse(shell.isConnected());
 
@@ -85,7 +89,7 @@ public class CypherShellTest {
     @Test
     public void verifyVariableMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        TestShell shell = new TestShell(logger);
+        OfflineTestShell shell = new OfflineTestShell(logger);
         shell.connect(cc);
 
         assertTrue(shell.isConnected());
@@ -101,7 +105,7 @@ public class CypherShellTest {
 
     @Test
     public void executeOfflineThrows() throws CommandException {
-        TestShell shell = new TestShell(logger);
+        OfflineTestShell shell = new OfflineTestShell(logger);
 
         thrown.expect(CommandException.class);
         thrown.expectMessage("Not connected to Neo4j");
@@ -112,7 +116,7 @@ public class CypherShellTest {
     @Test
     public void executeShouldPrintResult() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        TestShell shell = new TestShell(logger);
+        OfflineTestShell shell = new OfflineTestShell(logger);
         shell.connect(cc);
 
         shell.execute("RETURN 999");

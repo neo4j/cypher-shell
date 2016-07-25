@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.exceptions.value.Uncoercible;
@@ -8,8 +8,10 @@ import org.neo4j.driver.v1.util.Function;
 import java.util.List;
 import java.util.Map;
 
-
-public class TestValue implements Value {
+/**
+ * A fake value
+ */
+class FakeValue implements Value {
 
     @Override
     public String toString() {
