@@ -37,7 +37,6 @@ public class CommandHelper {
         registerCommand(new Rollback(transactionHandler));
         registerCommand(new Set(variableHolder));
         registerCommand(new Params(logger, variableHolder));
-        registerCommand(new Unset(variableHolder));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {
