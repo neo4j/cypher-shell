@@ -4,7 +4,7 @@ import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +50,7 @@ public class Set implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return Arrays.asList(":export");
+        return Collections.EMPTY_LIST;
     }
 
     @Override
