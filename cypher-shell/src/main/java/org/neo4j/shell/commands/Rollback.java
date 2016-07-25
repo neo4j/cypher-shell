@@ -1,6 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Command;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -9,7 +8,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.neo4j.shell.CommandHelper.simpleArgParse;
+import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
  * This command marks a transaction as failed and closes it.

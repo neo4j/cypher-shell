@@ -15,7 +15,7 @@ public interface ShellRunner {
      *
      * @return error code to exit with
      */
-    int runUntilEnd(@Nonnull CommandExecuter executer);
+    int runUntilEnd(@Nonnull StatementExecuter executer);
 
     /**
      *

@@ -2,17 +2,14 @@ package org.neo4j.shell;
 
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.util.Function;
-import org.neo4j.driver.v1.util.Pair;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +65,7 @@ public class TestStatementResult implements StatementResult {
 
     @Override
     public ResultSummary consume() {
-        throw new Util.NotImplementedYetException("Not implemented yet");
+        return new TestResultSummary();
     }
 
     /**
@@ -78,8 +75,9 @@ public class TestStatementResult implements StatementResult {
 
         Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
         Pattern returnAsPattern = Pattern.compile("^return (.*) as (.*)$", Pattern.CASE_INSENSITIVE);
-        for (Pattern p: Arrays.asList(returnAsPattern, returnPattern)) {
-            Matcher m = returnAsPattern.matcher(statement);
+
+        for (Pattern p: Arrays.asList(returnPattern, returnAsPattern)) {
+            Matcher m = p.matcher(statement);
             if (m.find()) {
                 String value = m.group(1);
                 String key = value;

@@ -6,9 +6,9 @@ import org.neo4j.shell.exception.ExitException;
 import javax.annotation.Nonnull;
 
 /**
- * An interface which executes commands
+ * An interface which executes statements
  */
-public interface CommandExecuter {
+public interface StatementExecuter {
 
     void execute(@Nonnull String command) throws ExitException, CommandException;
 }

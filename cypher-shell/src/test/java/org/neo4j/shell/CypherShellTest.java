@@ -4,16 +4,18 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
+import org.neo4j.shell.commands.CommandExecutable;
+import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
 import java.io.IOException;
 import java.util.Optional;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -91,58 +93,6 @@ public class CypherShellTest {
     }
 
     @Test
-    public void closeTransactionAfterRollback() throws CommandException {
-        TestShell shell = connectedShell();
-        shell.beginTransaction();
-
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
-
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
-
-        shell.rollbackTransaction();
-
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertFalse("Transaction should not be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
-    }
-
-    @Test
-    public void closeTransactionAfterCommit() throws CommandException {
-        TestShell shell = connectedShell();
-        shell.beginTransaction();
-
-        assertTrue("Expected an open transaction", shell.getCurrentTransaction().isPresent());
-
-        TestTransaction tx = (TestTransaction) shell.getCurrentTransaction().get();
-
-        shell.commitTransaction();
-
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertTrue("Transaction should be successful", tx.isSuccess());
-        assertFalse("Expected tx to be gone", shell.getCurrentTransaction().isPresent());
-    }
-
-    @Test
-    public void shouldExecuteInTransactionIfOpen() throws CommandException {
-        TestShell shell = connectedShell();
-        shell.beginTransaction();
-
-        TestTransaction tx = null;
-        Optional<Transaction> txo = shell.getCurrentTransaction();
-        if (txo.isPresent()) {
-            tx = (TestTransaction) txo.get();
-        } else {
-            fail("No transaction");
-        }
-
-        String cypherLine = "THIS IS CYPEHR";
-
-        shell.executeCypher(cypherLine);
-
-        assertEquals("did not execute in TX correctly", cypherLine, tx.getLastCypherStatement());
-    }
-
-    @Test
     public void shouldParseCommandsAndArgs() {
         assertTrue(shell.getCommandExecutable(":help").isPresent());
         assertTrue(shell.getCommandExecutable(":help :set").isPresent());
@@ -154,47 +104,5 @@ public class CypherShellTest {
         // when
         // then
         assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
-    }
-
-    @Test
-    public void beginNeedsToBeConnected() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Not connected to Neo4j");
-
-        TestShell shell = new TestShell(logger);
-
-        assertFalse(shell.isConnected());
-
-        shell.beginTransaction();
-    }
-
-    @Test
-    public void commitNeedsToBeConnected() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Not connected to Neo4j");
-
-        TestShell shell = new TestShell(logger);
-
-        assertFalse(shell.isConnected());
-
-        shell.commitTransaction();
-    }
-
-    @Test
-    public void rollbackNeedsToBeConnected() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Not connected to Neo4j");
-
-        TestShell shell = new TestShell(logger);
-
-        assertFalse(shell.isConnected());
-
-        shell.rollbackTransaction();
-    }
-
-    private TestShell connectedShell() throws CommandException {
-        TestShell shell = new TestShell(logger);
-        shell.connect(new ConnectionConfig("bla", 99, "bob", "pass"));
-        return shell;
     }
 }

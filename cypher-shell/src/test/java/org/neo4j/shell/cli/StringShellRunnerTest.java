@@ -6,7 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -21,7 +21,7 @@ public class StringShellRunnerTest {
     public ExpectedException thrown = ExpectedException.none();
 
     private Logger logger = mock(Logger.class);
-    private CommandExecuter commandExecuter = mock(CommandExecuter.class);
+    private StatementExecuter statementExecuter = mock(StatementExecuter.class);
 
     @Before
     public void setup() throws CommandException {
@@ -40,20 +40,20 @@ public class StringShellRunnerTest {
         String cypherString = "nonsense string";
         StringShellRunner runner = new StringShellRunner(CliArgHelper.parse(cypherString), logger);
 
-        int code = runner.runUntilEnd(commandExecuter);
+        int code = runner.runUntilEnd(statementExecuter);
 
         assertEquals("Wrong exit code", 0, code);
-        verify(commandExecuter).execute("nonsense string");
-        verifyNoMoreInteractions(commandExecuter);
+        verify(statementExecuter).execute("nonsense string");
+        verifyNoMoreInteractions(statementExecuter);
     }
 
     @Test
     public void errorsShouldThrow() throws IOException, CommandException {
-        doThrow(new ClientException("Error kaboom")).when(commandExecuter).execute(anyString());
+        doThrow(new ClientException("Error kaboom")).when(statementExecuter).execute(anyString());
 
         StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), logger);
 
-        int code = runner.runUntilEnd(commandExecuter);
+        int code = runner.runUntilEnd(statementExecuter);
 
         assertEquals("Wrong exit code", 1, code);
         verify(logger).printError("Error kaboom");

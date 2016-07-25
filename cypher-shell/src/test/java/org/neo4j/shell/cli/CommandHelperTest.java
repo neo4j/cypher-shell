@@ -1,10 +1,10 @@
-package org.neo4j.shell;
+package org.neo4j.shell.cli;
 
 import org.junit.Test;
 import org.neo4j.shell.exception.CommandException;
 
 import static org.junit.Assert.*;
-import static org.neo4j.shell.CommandHelper.simpleArgParse;
+import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 public class CommandHelperTest {
 

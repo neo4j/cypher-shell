@@ -1,6 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Command;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
@@ -10,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.neo4j.shell.CommandHelper.simpleArgParse;
+import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
  * Command to connect to an instance of Neo4j.

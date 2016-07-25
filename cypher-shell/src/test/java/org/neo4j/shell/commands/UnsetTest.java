@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.Command;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 

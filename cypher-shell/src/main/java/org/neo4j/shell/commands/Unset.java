@@ -1,6 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Command;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 
@@ -8,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.neo4j.shell.CommandHelper.simpleArgParse;
+import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
  * This command clears a previously set variable, or does nothing in case it is already cleared.
