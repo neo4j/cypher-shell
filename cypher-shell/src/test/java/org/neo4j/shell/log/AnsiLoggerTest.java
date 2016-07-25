@@ -7,6 +7,7 @@ import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 public class AnsiLoggerTest {
@@ -14,14 +15,12 @@ public class AnsiLoggerTest {
     private PrintStream out;
     private PrintStream err;
     private AnsiLogger logger;
-    private StringBuilder sb;
 
     @Before
     public void setup() {
         out = mock(PrintStream.class);
         err = mock(PrintStream.class);
-        sb = new StringBuilder();
-        logger = new AnsiLogger(out, err, sb);
+        logger = new AnsiLogger(out, err);
     }
 
     @Test
@@ -41,12 +40,34 @@ public class AnsiLoggerTest {
     @Test
     public void printError() throws Exception {
         logger.printError("bob");
-        assertEquals("bob", sb.toString());
+        verify(err).println("bob");
     }
 
     @Test
     public void printOut() throws Exception {
         logger.printOut("sob");
-        assertEquals("sob", sb.toString());
+        verify(out).println("sob");
+    }
+
+    @Test
+    public void printOutManyShouldNotBuildState() throws Exception {
+        logger.printOut("bob");
+        logger.printOut("nob");
+        logger.printOut("cod");
+
+        verify(out).println("bob");
+        verify(out).println("nob");
+        verify(out).println("cod");
+    }
+
+    @Test
+    public void printErrManyShouldNotBuildState() throws Exception {
+        logger.printError("bob");
+        logger.printError("nob");
+        logger.printError("cod");
+
+        verify(err).println("bob");
+        verify(err).println("nob");
+        verify(err).println("cod");
     }
 }
