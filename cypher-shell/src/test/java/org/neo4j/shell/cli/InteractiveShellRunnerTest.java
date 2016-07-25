@@ -3,7 +3,7 @@ package org.neo4j.shell.cli;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 
 public class InteractiveShellRunnerTest {
     Logger logger = mock(Logger.class);
-    CommandExecuter cmdExecuter = mock(CommandExecuter.class);
+    StatementExecuter cmdExecuter = mock(StatementExecuter.class);
 
     @Before
     public void setup() {

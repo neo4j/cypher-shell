@@ -1,6 +1,6 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.shell.CommandExecuter;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.exception.ExitException;
@@ -8,7 +8,7 @@ import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getSensibleMsg;
 
 
 /**
@@ -30,7 +30,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull CommandExecuter executer) {
+    public int runUntilEnd(@Nonnull StatementExecuter executer) {
         String command;
         boolean running = true;
         int exitCode = 0;

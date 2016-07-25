@@ -1,12 +1,12 @@
-package org.neo4j.shell;
+package org.neo4j.shell.exception;
 
 import javax.annotation.Nonnull;
 import java.security.cert.CertificateException;
 
 /**
- * Utility functions with regards to communication with Neo4j
+ * Utility functions with regards to exception messages
  */
-public class BoltHelper {
+public class Helper {
     @Nonnull
     private static Throwable getRootCause(@Nonnull final Throwable th) {
         Throwable cause = th;

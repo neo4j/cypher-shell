@@ -2,12 +2,13 @@ package org.neo4j.shell;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.log.StdLogger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.BoltHelper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getSensibleMsg;
 
 public class Main {
 

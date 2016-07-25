@@ -4,7 +4,6 @@ package org.neo4j.shell.commands;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.shell.Command;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.exception.CommandException;
