@@ -30,7 +30,7 @@ public class CypherShellTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    Logger logger = mock(Logger.class);
+    private Logger logger = mock(Logger.class);
     private OfflineTestShell shell;
     private BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
 
@@ -51,9 +51,6 @@ public class CypherShellTest {
 
         shell.connect(cc);
         verify(mockedBoltStateHandler).connect(cc);
-
-        shell.disconnect();
-        verify(mockedBoltStateHandler).disconnect();
 
         shell.isConnected();
         verify(mockedBoltStateHandler).isConnected();
