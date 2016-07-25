@@ -30,7 +30,6 @@ public class CommandHelper {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));
         registerCommand(new History(logger, historian));
-        registerCommand(new Connect(logger, connector));
         registerCommand(new Begin(transactionHandler));
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));
