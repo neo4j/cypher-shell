@@ -106,11 +106,6 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Override
-    public void disconnect() throws CommandException {
-        boltStateHandler.disconnect();
-    }
-
-    @Override
     public void beginTransaction() throws CommandException {
         boltStateHandler.beginTransaction();
     }

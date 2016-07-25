@@ -20,10 +20,4 @@ public interface Connector {
      * @throws CommandException if connection failed
      */
     void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException;
-
-    /**
-     *
-     * @throws CommandException if disconnection failed
-     */
-    void disconnect() throws CommandException;
 }

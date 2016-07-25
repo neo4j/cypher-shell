@@ -125,24 +125,9 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void canOnlyDisconnectOnce() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Not connected, nothing to disconnect from.");
-
-        try {
-            boltStateHandler.connect();
-            boltStateHandler.disconnect();
-        } catch (Throwable e) {
-            fail("Should not throw here: " + e);
-        }
-
-        boltStateHandler.disconnect();
-    }
-
-    @Test
     public void canOnlyConnectOnce() throws CommandException {
         thrown.expect(CommandException.class);
-        thrown.expectMessage("Already connected.");
+        thrown.expectMessage("Already connected");
 
         try {
             boltStateHandler.connect();

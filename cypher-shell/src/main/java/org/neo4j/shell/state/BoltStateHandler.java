@@ -1,11 +1,17 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementRunner;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
-import org.neo4j.shell.commands.Disconnect;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -83,8 +89,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     @Override
     public void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException {
         if (isConnected()) {
-            throw new CommandException(String.format("Already connected. Call @|bold %s|@ first.",
-                    Disconnect.COMMAND_NAME));
+            throw new CommandException("Already connected");
         }
 
         final AuthToken authToken;
@@ -118,14 +123,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
         return GraphDatabase.driver(connectionConfig.driverUrl(),
                 authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
-    }
-
-    @Override
-    public void disconnect() throws CommandException {
-        if (!isConnected()) {
-            throw new CommandException("Not connected, nothing to disconnect from.");
-        }
-        silentDisconnect();
     }
 
     /**
