@@ -1,6 +1,10 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.*;
+import org.neo4j.shell.Connector;
+import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.Historian;
+import org.neo4j.shell.TransactionHandler;
+import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
 import org.neo4j.shell.log.Logger;
@@ -32,7 +36,7 @@ public class CommandHelper {
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));
         registerCommand(new Set(variableHolder));
-        registerCommand(new Env(logger, variableHolder));
+        registerCommand(new Params(logger, variableHolder));
         registerCommand(new Unset(variableHolder));
     }
 
