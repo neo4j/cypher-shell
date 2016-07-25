@@ -24,4 +24,11 @@ public class HelperTest {
                         new ClientException("nested",
                                 new ClientException("nested deep")))));
     }
+
+    @Test
+    public void testNullMessage() {
+        assertEquals("ClientException", getSensibleMsg(new ClientException(null)));
+        assertEquals("NullPointerException",
+                getSensibleMsg(new ClientException("outer", new NullPointerException(null))));
+    }
 }

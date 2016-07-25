@@ -23,7 +23,7 @@ public class Helper {
      */
     @Nonnull
     public static String getSensibleMsg(@Nonnull final Throwable e) {
-        final String msg;
+        String msg;
         Throwable cause = getRootCause(e);
 
         if (cause instanceof CertificateException) {
@@ -31,6 +31,10 @@ public class Helper {
             msg = cause.getMessage();
         } else {
             msg = cause.getMessage();
+        }
+
+        if (msg == null) {
+            msg = cause.getClass().getSimpleName();
         }
 
         return msg;
