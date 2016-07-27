@@ -75,7 +75,7 @@ public class AnsiFormattedText {
             // Only do formatting if we actually have some formatting to apply
             if (!codes.isEmpty()) {
                 sb.append("@|")
-                  .append(join(",", codes))
+                  .append(String.join(",", codes))
                   .append(" ");
             }
             // string
@@ -86,16 +86,6 @@ public class AnsiFormattedText {
             }
         }
         return sb.toString();
-    }
-
-    /**
-     * Join a list of strings together into a single string, separated by the specified delimiter
-     * @param delimiter to separate each string with
-     * @param strings to join together
-     * @return a single string. if strings contained a single item, that is returned as is.
-     */
-    private String join(String delimiter, List<String> strings) {
-        return strings.stream().skip(1).reduce(strings.get(0), (s1, s2) -> s1 + delimiter + s2);
     }
 
     @Override
