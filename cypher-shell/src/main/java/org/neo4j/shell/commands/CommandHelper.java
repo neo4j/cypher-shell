@@ -7,6 +7,7 @@ import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -97,9 +98,8 @@ public class CommandHelper {
         }
 
         if (args.length < minCount || args.length > maxCount) {
-            throw new CommandException(
-                    String.format("Incorrect number of arguments.\nusage: @|bold %s|@ %s",
-                            commandName, usage));
+            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
+                    .bold().append(commandName).boldOff().append(" ").append(usage));
         }
 
         return args;

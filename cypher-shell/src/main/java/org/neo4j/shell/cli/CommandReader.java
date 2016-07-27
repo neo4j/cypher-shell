@@ -4,8 +4,9 @@ import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
-import org.fusesource.jansi.AnsiRenderer;
+import org.fusesource.jansi.Ansi;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -27,7 +28,8 @@ public class CommandReader implements Historian {
     static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
     //Pattern matches comments
     static final Pattern COMMENTS = Pattern.compile("//.*$");
-    private final String prompt = AnsiRenderer.render("@|bold neo4j>|@ ");
+    private final String prompt = Ansi.ansi().render(AnsiFormattedText.s().bold().append("neo4j> ")
+                                                                      .formattedString()).toString();
 
     public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
         this(System.in, logger, useHistoryFile);
