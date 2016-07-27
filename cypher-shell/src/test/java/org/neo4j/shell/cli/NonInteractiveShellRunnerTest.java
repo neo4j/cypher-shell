@@ -60,7 +60,7 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd(cmdExecuter);
 
         assertEquals("Exit code incorrect", 1, code);
-        verify(logger).printError(eq("Found a bad line"));
+        verify(logger).printError(eq("@|RED Found a bad line|@"));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd(cmdExecuter);
 
         assertEquals("Exit code incorrect", 1, code);
-        verify(logger, times(2)).printError(eq("Found a bad line"));
+        verify(logger, times(2)).printError(eq("@|RED Found a bad line|@"));
     }
 
     private class GoodBadExecuter implements StatementExecuter {

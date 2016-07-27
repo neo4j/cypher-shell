@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.driver.v1.StatementRunner;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.CommandExecutable;
@@ -20,10 +21,13 @@ import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 public class CypherShellTest {
@@ -187,5 +191,23 @@ public class CypherShellTest {
         // when
         // then
         assertFalse("Expected param to be unset", shell.remove("unknown var").isPresent());
+    }
+
+    @Test
+    public void setWithSomeBoltError() throws CommandException {
+        // then
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Failed to set value of parameter");
+
+        // given
+        StatementRunner runner = mock(StatementRunner.class);
+        when(runner.run(anyString(), anyMap())).thenReturn(null);
+        BoltStateHandler bh = mockedBoltStateHandler;
+        doReturn(runner).when(bh).getStatementRunner();
+
+        CypherShell shell = new CypherShell(logger, bh);
+
+        // when
+        shell.set("bob", "99");
     }
 }

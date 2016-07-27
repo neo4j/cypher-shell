@@ -2,6 +2,7 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.log.AnsiFormattedText;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -70,11 +71,17 @@ public class Help implements Command {
         }
 
         if (cmd == null) {
-            throw new CommandException(String.format("No such command: @|bold %s|@", name));
+            throw new CommandException(AnsiFormattedText.from("No such command: ").bold().append(name));
         }
 
-        logger.printOut(String.format("\nusage: @|bold %s|@ %s\n\n%s\n",
-                cmd.getName(), cmd.getUsage(), cmd.getHelp()));
+        logger.printOut(AnsiFormattedText.from("\nusage: ")
+                                         .bold().append(cmd.getName())
+                                         .boldOff()
+                                         .append(cmd.getUsage())
+                                         .append("\n\n")
+                                         .append(cmd.getHelp())
+                                         .append("\n")
+                                         .formattedString());
     }
 
     private void printGeneralHelp() {
@@ -85,13 +92,17 @@ public class Help implements Command {
 
         int leftColWidth = longestCmdLength(allCommands);
 
-        allCommands.stream().forEach(cmd -> {
-            logger.printOut(String.format("  @|bold %-" + leftColWidth + "s|@ %s",
-                    cmd.getName(), cmd.getDescription()));
-        });
+        allCommands.stream().forEach(cmd -> logger.printOut(
+                AnsiFormattedText.from("  ")
+                                 .bold().append(String.format("%-" + leftColWidth + "s", cmd.getName()))
+                                 .boldOff().append(" " + cmd.getDescription())
+                                 .formattedString()));
 
         logger.printOut("\nFor help on a specific command type:");
-        logger.printOut(String.format("    %s @|bold command|@\n", COMMAND_NAME));
+        logger.printOut(AnsiFormattedText.from("    ")
+                                         .append(COMMAND_NAME)
+                                         .bold().append(" command")
+                                         .boldOff().append("\n").formattedString());
     }
 
     private int longestCmdLength(List<Command> allCommands) {

@@ -8,7 +8,7 @@ import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.exception.Helper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
 
 /**
@@ -51,7 +51,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
                 running = false;
             } catch (Throwable e) {
                 exitCode = 1;
-                logger.printError(getSensibleMsg(e));
+                logger.printError(getFormattedMessage(e));
                 if (CliArgHelper.FailBehavior.FAIL_AT_END != failBehavior) {
                     running = false;
                 }

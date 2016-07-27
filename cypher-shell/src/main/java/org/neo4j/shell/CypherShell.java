@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
@@ -42,7 +41,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public void execute(@Nonnull final String cmdString) throws ExitException, CommandException {
         // See if it's a shell command
-        Optional<CommandExecutable> cmd = getCommandExecutable(cmdString);
+        final Optional<CommandExecutable> cmd = getCommandExecutable(cmdString);
         if (cmd.isPresent()) {
             executeCmd(cmd.get());
             return;
@@ -63,8 +62,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param cypher non-empty cypher text to executeLine
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
-        final StatementResult result = doCypherSilently(cypher);
-        logger.printOut(PrettyPrinter.format(result));
+        final Optional<StatementResult> result = doCypherSilently(cypher);
+        if (result.isPresent()) {
+            logger.printOut(PrettyPrinter.format(result.get()));
+        }
     }
 
     @Override
@@ -123,8 +124,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        Record record = doCypherSilently("RETURN " + valueString + " as " + name).single();
-        Object value = record.get(name).asObject();
+        final Optional<StatementResult> result = doCypherSilently("RETURN " + valueString + " as " + name);
+        if (!result.isPresent()) {
+            throw new CommandException("Failed to set value of parameter");
+        }
+        final Object value = result.get().single().get(name).asObject();
         queryParams.put(name, value);
         return Optional.ofNullable(value);
     }
@@ -142,10 +146,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     /**
-     * Run a cypher statement, and return the result. Is not stored in history.
+     * Run a cypher statement, and return the result.
      */
-    private StatementResult doCypherSilently(@Nonnull final String cypher) throws CommandException {
-        return boltStateHandler.getStatementRunner().run(cypher, queryParams);
+    @Nonnull
+    protected Optional<StatementResult> doCypherSilently(@Nonnull final String cypher) throws CommandException {
+        return Optional.ofNullable(boltStateHandler.getStatementRunner().run(cypher, queryParams));
     }
 
     public void setCommandHelper(@Nonnull CommandHelper commandHelper) {

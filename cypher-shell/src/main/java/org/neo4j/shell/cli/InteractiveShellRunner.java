@@ -10,7 +10,7 @@ import org.neo4j.shell.log.Logger;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 
-import static org.neo4j.shell.exception.Helper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
 /**
  * An interactive shell
@@ -36,7 +36,7 @@ public class InteractiveShellRunner implements ShellRunner {
                 exitCode = e.getCode();
                 running = false;
             } catch (Throwable e) {
-                logger.printError(getSensibleMsg(e));
+                logger.printError(getFormattedMessage(e));
             }
         }
         return exitCode;

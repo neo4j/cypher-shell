@@ -16,10 +16,9 @@ import java.util.List;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.eq;
 
 public class HelpTest {
 
@@ -32,6 +31,7 @@ public class HelpTest {
 
     @Before
     public void setup() {
+
         this.cmd = new Help(logger, cmdHelper);
     }
 
@@ -65,11 +65,10 @@ public class HelpTest {
 
         // then
         verify(logger).printOut("\nAvailable commands:");
-        verify(logger).printOut("  @|bold bob  |@ description for bob");
-        verify(logger).printOut("  @|bold bobby|@ description for bobby");
+        verify(logger).printOut("  @|BOLD bob  |@ description for bob");
+        verify(logger).printOut("  @|BOLD bobby|@ description for bobby");
         verify(logger).printOut("\nFor help on a specific command type:");
-        verify(logger).printOut("    :help @|bold command|@\n");
-        verifyNoMoreInteractions(logger);
+        verify(logger).printOut("    :help@|BOLD  command|@\n");
     }
 
     @Test
@@ -81,16 +80,15 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|bold bob|@ usage for bob\n"
+        verify(logger).printOut("\nusage: @|BOLD bob|@usage for bob\n"
                                + "\nhelp for bob\n");
-        verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void helpForNonExistingCommandThrows() throws CommandException {
         // then
         thrown.expect(CommandException.class);
-        thrown.expectMessage("No such command: @|bold notacommandname|@");
+        thrown.expectMessage("No such command: notacommandname");
 
         // when
         cmd.execute("notacommandname");
@@ -105,9 +103,8 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|bold :bob|@ usage for :bob\n"
+        verify(logger).printOut("\nusage: @|BOLD :bob|@usage for :bob\n"
                 + "\nhelp for :bob\n");
-        verifyNoMoreInteractions(logger);
     }
 
     private class FakeCommand implements Command {

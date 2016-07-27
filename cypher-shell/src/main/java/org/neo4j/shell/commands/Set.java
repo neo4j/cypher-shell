@@ -2,6 +2,7 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.AnsiFormattedText;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -58,9 +59,8 @@ public class Set implements Command {
         Matcher m = argPattern.matcher(argString);
 
         if (!m.matches()) {
-            throw new CommandException(
-                    String.format("Incorrect number of arguments.\nusage: @|bold %s|@ %s",
-                            COMMAND_NAME, getUsage()));
+            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
+                    .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
 
         variableHolder.set(m.group("key"), m.group("value"));

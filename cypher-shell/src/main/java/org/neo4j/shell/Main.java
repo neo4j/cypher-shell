@@ -1,30 +1,21 @@
 package org.neo4j.shell;
 
-import org.fusesource.jansi.AnsiConsole;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.commands.CommandHelper;
-import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.log.AnsiLogger;
+import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.exception.Helper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
 public class Main {
 
     public static void main(String[] args) {
         CliArgHelper.CliArgs cliArgs = CliArgHelper.parse(args);
 
-        configureTerminal(cliArgs.getSuppressColor());
-
         Main main = new Main();
         main.startShell(cliArgs);
-    }
-
-    private static void configureTerminal(boolean suppressColor) {
-        if (!suppressColor) {
-            AnsiConsole.systemInstall();
-        }
     }
 
     private void startShell(@Nonnull CliArgHelper.CliArgs cliArgs) {
@@ -47,7 +38,7 @@ public class Main {
             int code = shellRunner.runUntilEnd(shell);
             System.exit(code);
         } catch (Throwable e) {
-            logger.printError(getSensibleMsg(e));
+            logger.printError(getFormattedMessage(e));
             System.exit(1);
         }
     }

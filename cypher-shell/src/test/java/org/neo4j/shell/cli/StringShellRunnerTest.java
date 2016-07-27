@@ -56,6 +56,6 @@ public class StringShellRunnerTest {
         int code = runner.runUntilEnd(statementExecuter);
 
         assertEquals("Wrong exit code", 1, code);
-        verify(logger).printError("Error kaboom");
+        verify(logger).printError("@|RED Error kaboom|@");
     }
 }

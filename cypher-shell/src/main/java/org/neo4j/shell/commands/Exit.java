@@ -2,6 +2,7 @@ package org.neo4j.shell.commands;
 
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -42,7 +43,8 @@ public class Exit implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Exit the logger. Corresponds to entering @|bold CTRL-D|@.";
+        return AnsiFormattedText.from("Exit the logger. Corresponds to entering ").bold().append("CTRL-D").boldOff()
+                                .append(".").formattedString();
     }
 
     @Nonnull
