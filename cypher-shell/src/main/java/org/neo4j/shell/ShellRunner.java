@@ -1,6 +1,10 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.cli.*;
+import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.CommandReader;
+import org.neo4j.shell.cli.InteractiveShellRunner;
+import org.neo4j.shell.cli.NonInteractiveShellRunner;
+import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -34,7 +38,7 @@ public interface ShellRunner {
         CommandReader commandReader = new CommandReader(logger, true);
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);
-        } else if (isInteractive()) {
+        } else if (isInputInteractive()) {
             return new InteractiveShellRunner(commandReader, logger);
         } else {
             return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), commandReader, logger);
@@ -42,9 +46,9 @@ public interface ShellRunner {
     }
 
     /**
-     * @return true if the shell is a TTY, false otherwise (e.g., we are reading from a file)
+     * @return true if the shell reading from a TTY, false otherwise (e.g., we are reading from a file)
      */
-    static boolean isInteractive() {
+    static boolean isInputInteractive() {
         return 1 == isatty(STDIN_FILENO);
     }
 }
