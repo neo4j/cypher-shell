@@ -64,7 +64,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("good3\n");
         verifyNoMoreInteractions(cmdExecuter);
 
-        verify(logger, times(2)).printError("bad cmd");
+        verify(logger, times(2)).printError("@|RED bad cmd|@");
     }
 
     @Test
@@ -94,6 +94,6 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("exit\n");
         verifyNoMoreInteractions(cmdExecuter);
 
-        verify(logger).printError("bad cmd");
+        verify(logger).printError("@|RED bad cmd|@");
     }
 }

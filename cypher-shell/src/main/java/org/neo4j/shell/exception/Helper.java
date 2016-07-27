@@ -1,7 +1,8 @@
 package org.neo4j.shell.exception;
 
+import org.neo4j.shell.log.AnsiFormattedText;
+
 import javax.annotation.Nonnull;
-import java.security.cert.CertificateException;
 
 /**
  * Utility functions with regards to exception messages
@@ -22,21 +23,20 @@ public class Helper {
      * Interpret the cause of a Bolt exception and translate it into a sensible error message.
      */
     @Nonnull
-    public static String getSensibleMsg(@Nonnull final Throwable e) {
-        String msg;
+    public static String getFormattedMessage(@Nonnull final Throwable e) {
+        AnsiFormattedText msg = AnsiFormattedText.s().colorRed();
         Throwable cause = getRootCause(e);
 
-        if (cause instanceof CertificateException) {
-            // These seem to have sensible error messages in them
-            msg = cause.getMessage();
+        if (cause instanceof AnsiFormattedException) {
+            msg = msg.append(((AnsiFormattedException) cause).getFormattedMessage());
         } else {
-            msg = cause.getMessage();
+            if (cause.getMessage() != null ){
+                msg = msg.append(cause.getMessage());
+            } else {
+                msg = msg.append(cause.getClass().getSimpleName());
+            }
         }
 
-        if (msg == null) {
-            msg = cause.getClass().getSimpleName();
-        }
-
-        return msg;
+        return msg.formattedString();
     }
 }

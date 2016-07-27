@@ -8,7 +8,7 @@ import org.neo4j.shell.log.AnsiLogger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.exception.Helper.getSensibleMsg;
+import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
 public class Main {
 
@@ -47,7 +47,7 @@ public class Main {
             int code = shellRunner.runUntilEnd(shell);
             System.exit(code);
         } catch (Throwable e) {
-            logger.printError(getSensibleMsg(e));
+            logger.printError(getFormattedMessage(e));
             System.exit(1);
         }
     }
