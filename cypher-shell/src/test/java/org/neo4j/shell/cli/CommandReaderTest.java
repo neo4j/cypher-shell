@@ -1,19 +1,24 @@
 package org.neo4j.shell.cli;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.neo4j.shell.exception.JLineException;
 import org.neo4j.shell.log.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 public class CommandReaderTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     Logger logger = mock(Logger.class);
 
@@ -191,5 +196,41 @@ public class CommandReaderTest {
 
         // then
         assertThat(actual, is("CREATE (n: Person{name :\"John \\ Smith\"}) \n RETURN n\n"));
+    }
+
+    @Test
+    public void unescapedBangThrowsException() throws Exception {
+        thrown.expect(JLineException.class);
+        thrown.expectMessage("!bang\": event not found");
+
+        // given
+        PrintStream mockedErr = mock(PrintStream.class);
+        when(logger.getErrorStream()).thenReturn(mockedErr);
+
+        // Bangs need escaping in JLine, just like in bash
+        String inputString = ":set var \"String with !bang\"\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when
+        commandReader.readCommand();
+    }
+
+    @Test
+    public void escapedBangWorks() throws Exception {
+        // given
+        PrintStream mockedErr = mock(PrintStream.class);
+        when(logger.getErrorStream()).thenReturn(mockedErr);
+
+        // Bangs need escaping in JLine, just like in bash
+        String escapedString = ":set var \"String with \\!bang\"\n";
+        InputStream escapedStream = new ByteArrayInputStream(escapedString.getBytes());
+        CommandReader commandReader = new CommandReader(escapedStream, logger);
+
+        // when
+        String actual = commandReader.readCommand();
+
+        // then
+        assertEquals(":set var \"String with !bang\"\n", actual);
     }
 }

@@ -50,6 +50,9 @@ public class CommandReader implements Historian {
         if (historyFile != null) {
             setupHistoryFile(reader, logger, historyFile);
         }
+        // Intercept errors in Jline by catching its error prints. We don't want stack traces to be printed.
+        // Instead, catch the error, and handle it.
+        jline.internal.Log.setOutput(new ErrorPassingPrintStream());
     }
 
     @Nonnull
@@ -136,4 +139,5 @@ public class CommandReader implements Historian {
         Matcher commentsMatcher = COMMENTS.matcher(line);
         return commentsMatcher.replaceAll("");
     }
+
 }
