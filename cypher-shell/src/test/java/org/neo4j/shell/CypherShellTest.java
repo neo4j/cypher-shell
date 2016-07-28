@@ -21,7 +21,7 @@ import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
@@ -97,7 +97,9 @@ public class CypherShellTest {
 
         assertTrue(shell.getAll().isEmpty());
 
-        assertEquals("99", shell.set("bob", "99").get());
+        Optional result = shell.set("bob", "99");
+        assertTrue(result.isPresent());
+        assertEquals("99", result.get());
         assertEquals("99", shell.getAll().get("bob"));
 
         shell.remove("bob");
@@ -201,7 +203,7 @@ public class CypherShellTest {
 
         // given
         StatementRunner runner = mock(StatementRunner.class);
-        when(runner.run(anyString(), anyMap())).thenReturn(null);
+        when(runner.run(anyString(), anyMapOf(String.class, Object.class))).thenReturn(null);
         BoltStateHandler bh = mockedBoltStateHandler;
         doReturn(runner).when(bh).getStatementRunner();
 
