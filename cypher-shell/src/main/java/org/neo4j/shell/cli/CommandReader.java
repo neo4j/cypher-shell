@@ -6,6 +6,7 @@ import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.fusesource.jansi.Ansi;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.exception.JLineException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
@@ -114,7 +115,22 @@ public class CommandReader implements Historian {
         StringBuilder stringBuilder = new StringBuilder();
         boolean reading = true;
         while (reading) {
-            String line = reader.readLine(prompt);
+            String line;
+            try {
+                line = reader.readLine(prompt);
+            } catch (JLineException e) {
+                // Clear the buffer
+                // in front
+                reader.killLine();
+                // in back
+                boolean moreToDelete = true;
+                while (moreToDelete) {
+                    moreToDelete = reader.backspace();
+                }
+
+                // then rethrow
+                throw e;
+            }
             if (line == null) {
                 reading = false;
                 if (stringBuilder.length() == 0) {
