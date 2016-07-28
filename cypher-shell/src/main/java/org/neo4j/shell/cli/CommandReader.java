@@ -30,6 +30,7 @@ public class CommandReader implements Historian {
     static final Pattern COMMENTS = Pattern.compile("//.*$");
     private final String prompt = Ansi.ansi().render(AnsiFormattedText.s().bold().append("neo4j> ")
                                                                       .formattedString()).toString();
+    private FileHistory fileHistory;
 
     public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
         this(System.in, logger, useHistoryFile);
@@ -74,6 +75,7 @@ public class CommandReader implements Historian {
                 throw new IOException("Failed to create directory for history: " + dir.getAbsolutePath());
             }
             final FileHistory history = new FileHistory(historyFile);
+            this.fileHistory = history;
             reader.setHistory(history);
 
             // Make sure we flush history on exit
@@ -95,7 +97,7 @@ public class CommandReader implements Historian {
     }
 
     @Nonnull
-    private static File getDefaultHistoryFile() {
+    static File getDefaultHistoryFile() {
         // Storing in same directory as driver uses
         File dir = new File(getProperty("user.home"), ".neo4j");
         return new File(dir, ".neo4j_history");
@@ -140,4 +142,12 @@ public class CommandReader implements Historian {
         return commentsMatcher.replaceAll("");
     }
 
+    /**
+     * Useful in tests only
+     */
+    void flushHistory() throws IOException {
+        if (fileHistory != null) {
+            fileHistory.flush();
+        }
+    }
 }
