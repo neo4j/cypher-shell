@@ -5,23 +5,30 @@ import org.junit.Test;
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.shell.test.Util.ctrl;
 
 public class NonInteractiveShellRunnerTest {
 
-    Logger logger = mock(Logger.class);
-    StatementExecuter cmdExecuter = new GoodBadExecuter();
+    private Logger logger = mock(Logger.class);
+    private StatementExecuter cmdExecuter = mock(StatementExecuter.class);
 
     @Before
-    public void setup() {
+    public void setup() throws CommandException {
+        doThrow(new ClientException("Found a bad line")).when(cmdExecuter).execute(contains("bad"));
         doReturn(System.out).when(logger).getOutputStream();
     }
 
@@ -84,12 +91,45 @@ public class NonInteractiveShellRunnerTest {
         verify(logger, times(2)).printError(eq("@|RED Found a bad line|@"));
     }
 
-    private class GoodBadExecuter implements StatementExecuter {
-        @Override
-        public void execute(@Nonnull String command) throws ExitException, CommandException {
-            if (command.contains("bad")) {
-                throw new ClientException("Found a bad line");
-            }
-        }
+    @Test
+    public void ctrlCKillsNonInteractiveReadingCommandsShellFailFast() throws Exception {
+        String input = "good1\n" +
+                "good2\n" +
+                ctrl('C') +
+                "good3\n";
+        CommandReader commandReader = new CommandReader(
+                new ByteArrayInputStream(input.getBytes()),
+                logger);
+        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(CliArgHelper.FailBehavior.FAIL_FAST,
+                commandReader, logger);
+
+        int code = runner.runUntilEnd(cmdExecuter);
+
+        assertEquals("Wrong exit code", 1, code);
+
+        verify(cmdExecuter).execute("good1\n");
+        verify(cmdExecuter).execute("good2\n");
+        verifyNoMoreInteractions(cmdExecuter);
+    }
+
+    @Test
+    public void ctrlCKillsNonInteractiveShellReadingCommandsFailEnd() throws Exception {
+        String input = "good1\n" +
+                "good2\n" +
+                ctrl('C') +
+                "good3\n";
+        CommandReader commandReader = new CommandReader(
+                new ByteArrayInputStream(input.getBytes()),
+                logger);
+        NonInteractiveShellRunner runner = new NonInteractiveShellRunner(CliArgHelper.FailBehavior.FAIL_AT_END,
+                commandReader, logger);
+
+        int code = runner.runUntilEnd(cmdExecuter);
+
+        assertEquals("Wrong exit code", 1, code);
+
+        verify(cmdExecuter).execute("good1\n");
+        verify(cmdExecuter).execute("good2\n");
+        verifyNoMoreInteractions(cmdExecuter);
     }
 }

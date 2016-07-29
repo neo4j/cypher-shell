@@ -1,8 +1,9 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.shell.StatementExecuter;
+import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 
@@ -45,7 +46,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
                 if (!command.trim().isEmpty()) {
                     executer.execute(command);
                 }
-            } catch (ExitException e) {
+            } catch (ExitException | UserInterruptException e) {
                 // These exceptions are always fatal
                 exitCode = 1;
                 running = false;

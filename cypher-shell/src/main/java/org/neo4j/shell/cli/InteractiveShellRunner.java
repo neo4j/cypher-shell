@@ -1,10 +1,12 @@
 package org.neo4j.shell.cli;
 
-import org.neo4j.shell.StatementExecuter;
+import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
+import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
@@ -35,6 +37,9 @@ public class InteractiveShellRunner implements ShellRunner {
             } catch (ExitException e) {
                 exitCode = e.getCode();
                 running = false;
+            } catch (UserInterruptException e) {
+                // Not very nice to print "UserInterruptException"
+                logger.printError(AnsiFormattedText.s().colorRed().append("KeyboardInterrupt").formattedString());
             } catch (Throwable e) {
                 logger.printError(getFormattedMessage(e));
             }

@@ -50,6 +50,8 @@ public class CommandReader implements Historian {
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
         // Disable expansion of bangs: !
         reader.setExpandEvents(false);
+        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
+        reader.setHandleUserInterrupt(true);
         if (historyFile != null) {
             setupHistoryFile(reader, logger, historyFile);
         }
