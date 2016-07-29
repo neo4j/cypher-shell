@@ -251,4 +251,34 @@ public class CommandReaderTest {
         File history = CommandReader.getDefaultHistoryFile();
         assertEquals(expectedPath.toString(), history.getPath());
     }
+
+    @Test
+    public void unescapedBangWorks() throws Exception {
+        // given
+        PrintStream mockedErr = mock(PrintStream.class);
+        when(logger.getErrorStream()).thenReturn(mockedErr);
+
+        // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
+        String inputString = ":set var \"String with !bang\"\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertEquals(inputString, commandReader.readCommand());
+    }
+
+    @Test
+    public void escapedBangWorks() throws Exception {
+        // given
+        PrintStream mockedErr = mock(PrintStream.class);
+        when(logger.getErrorStream()).thenReturn(mockedErr);
+
+        // Bangs need escaping in JLine, just like in bash
+        String inputString = ":set var \"String with \\!bang\"\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger);
+
+        // when then
+        assertEquals(inputString, commandReader.readCommand());
+    }
 }

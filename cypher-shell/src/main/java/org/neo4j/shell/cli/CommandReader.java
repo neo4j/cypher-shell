@@ -48,6 +48,8 @@ public class CommandReader implements Historian {
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger,
                          @Nullable File historyFile) throws IOException {
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
+        // Disable expansion of bangs: !
+        reader.setExpandEvents(false);
         if (historyFile != null) {
             setupHistoryFile(reader, logger, historyFile);
         }
