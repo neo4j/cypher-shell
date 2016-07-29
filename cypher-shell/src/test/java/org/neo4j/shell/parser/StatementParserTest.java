@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.exception.IncompleteStatementException;
 import org.neo4j.shell.exception.UnconsumedStatementException;
-import org.neo4j.shell.parser.StatementParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,7 +19,7 @@ public class StatementParserTest {
 
     @Before
     public void setup() {
-        parser = new StatementParser();
+        parser = new StatementParser(new CypherParser());
     }
 
     @Test
@@ -59,15 +58,23 @@ public class StatementParserTest {
         String emptyPrompt = parser.getPrompt().plainString();
         assertEquals("neo4j> ", emptyPrompt);
 
-        parser.parseLine("CREATE\n");
+        parser.parseLine("CREATE \\\n");
 
         assertFalse(parser.isStatementComplete());
 
         String multiPrompt = parser.getPrompt().plainString();
 
-        assertEquals("...", multiPrompt);
+        assertEquals(".....> ", multiPrompt);
 
         // For alignment, they should match in length
         assertEquals("Expected both prompts to have equal length", emptyPrompt.length(), multiPrompt.length());
+
+        parser.parseLine("()\n");
+
+        assertTrue(parser.isStatementComplete());
+
+        parser.consumeStatement();
+
+        assertEquals("neo4j> ", parser.getPrompt().plainString());
     }
 }

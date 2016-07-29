@@ -14,7 +14,13 @@ public class StatementParser {
 
     protected static final Pattern shellCmdPattern = Pattern.compile("^\\s*:.+\\s*$");
     private State currentState = State.EMPTY;
-    private StringBuilder statementBuilder = new StringBuilder();
+    private StringBuilder statementBuilder;
+    private final CypherParser cypherParser;
+
+    public StatementParser(@Nonnull CypherParser cypherParser) {
+        statementBuilder = new StringBuilder();
+        this.cypherParser = cypherParser;
+    }
 
     /**
      * Returns a context dependent prompt. A different prompt is returned depending on if the line is in the middle of
@@ -23,8 +29,11 @@ public class StatementParser {
      */
     @Nonnull
     public AnsiFormattedText getPrompt() {
-        // First line
-        return AnsiFormattedText.s().bold().append("neo4j> ");
+        if (State.INCOMPLETE == currentState) {
+            return AnsiFormattedText.s().bold().append(".....> ");
+        } else {
+            return AnsiFormattedText.s().bold().append("neo4j> ");
+        }
     }
 
     /**
@@ -39,7 +48,7 @@ public class StatementParser {
             statementBuilder.append(line);
             currentState = State.COMPLETE;
         } else {
-            // currentState = cypherParser.parseLine(line, sb, currentState);
+            currentState = cypherParser.parseLine(line, statementBuilder, currentState);
         }
     }
 
@@ -83,7 +92,7 @@ public class StatementParser {
     /**
      * Enum of internal states.
      */
-    private enum State {
+    enum State {
         // No lines have been parsed so far
         EMPTY,
         // Some lines have been parsed, but they do not make up a complete statement

@@ -4,10 +4,10 @@ import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
-import org.fusesource.jansi.Ansi;
 import org.neo4j.shell.Historian;
-import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.CypherParser;
+import org.neo4j.shell.parser.StatementParser;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,20 +16,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.System.getProperty;
 
 public class CommandReader implements Historian {
     private final static File DEFAULT_HISTORY_FILE = getDefaultHistoryFile();
     private final ConsoleReader reader;
-    //Pattern matches a back slash at the end of the line for multiline commands
-    static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
-    //Pattern matches comments
-    static final Pattern COMMENTS = Pattern.compile("//.*$");
-    private final String prompt = Ansi.ansi().render(AnsiFormattedText.s().bold().append("neo4j> ")
-                                                                      .formattedString()).toString();
+    private final StatementParser parser;
     private FileHistory fileHistory;
 
     public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
@@ -45,8 +38,14 @@ public class CommandReader implements Historian {
         this(inputStream, logger, useHistoryFile ? DEFAULT_HISTORY_FILE : null);
     }
 
-    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger,
+    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nullable File historyFile)
+            throws IOException {
+        this(inputStream, logger, new StatementParser(new CypherParser()), historyFile);
+    }
+
+    public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nonnull StatementParser parser,
                          @Nullable File historyFile) throws IOException {
+        this.parser = parser;
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
         // Disable expansion of bangs: !
         reader.setExpandEvents(false);
@@ -112,35 +111,15 @@ public class CommandReader implements Historian {
      */
     @Nullable
     public String readCommand() throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        boolean reading = true;
-        while (reading) {
-            String line = reader.readLine(prompt);
+        while (!parser.isStatementComplete()) {
+            String line = reader.readLine(parser.getPrompt().renderedString());
             if (line == null) {
-                reading = false;
-                if (stringBuilder.length() == 0) {
-                    return null;
-                }
-            } else {
-                String withoutComments = commentSubstitutedLine(line);
-                Matcher m = MULTILINE_BREAK.matcher(withoutComments);
-                boolean isMultiline = m.find();
-                String parsedString = m.replaceAll("");
-
-                if (!parsedString.trim().isEmpty()) {
-                    stringBuilder.append(parsedString).append("\n");
-                }
-                if (!isMultiline && stringBuilder.length() > 0) {
-                    reading = false;
-                }
+                return null;
             }
-        }
-        return stringBuilder.toString();
-    }
 
-    private String commentSubstitutedLine(String line) {
-        Matcher commentsMatcher = COMMENTS.matcher(line);
-        return commentsMatcher.replaceAll("");
+            parser.parseLine(line);
+        }
+        return parser.consumeStatement();
     }
 
     /**

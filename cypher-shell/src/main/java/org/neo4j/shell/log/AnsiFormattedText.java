@@ -1,5 +1,7 @@
 package org.neo4j.shell.log;
 
+import org.fusesource.jansi.Ansi;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -56,7 +58,7 @@ public class AnsiFormattedText {
     }
 
     /**
-     * @return the text as a string including possible formatting
+     * @return the text as a string including possible formatting, ready for ANSI formatting
      */
     @Nonnull
     public String formattedString() {
@@ -88,9 +90,17 @@ public class AnsiFormattedText {
         return sb.toString();
     }
 
+    /**
+     * @return the text as a string rendered with ANSI escape codes
+     */
+    @Nonnull
+    public String renderedString() {
+        return Ansi.ansi().render(formattedString()).toString();
+    }
+
     @Override
     public String toString() {
-        return formattedString();
+        return renderedString();
     }
 
     /**
