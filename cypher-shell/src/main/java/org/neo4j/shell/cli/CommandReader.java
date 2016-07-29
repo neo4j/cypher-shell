@@ -30,6 +30,7 @@ public class CommandReader implements Historian {
     static final Pattern COMMENTS = Pattern.compile("//.*$");
     private final String prompt = Ansi.ansi().render(AnsiFormattedText.s().bold().append("neo4j> ")
                                                                       .formattedString()).toString();
+    private FileHistory fileHistory;
 
     public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
         this(System.in, logger, useHistoryFile);
@@ -47,6 +48,8 @@ public class CommandReader implements Historian {
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger,
                          @Nullable File historyFile) throws IOException {
         reader = new ConsoleReader(inputStream, logger.getOutputStream());
+        // Disable expansion of bangs: !
+        reader.setExpandEvents(false);
         if (historyFile != null) {
             setupHistoryFile(reader, logger, historyFile);
         }
@@ -71,6 +74,7 @@ public class CommandReader implements Historian {
                 throw new IOException("Failed to create directory for history: " + dir.getAbsolutePath());
             }
             final FileHistory history = new FileHistory(historyFile);
+            this.fileHistory = history;
             reader.setHistory(history);
 
             // Make sure we flush history on exit
@@ -92,7 +96,7 @@ public class CommandReader implements Historian {
     }
 
     @Nonnull
-    private static File getDefaultHistoryFile() {
+    static File getDefaultHistoryFile() {
         // Storing in same directory as driver uses
         File dir = new File(getProperty("user.home"), ".neo4j");
         return new File(dir, ".neo4j_history");
@@ -106,13 +110,13 @@ public class CommandReader implements Historian {
      */
     @Nullable
     public String readCommand() throws IOException {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         boolean reading = true;
         while (reading) {
             String line = reader.readLine(prompt);
             if (line == null) {
                 reading = false;
-                if (stringBuffer.length() == 0) {
+                if (stringBuilder.length() == 0) {
                     return null;
                 }
             } else {
@@ -122,18 +126,27 @@ public class CommandReader implements Historian {
                 String parsedString = m.replaceAll("");
 
                 if (!parsedString.trim().isEmpty()) {
-                    stringBuffer.append(parsedString).append("\n");
+                    stringBuilder.append(parsedString).append("\n");
                 }
-                if (!isMultiline && stringBuffer.length() > 0) {
+                if (!isMultiline && stringBuilder.length() > 0) {
                     reading = false;
                 }
             }
         }
-        return stringBuffer.toString();
+        return stringBuilder.toString();
     }
 
     private String commentSubstitutedLine(String line) {
         Matcher commentsMatcher = COMMENTS.matcher(line);
         return commentsMatcher.replaceAll("");
+    }
+
+    /**
+     * Useful in tests only
+     */
+    void flushHistory() throws IOException {
+        if (fileHistory != null) {
+            fileHistory.flush();
+        }
     }
 }
