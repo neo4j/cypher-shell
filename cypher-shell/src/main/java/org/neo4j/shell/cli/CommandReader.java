@@ -1,7 +1,6 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
-import jline.console.UserInterruptException;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
@@ -113,20 +112,18 @@ public class CommandReader implements Historian {
     @Nullable
     public String readCommand() throws IOException {
         while (!parser.isStatementComplete()) {
-            String line;
             try {
-                line = reader.readLine(parser.getPrompt().renderedString());
-            } catch (UserInterruptException e) {
-                // Uesr pressed Ctrl-C, clear current parser state
+                String line = reader.readLine(parser.getPrompt().renderedString());
+                if (line == null) {
+                    return null;
+                }
+                parser.parseLine(line);
+            } catch (Throwable t) {
+                // User pressed Ctrl-C, or made a boo-boo, clear current parser state
                 parser.reset();
                 // Handle this error like the rest
-                throw e;
+                throw t;
             }
-            if (line == null) {
-                return null;
-            }
-
-            parser.parseLine(line);
         }
         return parser.consumeStatement();
     }

@@ -25,7 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -253,8 +255,29 @@ public class CommandReaderTest {
 
         try {
             commandReader.readCommand();
-            fail("Shoudl have thrown excepiton");
+            fail("Should have thrown exception");
         } catch (UserInterruptException e) {
+            // State should be cleared
+            verify(mockedParser).reset();
+        }
+    }
+
+    @Test
+    public void anyExceptionClearsState() throws Exception {
+        StatementParser mockedParser = mock(StatementParser.class);
+        when(mockedParser.getPrompt()).thenReturn(AnsiFormattedText.from("bob"));
+        when(mockedParser.isStatementComplete()).thenReturn(false);
+        doThrow(new RuntimeException("Fake error")).when(mockedParser).parseLine(contains("bob"));
+
+        String inputString = "CREATE \\\n" + "bob\n" + "foo\n";
+
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger, mockedParser, null);
+
+        try {
+            commandReader.readCommand();
+            fail("Should have thrown exception");
+        } catch (RuntimeException e) {
             // State should be cleared
             verify(mockedParser).reset();
         }
