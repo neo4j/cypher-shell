@@ -1,10 +1,13 @@
 package org.neo4j.shell.cli;
 
+import jline.console.UserInterruptException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.StatementParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -21,10 +24,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.neo4j.shell.test.Util.ctrl;
 
 public class CommandReaderTest {
     @Rule
@@ -222,8 +227,8 @@ public class CommandReaderTest {
         CommandReader commandReader = new CommandReader(inputStream, logger, historyFile);
 
         // when
-        assertEquals(cmd1 + "\n", commandReader.readCommand());
-        assertEquals(cmd2 + "\n", commandReader.readCommand());
+        assertEquals(cmd1, commandReader.readCommand());
+        assertEquals(cmd2, commandReader.readCommand());
 
         commandReader.flushHistory();
 
@@ -233,6 +238,26 @@ public class CommandReaderTest {
         assertEquals(2, history.size());
         assertEquals(cmd1, history.get(0));
         assertEquals(cmd2, history.get(1));
+    }
+
+    @Test
+    public void keyboardInterruptClearsState() throws Exception {
+        StatementParser mockedParser = mock(StatementParser.class);
+        when(mockedParser.getPrompt()).thenReturn(AnsiFormattedText.from("bob"));
+        when(mockedParser.isStatementComplete()).thenReturn(false);
+
+        String inputString = "CREATE \\\n" + ctrl('C');
+
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        CommandReader commandReader = new CommandReader(inputStream, logger, mockedParser, null);
+
+        try {
+            commandReader.readCommand();
+            fail("Shoudl have thrown excepiton");
+        } catch (UserInterruptException e) {
+            // State should be cleared
+            verify(mockedParser).reset();
+        }
     }
 
     @Test
@@ -259,12 +284,11 @@ public class CommandReaderTest {
         when(logger.getErrorStream()).thenReturn(mockedErr);
 
         // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
-        String inputString = ":set var \"String with !bang\"\n";
-        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InputStream inputStream = new ByteArrayInputStream(":set var \"String with !bang\"\n".getBytes());
         CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when then
-        assertEquals(inputString, commandReader.readCommand());
+        assertEquals(":set var \"String with !bang\"", commandReader.readCommand());
     }
 
     @Test
@@ -274,11 +298,10 @@ public class CommandReaderTest {
         when(logger.getErrorStream()).thenReturn(mockedErr);
 
         // Bangs need escaping in JLine, just like in bash
-        String inputString = ":set var \"String with \\!bang\"\n";
-        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InputStream inputStream = new ByteArrayInputStream(":set var \"String with \\!bang\"\n".getBytes());
         CommandReader commandReader = new CommandReader(inputStream, logger);
 
         // when then
-        assertEquals(inputString, commandReader.readCommand());
+        assertEquals(":set var \"String with \\!bang\"", commandReader.readCommand());
     }
 }

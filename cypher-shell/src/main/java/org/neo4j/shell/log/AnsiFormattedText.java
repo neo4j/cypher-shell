@@ -98,11 +98,6 @@ public class AnsiFormattedText {
         return Ansi.ansi().render(formattedString()).toString();
     }
 
-    @Override
-    public String toString() {
-        return renderedString();
-    }
-
     /**
      * @return the text as a plain string without any formatting
      */

@@ -37,7 +37,6 @@ public class AnsiFormattedTextTest {
 
         assertEquals("hello world", st.plainString());
         assertEquals("@|RED,BOLD hello|@ world", st.formattedString());
-        assertEquals("@|RED,BOLD hello|@ world", st.toString());
     }
 
     @Test
