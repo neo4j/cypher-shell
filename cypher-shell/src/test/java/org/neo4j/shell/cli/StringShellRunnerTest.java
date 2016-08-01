@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
@@ -14,7 +15,10 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class StringShellRunnerTest {
     @Rule
@@ -57,5 +61,14 @@ public class StringShellRunnerTest {
 
         assertEquals("Wrong exit code", 1, code);
         verify(logger).printError("@|RED Error kaboom|@");
+    }
+
+    @Test
+    public void shellRunnerHasNoHistory() throws Exception {
+        // given
+        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), logger);
+
+        // when then
+        assertEquals(Historian.empty, runner.getHistorian());
     }
 }
