@@ -53,6 +53,29 @@ public class StatementParserTest {
     }
 
     @Test
+    public void resetClearsState() throws Exception {
+        // given
+        assertFalse(parser.isStatementComplete());
+        String emptyPrompt = parser.getPrompt().plainString();
+        assertEquals("neo4j> ", emptyPrompt);
+
+        parser.parseLine("CREATE \\\n");
+
+        assertFalse(parser.isStatementComplete());
+
+        String multiPrompt = parser.getPrompt().plainString();
+
+        assertEquals(".....> ", multiPrompt);
+
+        // when
+        parser.reset();
+
+        // thne
+        assertFalse(parser.isStatementComplete());
+        assertEquals(emptyPrompt, parser.getPrompt().plainString());
+    }
+
+    @Test
     public void getPromptChangesWithContext() throws Exception {
         assertFalse(parser.isStatementComplete());
         String emptyPrompt = parser.getPrompt().plainString();

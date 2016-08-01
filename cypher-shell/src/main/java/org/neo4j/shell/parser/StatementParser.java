@@ -84,7 +84,7 @@ public class StatementParser {
     /**
      * Resets the parser to empty state.
      */
-    private void reset() {
+    public void reset() {
         currentState = State.EMPTY;
         statementBuilder = new StringBuilder();
     }
