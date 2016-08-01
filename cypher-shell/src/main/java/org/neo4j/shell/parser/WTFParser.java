@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * A parser for Cypher.
  */
-public class CypherParser {
+public class WTFParser {
     //Pattern matches a back slash at the end of the line for multiline commands
     private static final Pattern MULTILINE_BREAK = Pattern.compile("\\\\\\s*$");
     //Pattern matches comments

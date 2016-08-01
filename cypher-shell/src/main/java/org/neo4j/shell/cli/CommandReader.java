@@ -5,9 +5,11 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.parser.CypherParser;
+import org.neo4j.shell.parser.CypherParserWrapper;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.parser.WTFParser;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,7 +42,7 @@ public class CommandReader implements Historian {
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nullable File historyFile)
             throws IOException {
-        this(inputStream, logger, new StatementParser(new CypherParser()), historyFile);
+        this(inputStream, logger, new StatementParser(new WTFParser()), historyFile);
     }
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nonnull StatementParser parser,
@@ -101,6 +103,32 @@ public class CommandReader implements Historian {
         // Storing in same directory as driver uses
         File dir = new File(getProperty("user.home"), ".neo4j");
         return new File(dir, ".neo4j_history");
+    }
+
+    /**
+     * Reads from the InputStream until a non-empty statement can be found.
+     * Empty statements are either lines consisting of all whitespace, or comments (prefixed by //)
+     * @return a list of command statements, or null if EOF
+     * @throws IOException
+     */
+    @Nullable
+    public List<String> readCommandsInteractively() throws IOException, NoMoreInputException, CypherParserWrapper.CypherSyntaxError {
+        StringBuilder sb = new StringBuilder();
+        String prompt = "prompt1";
+
+        while (true) {
+            String line = reader.readLine(prompt);
+            if (line == null) {
+                // User hit CTRL-D, or file ended
+                throw new NoMoreInputException();
+            }
+            sb.append(line);
+            try {
+                return parser.parse(sb.toString());
+            } catch (CypherParserWrapper.IncompleteCypherError ignored) {
+                // Try to read more lines
+            }
+        }
     }
 
     /**

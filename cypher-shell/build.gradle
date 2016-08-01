@@ -1,10 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'antlr'
 
 mainClassName = 'org.neo4j.shell.Main'
 applicationName = 'cypher-shell'
 
 dependencies {
+    antlr "org.antlr:antlr4:4.5"
+
     compile "net.sourceforge.argparse4j:argparse4j:$argparse4jVersion"
     compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
     compile "com.google.code.findbugs:annotations:$findbugsVersion"
