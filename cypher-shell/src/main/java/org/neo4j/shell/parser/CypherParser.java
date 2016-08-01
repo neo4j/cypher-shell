@@ -24,7 +24,7 @@ public class CypherParser {
      * @throws UnconsumedStatementException if current state is COMPLETE
      */
     @Nonnull
-    public static StatementParser.State parseLine(@Nonnull String line,
+    public StatementParser.State parseLine(@Nonnull String line,
                                            @Nonnull StringBuilder statementBuilder,
                                            @Nonnull StatementParser.State currentState) {
         if (StatementParser.State.COMPLETE == currentState) {
