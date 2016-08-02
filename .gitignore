@@ -3,3 +3,5 @@ build
 out
 .idea/
 *.iml
+gradle/wrapper/gradle-wrapper.properties
+gradlew.bat
