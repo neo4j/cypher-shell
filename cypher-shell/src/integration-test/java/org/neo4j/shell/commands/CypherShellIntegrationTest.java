@@ -17,9 +17,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class CypherShellIntegrationTest {
     @Rule
@@ -39,6 +37,19 @@ public class CypherShellIntegrationTest {
     @After
     public void tearDown() throws Exception {
         shell.execute("MATCH (n:TestPerson) DETACH DELETE (n)");
+    }
+
+    @Test
+    public void cypherWithNoReturnStatements() throws CommandException {
+        //when
+        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        assertThat(result.get(0), is("Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test
