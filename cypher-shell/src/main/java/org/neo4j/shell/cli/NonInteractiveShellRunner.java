@@ -4,10 +4,17 @@ import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
+import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.StatementParser;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
@@ -19,51 +26,56 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class NonInteractiveShellRunner implements ShellRunner {
 
     private final CliArgHelper.FailBehavior failBehavior;
-    private final CommandReader commandReader;
     private final Logger logger;
+    private final InputStream inputStream;
 
     public NonInteractiveShellRunner(@Nonnull CliArgHelper.FailBehavior failBehavior,
-                                     @Nonnull CommandReader commandReader,
-                                     @Nonnull Logger logger) {
+                                     @Nonnull Logger logger,
+                                     @Nonnull InputStream inputStream) {
         this.failBehavior = failBehavior;
         this.logger = logger;
-        this.commandReader = commandReader;
+        this.inputStream = inputStream;
     }
 
     @Override
     public int runUntilEnd(@Nonnull StatementExecuter executer) {
-        String command;
-        boolean running = true;
-        int exitCode = 0;
-        while (running) {
-            try {
-                command = commandReader.readCommand();
-                if (null == command) {
-                    running = false;
-                    continue;
-                }
+        List<String> statements;
+        try {
+            String script = readFileToExecute();
+            statements = StatementParser.parse(script);
+        } catch (CypherSyntaxError cypherSyntaxError) {
+            logger.printError("Cypher syntax error. TODO show where");
+            return 1;
+        } catch (Throwable e) {
+            logger.printError(getFormattedMessage(e));
+            return 1;
+        }
 
-                if (!command.trim().isEmpty()) {
-                    executer.execute(command);
-                }
+        int exitCode = 0;
+        for (String statement : statements) {
+            try {
+                executer.execute(statement);
             } catch (ExitException | UserInterruptException e) {
                 // These exceptions are always fatal
-                exitCode = 1;
-                running = false;
+                return 1;
             } catch (Throwable e) {
                 exitCode = 1;
                 logger.printError(getFormattedMessage(e));
                 if (CliArgHelper.FailBehavior.FAIL_AT_END != failBehavior) {
-                    running = false;
+                    return exitCode;
                 }
             }
         }
-
         return exitCode;
+    }
+
+    @Nonnull
+    private String readFileToExecute() {
+        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
     }
 
     @Override
     public Historian getHistorian() {
-        return commandReader;
+        return Historian.empty;
     }
 }

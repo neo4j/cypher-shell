@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.shell.exception.IncompleteCypherError;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -83,7 +84,7 @@ public class CypherParserWrapperTest {
     @Test
     public void testIncompleteSimple() throws Exception {
         // then
-        thrown.expect(CypherParserWrapper.IncompleteCypherError.class);
+        thrown.expect(IncompleteCypherError.class);
 
         // given
         final String cypher = "RETURN";
@@ -143,6 +144,19 @@ public class CypherParserWrapperTest {
         List<String> statements = parser.parse(String.join("\n", lines));
 
         // then
-        assertEquals(7, statements.size());
+        assertEquals(8, statements.size());
+    }
+
+    @Test
+    public void parseGraphGems() throws Exception {
+        // given
+        List<String> lines =
+                Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("graphgems.cypher").toURI()));
+
+        // when
+        List<String> statements = parser.parse(String.join("\n", lines));
+
+        // then
+        assertEquals(8, statements.size());
     }
 }

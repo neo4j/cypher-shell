@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.IncompleteStatementException;
 import org.neo4j.shell.exception.UnconsumedStatementException;
 
@@ -23,7 +24,7 @@ public class StatementParserTest {
 
     @Before
     public void setup() {
-        parser = new StatementParser(new WTFParser());
+        parser = new StatementParser();
     }
 
     @Test
@@ -185,7 +186,7 @@ public class StatementParserTest {
 
     @Test
     public void throwsErrorOnMisformedMixedScript() throws Exception {
-        thrown.expect(CypherParserWrapper.CypherSyntaxError.class);
+        thrown.expect(CypherSyntaxError.class);
 
         String stmt0 = "   :begin  \n";
         String stmt1 = "CREATE (n) RETURN n\n";

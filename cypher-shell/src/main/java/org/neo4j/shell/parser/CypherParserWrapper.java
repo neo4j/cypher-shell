@@ -8,6 +8,8 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.neo4j.shell.cypher.CypherShellLexer;
 import org.neo4j.shell.cypher.CypherShellParser;
+import org.neo4j.shell.exception.CypherSyntaxError;
+import org.neo4j.shell.exception.IncompleteCypherError;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -38,8 +40,8 @@ public class CypherParserWrapper {
      * Parses a cypher text and returns the separate statements within.
      * @param text to parse
      * @return list of statements
-     * @throws CypherSyntaxError if the text has syntax problems. If the cypher statement simply isn't finished,
-     * an {@link IncompleteCypherError} will be thrown.
+     * @throws org.neo4j.shell.exception.CypherSyntaxError if the text has syntax problems. If the cypher statement
+     * simply isn't finished, an {@link org.neo4j.shell.exception.IncompleteCypherError} will be thrown.
      */
     @Nonnull
     public List<String> parse(@Nonnull String text) throws CypherSyntaxError {
@@ -60,19 +62,6 @@ public class CypherParserWrapper {
                 }
             }
             throw new CypherSyntaxError(e);
-        }
-    }
-
-    public static class IncompleteCypherError extends CypherSyntaxError {
-
-        public IncompleteCypherError(ParseCancellationException cause) {
-            super(cause);
-        }
-    }
-
-    public static class CypherSyntaxError extends Exception {
-        public CypherSyntaxError(ParseCancellationException cause) {
-            super(cause);
         }
     }
 }

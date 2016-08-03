@@ -41,8 +41,8 @@ public class NonInteractiveShellRunnerTest {
                 logger);
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 CliArgHelper.FailBehavior.FAIL_FAST,
-                commandReader,
-                logger);
+                logger,
+                new ByteArrayInputStream(input.getBytes()));
         int code = runner.runUntilEnd(cmdExecuter);
 
         assertEquals("Exit code incorrect", 0, code);
@@ -61,8 +61,8 @@ public class NonInteractiveShellRunnerTest {
                 logger);
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 CliArgHelper.FailBehavior.FAIL_FAST,
-                commandReader,
-                logger);
+                logger,
+                new ByteArrayInputStream(input.getBytes()));
 
         int code = runner.runUntilEnd(cmdExecuter);
 
@@ -82,8 +82,8 @@ public class NonInteractiveShellRunnerTest {
                 logger);
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 CliArgHelper.FailBehavior.FAIL_AT_END,
-                commandReader,
-                logger);
+                logger,
+                new ByteArrayInputStream(input.getBytes()));
 
         int code = runner.runUntilEnd(cmdExecuter);
 
@@ -101,7 +101,7 @@ public class NonInteractiveShellRunnerTest {
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(CliArgHelper.FailBehavior.FAIL_FAST,
-                commandReader, logger);
+                logger, new ByteArrayInputStream(input.getBytes()));
 
         int code = runner.runUntilEnd(cmdExecuter);
 
@@ -122,7 +122,7 @@ public class NonInteractiveShellRunnerTest {
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(CliArgHelper.FailBehavior.FAIL_AT_END,
-                commandReader, logger);
+                logger, new ByteArrayInputStream(input.getBytes()));
 
         int code = runner.runUntilEnd(cmdExecuter);
 

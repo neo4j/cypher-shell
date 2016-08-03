@@ -5,11 +5,11 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.exception.CypherSyntaxError;
+import org.neo4j.shell.exception.IncompleteCypherError;
 import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.parser.CypherParserWrapper;
 import org.neo4j.shell.parser.StatementParser;
-import org.neo4j.shell.parser.WTFParser;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,7 +42,7 @@ public class CommandReader implements Historian {
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nullable File historyFile)
             throws IOException {
-        this(inputStream, logger, new StatementParser(new WTFParser()), historyFile);
+        this(inputStream, logger, new StatementParser(), historyFile);
     }
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger, @Nonnull StatementParser parser,
@@ -112,7 +112,7 @@ public class CommandReader implements Historian {
      * @throws IOException
      */
     @Nullable
-    public List<String> readCommandsInteractively() throws IOException, NoMoreInputException, CypherParserWrapper.CypherSyntaxError {
+    public List<String> readCommandsInteractively() throws IOException, NoMoreInputException, CypherSyntaxError {
         StringBuilder sb = new StringBuilder();
         String prompt = "prompt1";
 
@@ -125,7 +125,7 @@ public class CommandReader implements Historian {
             sb.append(line);
             try {
                 return parser.parse(sb.toString());
-            } catch (CypherParserWrapper.IncompleteCypherError ignored) {
+            } catch (IncompleteCypherError ignored) {
                 // Try to read more lines
             }
         }

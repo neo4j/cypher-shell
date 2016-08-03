@@ -1,4 +1,4 @@
-// This file contains 7 statements
+// This file contains 8 statements
 
 CREATE
       (
@@ -15,3 +15,9 @@ CREATE
 
   RETURN 1 RETURN
  2 RETURN 3
+
+// This is one statement
+MATCH (null)-[:merge]->(true)
+with null.delete as foreach, `true`.false as null
+return 2 + foreach, coalesce(null, 3.1415)
+limit 10;

@@ -41,7 +41,7 @@ public interface ShellRunner {
         } else if (isInputInteractive()) {
             return new InteractiveShellRunner(commandReader, logger);
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), commandReader, logger);
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger, System.in);
         }
     }
 

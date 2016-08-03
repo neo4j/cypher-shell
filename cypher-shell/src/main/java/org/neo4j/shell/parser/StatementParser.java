@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.neo4j.shell.cypher.CypherShellLexer;
 import org.neo4j.shell.cypher.CypherShellParser;
+import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.IncompleteStatementException;
 import org.neo4j.shell.exception.UnconsumedStatementException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -31,7 +32,7 @@ public class StatementParser {
     private State currentState = State.EMPTY;
     private StringBuilder statementBuilder;
 
-    public StatementParser(@Nonnull WTFParser WTFParser) {
+    public StatementParser() {
         statementBuilder = new StringBuilder();
         cypherParserWrapper = new CypherParserWrapper();
     }
@@ -124,10 +125,10 @@ public class StatementParser {
      * @return list of statements (shell commands, and cypher statements)
      */
     @Nonnull
-    public static List<String> parse(@Nonnull String text) throws CypherParserWrapper.CypherSyntaxError {
+    public static List<String> parse(@Nonnull String text) throws CypherSyntaxError {
         try {
             return cypherParserWrapper.parse(text);
-        } catch (CypherParserWrapper.CypherSyntaxError e) {
+        } catch (CypherSyntaxError e) {
             System.out.println(e);
 
             if (e.getCause() instanceof ParseCancellationException &&
