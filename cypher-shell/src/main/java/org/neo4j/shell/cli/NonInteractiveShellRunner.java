@@ -4,7 +4,6 @@ import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
-import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
@@ -27,13 +26,16 @@ public class NonInteractiveShellRunner implements ShellRunner {
 
     private final CliArgHelper.FailBehavior failBehavior;
     private final Logger logger;
+    private final StatementParser statementParser;
     private final InputStream inputStream;
 
     public NonInteractiveShellRunner(@Nonnull CliArgHelper.FailBehavior failBehavior,
                                      @Nonnull Logger logger,
+                                     @Nonnull StatementParser statementParser,
                                      @Nonnull InputStream inputStream) {
         this.failBehavior = failBehavior;
         this.logger = logger;
+        this.statementParser = statementParser;
         this.inputStream = inputStream;
     }
 
@@ -42,10 +44,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
         List<String> statements;
         try {
             String script = readFileToExecute();
-            statements = StatementParser.parse(script);
-        } catch (CypherSyntaxError cypherSyntaxError) {
-            logger.printError("Cypher syntax error. TODO show where");
-            return 1;
+            statements = statementParser.parse(script);
         } catch (Throwable e) {
             logger.printError(getFormattedMessage(e));
             return 1;

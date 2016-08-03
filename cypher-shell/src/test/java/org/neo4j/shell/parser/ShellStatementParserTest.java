@@ -6,111 +6,28 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.IncompleteCypherError;
-import org.neo4j.shell.exception.IncompleteStatementException;
-import org.neo4j.shell.exception.UnconsumedStatementException;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.neo4j.shell.parser.StatementParser.splitOnLine;
+import static org.neo4j.shell.parser.ShellStatementParser.splitOnLine;
 
-public class StatementParserTest {
+public class ShellStatementParserTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private StatementParser parser;
+    private ShellStatementParser parser;
 
     @Before
     public void setup() {
-        parser = new StatementParser();
-    }
-
-    @Test
-    public void emptyWillThrow() throws Exception {
-        thrown.expect(IncompleteStatementException.class);
-        assertFalse(parser.isStatementComplete());
-        parser.consumeStatement();
-    }
-
-    @Test
-    public void singleCommandParses() throws Exception {
-        assertFalse(parser.isStatementComplete());
-        parser.parseLine(":help exit\n");
-        assertTrue(parser.isStatementComplete());
-        assertEquals(":help exit\n", parser.consumeStatement());
-        // Repeat to make sure state got reset
-        assertFalse(parser.isStatementComplete());
-        parser.parseLine(":help bob\n");
-        assertTrue(parser.isStatementComplete());
-        assertEquals(":help bob\n", parser.consumeStatement());
-    }
-
-    @Test
-    public void unconsumedStatementThrowsOnParse() throws Exception {
-        assertFalse(parser.isStatementComplete());
-        parser.parseLine(":help exit\n");
-        assertTrue(parser.isStatementComplete());
-
-        thrown.expect(UnconsumedStatementException.class);
-        parser.parseLine(":help bob\n");
-    }
-
-    @Test
-    public void resetClearsState() throws Exception {
-        // given
-        assertFalse(parser.isStatementComplete());
-        String emptyPrompt = parser.getPrompt().plainString();
-        assertEquals("neo4j> ", emptyPrompt);
-
-        parser.parseLine("CREATE \\\n");
-
-        assertFalse(parser.isStatementComplete());
-
-        String multiPrompt = parser.getPrompt().plainString();
-
-        assertEquals(".....> ", multiPrompt);
-
-        // when
-        parser.reset();
-
-        // thne
-        assertFalse(parser.isStatementComplete());
-        assertEquals(emptyPrompt, parser.getPrompt().plainString());
-    }
-
-    @Test
-    public void getPromptChangesWithContext() throws Exception {
-        assertFalse(parser.isStatementComplete());
-        String emptyPrompt = parser.getPrompt().plainString();
-        assertEquals("neo4j> ", emptyPrompt);
-
-        parser.parseLine("CREATE \\\n");
-
-        assertFalse(parser.isStatementComplete());
-
-        String multiPrompt = parser.getPrompt().plainString();
-
-        assertEquals(".....> ", multiPrompt);
-
-        // For alignment, they should match in length
-        assertEquals("Expected both prompts to have equal length", emptyPrompt.length(), multiPrompt.length());
-
-        parser.parseLine("()\n");
-
-        assertTrue(parser.isStatementComplete());
-
-        parser.consumeStatement();
-
-        assertEquals("neo4j> ", parser.getPrompt().plainString());
+        parser = new ShellStatementParser();
     }
 
     @Test
     public void canParseShellCommand() throws Exception {
         String stmt = ":help exit";
-        List<String> statements = StatementParser.parse(stmt);
+        List<String> statements = parser.parse(stmt);
 
         assertEquals(1, statements.size());
         assertEquals(stmt, statements.get(0));
@@ -122,13 +39,13 @@ public class StatementParserTest {
 
         String stmt = "CREATE\n";
 
-        StatementParser.parse(stmt);
+        parser.parse(stmt);
     }
 
     @Test
     public void canParseCypherCommand() throws Exception {
         String stmt = "CREATE (n) RETURN n";
-        List<String> statements = StatementParser.parse(stmt);
+        List<String> statements = parser.parse(stmt);
 
         assertEquals(1, statements.size());
         assertEquals(stmt, statements.get(0));
@@ -139,7 +56,7 @@ public class StatementParserTest {
         String stmt1 = "CREATE (n) RETURN n\n";
         String stmt2 = "CREATE (n) RETURN n";
 
-        List<String> statements = StatementParser.parse(String.join("", stmt1, stmt2));
+        List<String> statements = parser.parse(String.join("", stmt1, stmt2));
 
         assertEquals(2, statements.size());
         assertEquals(stmt1, statements.get(0));
@@ -150,7 +67,7 @@ public class StatementParserTest {
     public void canParseReturnsStacked() throws Exception {
         String stmt = "RETURN 1 RETURN 2 RETURN 3";
 
-        List<String> statements = StatementParser.parse(stmt);
+        List<String> statements = parser.parse(stmt);
 
         assertEquals(3, statements.size());
         assertEquals("RETURN 1 ", statements.get(0));
@@ -166,7 +83,7 @@ public class StatementParserTest {
         String stmt3 = ":commit\n";
         String stmt4 = ":exit";
 
-        List<String> statements = StatementParser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
+        List<String> statements = parser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
 
         assertEquals(5, statements.size());
         assertEquals(stmt0, statements.get(0) + "\n");
@@ -184,7 +101,7 @@ public class StatementParserTest {
         String stmt3 = "  :commit  \n";
         String stmt4 = "  :exit  ";
 
-        List<String> statements = StatementParser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
+        List<String> statements = parser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
 
         assertEquals(5, statements.size());
         assertEquals(stmt0, statements.get(0) + "\n");
@@ -204,13 +121,13 @@ public class StatementParserTest {
         String stmt3 = "  :commit  \n";
         String stmt4 = "  :exit  ";
 
-        StatementParser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
+        parser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
     }
 
     @Test
     public void splitLineTest() throws Exception {
         String txt = "one\ntwo\nthree";
-        StatementParser.LineSplitResult res = splitOnLine(txt, 0);
+        ShellStatementParser.LineSplitResult res = splitOnLine(txt, 0);
 
         assertNull(res.getBefore());
         assertEquals("one", res.getLine());

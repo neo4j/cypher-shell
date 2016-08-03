@@ -1,10 +1,12 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.FileHistorian;
 import org.neo4j.shell.cli.InteractiveShellRunner;
 import org.neo4j.shell.cli.NonInteractiveShellRunner;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.ShellStatementParser;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -37,9 +39,11 @@ public interface ShellRunner {
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);
         } else if (isInputInteractive()) {
-            return new InteractiveShellRunner(logger, System.in);
+            return new InteractiveShellRunner(logger, new ShellStatementParser(),
+                    System.in, FileHistorian.getDefaultHistoryFile());
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger, System.in);
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger,
+                    new ShellStatementParser(), System.in);
         }
     }
 

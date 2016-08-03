@@ -14,6 +14,7 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
 
 import javax.annotation.Nonnull;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -25,24 +26,21 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
  * along the way.
  */
 public class InteractiveShellRunner implements ShellRunner {
-    private final Logger logger;
-    private final InputStream inputStream;
-    private final ConsoleReader reader;
     private final static String freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ").renderedString();
-    private final static String continuationPrompt = AnsiFormattedText.s().bold().append(".....> ").renderedString();
+    private final static String continuationPrompt = AnsiFormattedText.s().bold().append("  ...> ").renderedString();
+    private final Logger logger;
+    private final ConsoleReader reader;
     private final Historian historian;
+    private final StatementParser statementParser;
 
     public InteractiveShellRunner(@Nonnull Logger logger,
-                                  @Nonnull InputStream inputStream) throws IOException {
+                                  @Nonnull StatementParser statementParser,
+                                  @Nonnull InputStream inputStream,
+                                  @Nonnull File historyFile) throws IOException {
         this.logger = logger;
-        this.inputStream = inputStream;
-        reader = new ConsoleReader(inputStream, logger.getOutputStream());
-        // Disable expansion of bangs: !
-        reader.setExpandEvents(false);
-        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
-        reader.setHandleUserInterrupt(true);
-        // Setup history as well
-        historian = DefaultFileHistorian.setupHistory(reader, logger);
+        this.statementParser = statementParser;
+        reader = setupConsoleReader(logger, inputStream);
+        this.historian = FileHistorian.setupHistory(reader, logger, historyFile);
     }
 
     @Override
@@ -98,10 +96,21 @@ public class InteractiveShellRunner implements ShellRunner {
             }
             sb.append(line).append("\n");
             try {
-                return StatementParser.parse(sb.toString());
+                return statementParser.parse(sb.toString());
             } catch (IncompleteCypherError ignored) {
                 // Try to read more lines
             }
         }
+    }
+
+    private static ConsoleReader setupConsoleReader(@Nonnull Logger logger,
+                                                    @Nonnull InputStream inputStream) throws IOException {
+        ConsoleReader reader = new ConsoleReader(inputStream, logger.getOutputStream());
+        // Disable expansion of bangs: !
+        reader.setExpandEvents(false);
+        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
+        reader.setHandleUserInterrupt(true);
+
+        return reader;
     }
 }

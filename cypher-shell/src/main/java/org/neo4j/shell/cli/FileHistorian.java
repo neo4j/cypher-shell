@@ -18,24 +18,18 @@ import static java.lang.System.getProperty;
  * An historian which stores history in a file in the users home dir. The setup methods install a shutdown hook which
  * will flush the history on exit.
  */
-public class DefaultFileHistorian implements Historian {
+public class FileHistorian implements Historian {
 
     private final MemoryHistory history;
 
-    private DefaultFileHistorian(MemoryHistory history) {
+    private FileHistorian(MemoryHistory history) {
         this.history = history;
     }
 
     @Nonnull
     public static Historian setupHistory(@Nonnull final ConsoleReader reader,
-                                         @Nonnull final Logger logger) throws IOException {
-        return setupHistory(reader, logger, getDefaultHistoryFile());
-    }
-
-    @Nonnull
-    private static Historian setupHistory(@Nonnull final ConsoleReader reader,
-                                          @Nonnull final Logger logger,
-                                          @Nonnull final File historyFile) throws IOException {
+                                  @Nonnull final Logger logger,
+                                  @Nonnull final File historyFile) throws IOException {
         try {
             File dir = historyFile.getParentFile();
             if (!dir.isDirectory() && !dir.mkdir()) {
@@ -56,18 +50,18 @@ public class DefaultFileHistorian implements Historian {
                 }
             });
 
-            return new DefaultFileHistorian(history);
+            return new FileHistorian(history);
         } catch (IOException e) {
             logger.printError("Could not load history file. Falling back to session-based history.\n"
                     + e.getMessage());
             MemoryHistory history = new MemoryHistory();
             reader.setHistory(history);
-            return new DefaultFileHistorian(history);
+            return new FileHistorian(history);
         }
     }
 
     @Nonnull
-    private static File getDefaultHistoryFile() {
+    public static File getDefaultHistoryFile() {
         // Storing in same directory as driver uses
         File dir = new File(getProperty("user.home"), ".neo4j");
         return new File(dir, ".neo4j_history");
@@ -81,5 +75,12 @@ public class DefaultFileHistorian implements Historian {
         history.forEach(entry -> result.add(String.valueOf(entry.value())));
 
         return result;
+    }
+
+    @Override
+    public void flushHistory() throws IOException {
+        if (history instanceof FileHistory) {
+            ((FileHistory) history).flush();
+        }
     }
 }
