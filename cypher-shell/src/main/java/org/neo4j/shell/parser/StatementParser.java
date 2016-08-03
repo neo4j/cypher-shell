@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.neo4j.shell.cypher.CypherShellLexer;
 import org.neo4j.shell.cypher.CypherShellParser;
 import org.neo4j.shell.exception.CypherSyntaxError;
+import org.neo4j.shell.exception.IncompleteCypherError;
 import org.neo4j.shell.exception.IncompleteStatementException;
 import org.neo4j.shell.exception.UnconsumedStatementException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -28,13 +29,11 @@ import java.util.stream.Collectors;
 public class StatementParser {
 
     protected static final Pattern shellCmdPattern = Pattern.compile("^\\s*:.+\\s*$");
-    private static CypherParserWrapper cypherParserWrapper;
     private State currentState = State.EMPTY;
     private StringBuilder statementBuilder;
 
     public StatementParser() {
         statementBuilder = new StringBuilder();
-        cypherParserWrapper = new CypherParserWrapper();
     }
 
     /**
@@ -72,10 +71,7 @@ public class StatementParser {
 
             try {
                 CypherShellParser.CypherScriptContext context = parser.cypherScript();
-                // Completely valid cypher(s)
-                System.out.println("Parser " + context.toString());
             } catch (ParseCancellationException e) {
-                System.out.println("Exc: " + e);
                 throw e;
             }
 
@@ -127,10 +123,11 @@ public class StatementParser {
     @Nonnull
     public static List<String> parse(@Nonnull String text) throws CypherSyntaxError {
         try {
-            return cypherParserWrapper.parse(text);
+            return CypherParserWrapper.parse(text);
+        } catch (IncompleteCypherError e) {
+            // Should be rethrown directly
+            throw e;
         } catch (CypherSyntaxError e) {
-            System.out.println(e);
-
             if (e.getCause() instanceof ParseCancellationException &&
                     e.getCause().getCause() instanceof RecognitionException) {
                 RecognitionException ex = (RecognitionException) e.getCause().getCause();

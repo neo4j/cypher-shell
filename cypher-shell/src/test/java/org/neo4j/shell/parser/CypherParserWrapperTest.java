@@ -16,11 +16,8 @@ public class CypherParserWrapperTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private CypherParserWrapper parser;
-
     @Before
     public void setup() {
-        parser = new CypherParserWrapper();
     }
 
     @Test
@@ -29,7 +26,7 @@ public class CypherParserWrapperTest {
         final String cypher = "CREATE ()";
 
         // when
-        List<String> statements = parser.parse(cypher);
+        List<String> statements = CypherParserWrapper.parse(cypher);
 
         // then
         assertEquals(1, statements.size());
@@ -43,7 +40,7 @@ public class CypherParserWrapperTest {
         final String allCyphers = String.join(";", cypher, cypher, cypher);
 
         // when
-        List<String> statements = parser.parse(allCyphers);
+        List<String> statements = CypherParserWrapper.parse(allCyphers);
 
         // then
         assertEquals(3, statements.size());
@@ -57,7 +54,7 @@ public class CypherParserWrapperTest {
                 "MATCH (m:BOB) RETURN m MATCH (n:NOB) RETURN n";
 
         // when
-        List<String> statements = parser.parse(cypher);
+        List<String> statements = CypherParserWrapper.parse(cypher);
 
         // then
         assertEquals(2, statements.size());
@@ -72,7 +69,7 @@ public class CypherParserWrapperTest {
                 "RETURN 1 RETURN 2 RETURN 3";
 
         // when
-        List<String> statements = parser.parse(cypher);
+        List<String> statements = CypherParserWrapper.parse(cypher);
 
         // then
         assertEquals(3, statements.size());
@@ -90,7 +87,7 @@ public class CypherParserWrapperTest {
         final String cypher = "RETURN";
 
         // when
-        parser.parse(cypher);
+        CypherParserWrapper.parse(cypher);
     }
 
     @Test
@@ -100,7 +97,7 @@ public class CypherParserWrapperTest {
                 "RETURN 1";
 
         // when
-        List<String> statements = parser.parse(cypher);
+        List<String> statements = CypherParserWrapper.parse(cypher);
 
         // then
         assertEquals(1, statements.size());
@@ -114,7 +111,7 @@ public class CypherParserWrapperTest {
         final String cypher = "/* Ignore this part */ RETURN 1";
 
         // when
-        List<String> statements = parser.parse(cypher);
+        List<String> statements = CypherParserWrapper.parse(cypher);
 
         // then
         assertEquals(1, statements.size());
@@ -128,7 +125,7 @@ public class CypherParserWrapperTest {
                 Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("small-test.cypher").toURI()));
 
         // when
-        List<String> statements = parser.parse(String.join("\n", lines));
+        List<String> statements = CypherParserWrapper.parse(String.join("\n", lines));
 
         // then
         assertEquals(11, statements.size());
@@ -141,7 +138,7 @@ public class CypherParserWrapperTest {
                 Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("torture-test.cypher").toURI()));
 
         // when
-        List<String> statements = parser.parse(String.join("\n", lines));
+        List<String> statements = CypherParserWrapper.parse(String.join("\n", lines));
 
         // then
         assertEquals(8, statements.size());
@@ -154,7 +151,7 @@ public class CypherParserWrapperTest {
                 Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("graphgems.cypher").toURI()));
 
         // when
-        List<String> statements = parser.parse(String.join("\n", lines));
+        List<String> statements = CypherParserWrapper.parse(String.join("\n", lines));
 
         // then
         assertEquals(8, statements.size());

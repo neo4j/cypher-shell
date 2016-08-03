@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.exception.CypherSyntaxError;
+import org.neo4j.shell.exception.IncompleteCypherError;
 import org.neo4j.shell.exception.IncompleteStatementException;
 import org.neo4j.shell.exception.UnconsumedStatementException;
 
@@ -116,6 +117,15 @@ public class StatementParserTest {
     }
 
     @Test
+    public void incompleteCypherTest() throws Exception {
+        thrown.expect(IncompleteCypherError.class);
+
+        String stmt = "CREATE\n";
+
+        StatementParser.parse(stmt);
+    }
+
+    @Test
     public void canParseCypherCommand() throws Exception {
         String stmt = "CREATE (n) RETURN n";
         List<String> statements = StatementParser.parse(stmt);
@@ -194,7 +204,7 @@ public class StatementParserTest {
         String stmt3 = "  :commit  \n";
         String stmt4 = "  :exit  ";
 
-        List<String> statements = StatementParser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
+        StatementParser.parse(String.join("", stmt0, stmt1, stmt2, stmt3, stmt4));
     }
 
     @Test

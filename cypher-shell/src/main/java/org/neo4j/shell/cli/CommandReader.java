@@ -145,6 +145,11 @@ public class CommandReader implements Historian {
                 if (line == null) {
                     return null;
                 }
+                if (line.contains("\r")) {
+                    System.err.println("Found carriage return!");
+                } else {
+                    System.err.println("No carriage return");
+                }
                 parser.parseLine(line);
             } catch (Throwable t) {
                 // User pressed Ctrl-C, or made a boo-boo, clear current parser state

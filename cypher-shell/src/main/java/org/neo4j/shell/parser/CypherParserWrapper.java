@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
  */
 public class CypherParserWrapper {
 
+    private CypherParserWrapper() {}
+
     /**
      * Construct an ANTLR parser for the given cypher text.
      * @param text to parse
@@ -44,7 +46,7 @@ public class CypherParserWrapper {
      * simply isn't finished, an {@link org.neo4j.shell.exception.IncompleteCypherError} will be thrown.
      */
     @Nonnull
-    public List<String> parse(@Nonnull String text) throws CypherSyntaxError {
+    public static List<String> parse(@Nonnull String text) throws CypherSyntaxError {
         CypherShellParser parser = getParser(text);
 
         try {

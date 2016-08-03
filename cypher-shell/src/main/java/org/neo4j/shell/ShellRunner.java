@@ -1,7 +1,6 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.cli.CliArgHelper;
-import org.neo4j.shell.cli.CommandReader;
 import org.neo4j.shell.cli.InteractiveShellRunner;
 import org.neo4j.shell.cli.NonInteractiveShellRunner;
 import org.neo4j.shell.cli.StringShellRunner;
@@ -35,11 +34,10 @@ public interface ShellRunner {
      * @throws IOException
      */
     static ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs, @Nonnull Logger logger) throws IOException {
-        CommandReader commandReader = new CommandReader(logger, true);
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);
         } else if (isInputInteractive()) {
-            return new InteractiveShellRunner(commandReader, logger);
+            return new InteractiveShellRunner(logger, System.in);
         } else {
             return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger, System.in);
         }

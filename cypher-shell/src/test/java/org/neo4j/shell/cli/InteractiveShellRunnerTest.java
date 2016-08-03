@@ -32,7 +32,7 @@ public class InteractiveShellRunnerTest {
         CommandReader commandReader = new CommandReader(
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
-        InteractiveShellRunner runner = new InteractiveShellRunner(commandReader, logger);
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ByteArrayInputStream(input.getBytes()));
         runner.runUntilEnd(cmdExecuter);
 
         verify(cmdExecuter).execute("good1\n");
@@ -50,7 +50,7 @@ public class InteractiveShellRunnerTest {
         CommandReader commandReader = new CommandReader(
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
-        InteractiveShellRunner runner = new InteractiveShellRunner(commandReader, logger);
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ByteArrayInputStream(input.getBytes()));
 
         int code = runner.runUntilEnd(cmdExecuter);
 
@@ -77,7 +77,7 @@ public class InteractiveShellRunnerTest {
         CommandReader commandReader = new CommandReader(
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
-        InteractiveShellRunner runner = new InteractiveShellRunner(commandReader, logger);
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ByteArrayInputStream(input.getBytes()));
 
         doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit"));
 
@@ -103,7 +103,7 @@ public class InteractiveShellRunnerTest {
         CommandReader commandReader = new CommandReader(
                 new ByteArrayInputStream(input.getBytes()),
                 logger);
-        InteractiveShellRunner runner = new InteractiveShellRunner(commandReader, logger);
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ByteArrayInputStream(input.getBytes()));
 
         doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit"));
 

@@ -20,7 +20,7 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
 
 /**
- * A shell runner which reads from STDIN and executes commands until completion. In case of errors, the failBehavior
+ * A shell runner which reads all of STDIN and executes commands until completion. In case of errors, the failBehavior
  * determines if the shell exits immediately, or if it should keep trying the next commands.
  */
 public class NonInteractiveShellRunner implements ShellRunner {
