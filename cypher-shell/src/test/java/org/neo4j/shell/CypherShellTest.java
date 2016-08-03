@@ -23,11 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.contains;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class CypherShellTest {
@@ -51,7 +47,7 @@ public class CypherShellTest {
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
 
         shell.connect(cc);
         verify(mockedBoltStateHandler).connect(cc);
@@ -62,7 +58,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
 
         shell.beginTransaction();
         verify(mockedBoltStateHandler).beginTransaction();
@@ -207,7 +203,7 @@ public class CypherShellTest {
         BoltStateHandler bh = mockedBoltStateHandler;
         doReturn(runner).when(bh).getStatementRunner();
 
-        CypherShell shell = new CypherShell(logger, bh);
+        CypherShell shell = new CypherShell(logger, bh, CliArgHelper.Format.VERBOSE);
 
         // when
         shell.set("bob", "99");

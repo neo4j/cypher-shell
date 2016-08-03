@@ -25,8 +25,15 @@ public class CliArgHelper {
     }
 
     public enum Format {
-        DEFAULT,
-        PLAIN
+        VERBOSE,
+        PLAIN;
+
+        public static Format parse(String format) {
+            if (format.equalsIgnoreCase(PLAIN.name())) {
+                return PLAIN;
+            }
+            return VERBOSE;
+        }
     }
 
 
@@ -75,7 +82,7 @@ public class CliArgHelper {
         cliArgs.setFailBehavior(ns.get("fail-behavior"));
 
         //Set Output format
-        cliArgs.setFormat(ns.get("format"));
+        cliArgs.setFormat(Format.parse(ns.get("format")));
 
         return cliArgs;
     }
@@ -121,10 +128,10 @@ public class CliArgHelper {
         parser.setDefault("fail-behavior", FAIL_FAST);
 
         parser.addArgument("--format")
-                .help("output format")
-                .choices(new CollectionArgumentChoice<>(Format.DEFAULT.name(), Format.PLAIN.name()))
-                .setDefault(Format.DEFAULT)
-                .action(new StoreConstArgumentAction());
+                .help("desired output format, verbose(default) displays statistics, plain only displays data")
+                .choices(new CollectionArgumentChoice<>(
+                        Format.VERBOSE.name().toLowerCase(), Format.PLAIN.name().toLowerCase()))
+                .setDefault(Format.VERBOSE.name().toLowerCase());
 
         parser.addArgument("cypher")
                 .nargs("?")
@@ -140,7 +147,7 @@ public class CliArgHelper {
         private String username = "";
         private String password = "";
         private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
-        private Format format = Format.DEFAULT;
+        private Format format = Format.VERBOSE;
         private Optional<String> cypher = Optional.empty();
 
         public boolean getSuppressColor() {

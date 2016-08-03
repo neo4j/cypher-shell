@@ -3,6 +3,7 @@ package org.neo4j.shell.prettyprint;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
+import org.neo4j.shell.cli.CliArgHelper;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -10,7 +11,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class StatisticsCollector {
+    private CliArgHelper.Format format;
+
+    public StatisticsCollector(@Nonnull CliArgHelper.Format format) {
+        this.format = format;
+    }
+
     public String collect(@Nonnull StatementResult result) {
+        if (CliArgHelper.Format.VERBOSE == format) {
+            return collectStatistics(result);
+        } else {
+            return "";
+        }
+    }
+
+    private String collectStatistics(@Nonnull StatementResult result) {
         List<String> statistics = new ArrayList<String>();
         ResultSummary consume = result.consume();
         SummaryCounters counters = consume.counters();

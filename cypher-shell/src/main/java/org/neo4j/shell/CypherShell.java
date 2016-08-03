@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -26,18 +27,20 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     private final BoltStateHandler boltStateHandler;
+    private final PrettyPrinter prettyPrinter;
     protected CommandHelper commandHelper;
     protected final Map<String, Object> queryParams = new HashMap<>();
-    private PrettyPrinter prettyPrinter;
 
-    public CypherShell(@Nonnull Logger logger) {
-        this(logger, new BoltStateHandler());
+    public CypherShell(@Nonnull Logger logger, @Nonnull CliArgHelper.Format format) {
+        this(logger, new BoltStateHandler(), format);
     }
 
-    protected CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
+    protected CypherShell(@Nonnull Logger logger,
+                          @Nonnull BoltStateHandler boltStateHandler,
+                          @Nonnull CliArgHelper.Format format) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
-        prettyPrinter = new PrettyPrinter();
+        this.prettyPrinter = new PrettyPrinter(format);
     }
 
     @Override

@@ -28,7 +28,7 @@ public class Main {
         try {
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
-            CypherShell shell = new CypherShell(logger);
+            CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
 
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
 

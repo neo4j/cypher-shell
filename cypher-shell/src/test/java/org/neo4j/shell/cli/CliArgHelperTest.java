@@ -2,8 +2,10 @@ package org.neo4j.shell.cli;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.neo4j.shell.test.Util.asArray;
 
@@ -35,8 +37,12 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void parseFormatAsArgument() {
-        String text = "-a 192.168.1.1 -p 123 --format plain";
-        assertEquals(Optional.of("plain"), CliArgHelper.parse(text.split(" ")).getCypher());
+    public void parseArgumentsAndQuery() {
+        String query = "\"match (n) return n\"";
+        ArrayList<String> strings = new ArrayList<>();
+        strings.addAll(asList("-a 192.168.1.1 -p 123 --format plain".split(" ")));
+        strings.add(query);
+        assertEquals(Optional.of(query),
+                CliArgHelper.parse(strings.toArray(new String[strings.size()])).getCypher());
     }
 }
