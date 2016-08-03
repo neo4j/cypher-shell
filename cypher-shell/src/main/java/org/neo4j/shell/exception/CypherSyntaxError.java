@@ -10,7 +10,7 @@ public class CypherSyntaxError extends Exception {
         super(cause);
     }
 
-    public CypherSyntaxError(String msg) {
-        super(msg);
+    public CypherSyntaxError(String msg, ParseCancellationException cause) {
+        super(msg, cause);
     }
 }

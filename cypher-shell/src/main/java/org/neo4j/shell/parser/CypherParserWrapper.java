@@ -69,7 +69,8 @@ public class CypherParserWrapper {
                         String.format("Invalid input '%s' (line %d, position %d)",
                                 token.getText(),
                                 token.getLine(),
-                                token.getCharPositionInLine()));
+                                token.getCharPositionInLine()),
+                        e);
             }
             throw new CypherSyntaxError(e);
         }

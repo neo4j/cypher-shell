@@ -30,6 +30,7 @@ public class InteractiveShellRunner implements ShellRunner {
     private final ConsoleReader reader;
     private final static String freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ").renderedString();
     private final static String continuationPrompt = AnsiFormattedText.s().bold().append(".....> ").renderedString();
+    private final Historian historian;
 
     public InteractiveShellRunner(@Nonnull Logger logger,
                                   @Nonnull InputStream inputStream) throws IOException {
@@ -40,6 +41,8 @@ public class InteractiveShellRunner implements ShellRunner {
         reader.setExpandEvents(false);
         // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
         reader.setHandleUserInterrupt(true);
+        // Setup history as well
+        historian = DefaultFileHistorian.setupHistory(reader, logger);
     }
 
     @Override
@@ -69,8 +72,7 @@ public class InteractiveShellRunner implements ShellRunner {
 
     @Override
     public Historian getHistorian() {
-        // Fix
-        return Historian.empty;
+        return historian;
     }
 
     /**

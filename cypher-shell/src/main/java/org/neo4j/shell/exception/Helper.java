@@ -25,7 +25,14 @@ public class Helper {
     @Nonnull
     public static String getFormattedMessage(@Nonnull final Throwable e) {
         AnsiFormattedText msg = AnsiFormattedText.s().colorRed();
-        Throwable cause = getRootCause(e);
+        final Throwable cause;
+
+        if (e instanceof CypherSyntaxError) {
+            cause = e;
+        } else {
+            //noinspection ThrowableResultOfMethodCallIgnored
+            cause = getRootCause(e);
+        }
 
         if (cause instanceof AnsiFormattedException) {
             msg = msg.append(((AnsiFormattedException) cause).getFormattedMessage());

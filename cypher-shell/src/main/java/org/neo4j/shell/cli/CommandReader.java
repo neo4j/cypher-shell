@@ -27,9 +27,6 @@ public class CommandReader implements Historian {
     private final StatementParser parser;
     private FileHistory fileHistory;
 
-    public CommandReader(@Nonnull Logger logger, final boolean useHistoryFile) throws IOException {
-        this(System.in, logger, useHistoryFile);
-    }
 
     public CommandReader(@Nonnull InputStream inputStream, @Nonnull Logger logger) throws IOException {
         this(inputStream, logger, false);
