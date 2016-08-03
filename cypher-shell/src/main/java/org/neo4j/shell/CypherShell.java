@@ -28,6 +28,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     private final BoltStateHandler boltStateHandler;
     protected CommandHelper commandHelper;
     protected final Map<String, Object> queryParams = new HashMap<>();
+    private PrettyPrinter prettyPrinter;
 
     public CypherShell(@Nonnull Logger logger) {
         this(logger, new BoltStateHandler());
@@ -36,6 +37,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
+        prettyPrinter = new PrettyPrinter();
     }
 
     @Override
@@ -64,7 +66,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<StatementResult> result = doCypherSilently(cypher);
         if (result.isPresent()) {
-            logger.printOut(PrettyPrinter.format(result.get()));
+            logger.printOut(prettyPrinter.format(result.get()));
         }
     }
 

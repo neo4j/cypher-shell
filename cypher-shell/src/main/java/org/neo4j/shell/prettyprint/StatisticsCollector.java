@@ -1,0 +1,52 @@
+package org.neo4j.shell.prettyprint;
+
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.summary.SummaryCounters;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StatisticsCollector {
+    public String collect(@Nonnull StatementResult result) {
+        List<String> statistics = new ArrayList<String>();
+        ResultSummary consume = result.consume();
+        SummaryCounters counters = consume.counters();
+        if (counters.nodesCreated() != 0) {
+            statistics.add(String.format("Added %d nodes", counters.nodesCreated()));
+        }
+        if (counters.nodesDeleted() != 0) {
+            statistics.add(String.format("Deleted %d nodes", counters.nodesDeleted()));
+        }
+        if (counters.relationshipsCreated() != 0) {
+            statistics.add(String.format("Created %d relationships", counters.relationshipsCreated()));
+        }
+        if (counters.relationshipsDeleted() != 0) {
+            statistics.add(String.format("Deleted %d relationships", counters.relationshipsDeleted()));
+        }
+        if (counters.propertiesSet() != 0) {
+            statistics.add(String.format("Set %d properties", counters.propertiesSet()));
+        }
+        if (counters.labelsAdded() != 0) {
+            statistics.add(String.format("Added %d labels", counters.labelsAdded()));
+        }
+        if (counters.labelsRemoved() != 0) {
+            statistics.add(String.format("Removed %d labels", counters.labelsRemoved()));
+        }
+        if (counters.indexesAdded() != 0) {
+            statistics.add(String.format("Added %d indexes", counters.indexesAdded()));
+        }
+        if (counters.indexesRemoved() != 0) {
+            statistics.add(String.format("Removed %d indexes", counters.indexesRemoved()));
+        }
+        if (counters.constraintsAdded() != 0) {
+            statistics.add(String.format("Added %d constraints", counters.constraintsAdded()));
+        }
+        if (counters.constraintsRemoved() != 0) {
+            statistics.add(String.format("Removed %d constraints", counters.constraintsRemoved()));
+        }
+        return statistics.stream().collect(Collectors.joining(", "));
+    }
+}

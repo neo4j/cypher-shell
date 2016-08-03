@@ -25,7 +25,7 @@ public class PrettyPrinterTest {
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = PrettyPrinter.format(result);
+        String actual = new PrettyPrinter().format(result);
 
         // then
         assertThat(actual, is("Added 10 nodes, Added 1 labels"));
