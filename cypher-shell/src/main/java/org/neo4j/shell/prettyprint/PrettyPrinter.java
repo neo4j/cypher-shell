@@ -42,6 +42,10 @@ public class PrettyPrinter {
         while (result.hasNext()) {
             sb.append("\n").append(format(result.next()));
         }
+        String statistics = statisticsCollector.collect(result);
+        if (!statistics.isEmpty()) {
+            sb.append("\n").append(statistics);
+        }
         return sb.toString();
     }
 

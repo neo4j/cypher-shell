@@ -54,6 +54,19 @@ public class CypherShellIntegrationTest {
     }
 
     @Test
+    public void cypherWithReturnStatements() throws CommandException {
+        //when
+        shell.execute("CREATE (jane :TestPerson {name: \"Jane Smith\"}) RETURN jane");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        assertThat(result.get(0), is("jane\n{name: \"Jane Smith\"}\nAdded 1 nodes, Set 1 properties, Added 1 labels"));
+    }
+
+    @Test
     public void connectTwiceThrows() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
