@@ -5,6 +5,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -87,6 +89,60 @@ public class CypherParserWrapperTest {
         final String cypher = "RETURN";
 
         // when
+        parser.parse(cypher);
+    }
+
+    @Test
+    public void testComment() throws Exception {
+        // given
+        final String cypher = "// Ignore this line \n" +
+                "RETURN 1";
+
+        // when
         List<String> statements = parser.parse(cypher);
+
+        // then
+        assertEquals(1, statements.size());
+        assertEquals("// Ignore this line \n" +
+                "RETURN 1", statements.get(0));
+    }
+
+    @Test
+    public void testBlockComment() throws Exception {
+        // given
+        final String cypher = "/* Ignore this part */ RETURN 1";
+
+        // when
+        List<String> statements = parser.parse(cypher);
+
+        // then
+        assertEquals(1, statements.size());
+        assertEquals("/* Ignore this part */ RETURN 1", statements.get(0));
+    }
+
+    @Test
+    public void parseSmallTest() throws Exception {
+        // given
+        List<String> lines =
+                Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("small-test.cypher").toURI()));
+
+        // when
+        List<String> statements = parser.parse(String.join("\n", lines));
+
+        // then
+        assertEquals(11, statements.size());
+    }
+
+    @Test
+    public void parseTortureTest() throws Exception {
+        // given
+        List<String> lines =
+                Files.readAllLines(Paths.get(CypherParserWrapperTest.class.getResource("torture-test.cypher").toURI()));
+
+        // when
+        List<String> statements = parser.parse(String.join("\n", lines));
+
+        // then
+        assertEquals(7, statements.size());
     }
 }

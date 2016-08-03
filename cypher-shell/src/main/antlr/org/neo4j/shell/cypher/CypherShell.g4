@@ -705,12 +705,15 @@ WHITESPACE : SPACE
            | ' '
            | ' '
            | ' '
-           | Comment
+           | COMMENT
+           | BLOCKCOMMENT
            ;
 
-Comment : ( '/*' ( Comment_0 | ( '*' Comment_1 ) )* '*/' )
-        | ( '//' Comment_2 CR? ( LF | EOF ) )
-        ;
+BLOCKCOMMENT : '/*' .*? '*/' -> skip ;
+COMMENT : '//' ~[\r\n]* '\r'? '\n' -> skip ;
+//Comment : ( '/*' ( Comment_0 | ( '*' Comment_1 ) )* '*/' )
+//        | ( '//' Comment_2 CR? ( LF | EOF ) )
+//        ;
 
 leftArrowHead : '<'
               | '⟨'
