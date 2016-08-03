@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.NoViableAltException;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.neo4j.shell.cypher.CypherShellLexer;
@@ -58,10 +59,17 @@ public class CypherParserWrapper {
         } catch (ParseCancellationException e) {
             if (e.getCause() instanceof NoViableAltException) {
                 NoViableAltException ex = (NoViableAltException) e.getCause();
-                if ("<EOF>".equals(ex.getOffendingToken().getText())) {
+                Token token = ex.getOffendingToken();
+                if ("<EOF>".equals(token.getText())) {
                     // Incomplete
                     throw new IncompleteCypherError(e);
                 }
+                // Explain what failed
+                throw new CypherSyntaxError(
+                        String.format("Invalid input '%s' (line %d, position %d)",
+                                token.getText(),
+                                token.getLine(),
+                                token.getCharPositionInLine()));
             }
             throw new CypherSyntaxError(e);
         }

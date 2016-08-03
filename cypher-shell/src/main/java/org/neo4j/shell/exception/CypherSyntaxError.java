@@ -9,4 +9,8 @@ public class CypherSyntaxError extends Exception {
     public CypherSyntaxError(ParseCancellationException cause) {
         super(cause);
     }
+
+    public CypherSyntaxError(String msg) {
+        super(msg);
+    }
 }

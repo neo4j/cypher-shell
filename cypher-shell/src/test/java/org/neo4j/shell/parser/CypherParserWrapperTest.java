@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.IncompleteCypherError;
 
 import java.nio.file.Files;
@@ -85,6 +86,19 @@ public class CypherParserWrapperTest {
 
         // given
         final String cypher = "RETURN";
+
+        // when
+        CypherParserWrapper.parse(cypher);
+    }
+
+    @Test
+    public void testIncorrectSimple() throws Exception {
+        // then
+        thrown.expect(CypherSyntaxError.class);
+        thrown.expectMessage("bob");
+
+        // given
+        final String cypher = "CREATE ;";
 
         // when
         CypherParserWrapper.parse(cypher);
