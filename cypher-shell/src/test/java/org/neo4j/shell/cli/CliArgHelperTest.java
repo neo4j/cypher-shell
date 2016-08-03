@@ -2,6 +2,8 @@ package org.neo4j.shell.cli;
 
 import org.junit.Test;
 
+import java.util.Optional;
+
 import static org.junit.Assert.assertEquals;
 import static org.neo4j.shell.test.Util.asArray;
 
@@ -30,5 +32,11 @@ public class CliArgHelperTest {
         String text = "Single string";
         assertEquals("Did not parse cypher string", text,
                 CliArgHelper.parse(asArray(text)).getCypher().get());
+    }
+
+    @Test
+    public void parseFormatAsArgument() {
+        String text = "-a 192.168.1.1 -p 123 --format plain";
+        assertEquals(Optional.of("plain"), CliArgHelper.parse(text.split(" ")).getCypher());
     }
 }

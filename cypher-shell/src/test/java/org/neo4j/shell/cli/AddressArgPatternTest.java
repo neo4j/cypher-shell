@@ -11,7 +11,7 @@ public class AddressArgPatternTest {
 
     @Test
     public void testUserPassProtocolHostPort() {
-        Matcher m = CliArgHelper.addressArgPattern.matcher("   bolt://bob1:pass@localhost:123");
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("   bolt://bob1:pass@localhost:123");
         assertTrue("Expected a match: " + "   bolt://bob1:pass@:123", m.matches());
         assertEquals("123", m.group("port"));
         assertEquals("bob1", m.group("username"));
@@ -19,7 +19,7 @@ public class AddressArgPatternTest {
         assertEquals("bolt://", m.group("protocol"));
         assertEquals("localhost", m.group("host"));
 
-        Matcher m1 = CliArgHelper.addressArgPattern.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1  ");
+        Matcher m1 = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1  ");
         assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1  ", m1.matches());
         assertEquals("1", m1.group("port"));
         assertEquals("bob1", m1.group("username"));
@@ -27,7 +27,7 @@ public class AddressArgPatternTest {
         assertEquals("bolt://", m1.group("protocol"));
         assertEquals("99.99.99.99", m1.group("host"));
 
-        Matcher m2 = CliArgHelper.addressArgPattern.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1");
+        Matcher m2 = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1");
         assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1", m2.matches());
         assertEquals("1", m2.group("port"));
         assertEquals("bob1", m2.group("username"));
@@ -125,7 +125,7 @@ public class AddressArgPatternTest {
 
     private void verifyUserPassHostPort(String user, String pass, String host, String port) {
         String args = user + ":" + pass + "@" + host + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(port.trim(), m.group("port"));
@@ -136,7 +136,7 @@ public class AddressArgPatternTest {
 
     private void verifyUserPassPort(String user, String pass, String port) {
         String args = user + ":" + pass + "@:" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(port.trim(), m.group("port"));
         assertEquals(user.trim(), m.group("username"));
@@ -148,7 +148,7 @@ public class AddressArgPatternTest {
 
     private void verifyUserPassProtocolPort(String protocol, String user, String pass, String port) {
         String args = protocol + user + ":" + pass + "@" + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(port.trim(), m.group("port"));
         assertEquals(user.trim(), m.group("username"));
@@ -160,7 +160,7 @@ public class AddressArgPatternTest {
 
     private void verifyUserPassProtocolHost(String protocol, String user, String pass, String host) {
         String args = protocol + user + ":" + pass + "@" + host;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(user.trim(), m.group("username"));
@@ -172,7 +172,7 @@ public class AddressArgPatternTest {
 
     private void verifyUserPassHost(String user, String pass, String host) {
         String args = user + ":" + pass + "@" + host;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(user.trim(), m.group("username"));
@@ -184,7 +184,7 @@ public class AddressArgPatternTest {
 
     private void verifyProtocolHostPort(String protocol, String host, String port) {
         String args = protocol + host + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(port.trim(), m.group("port"));
@@ -196,7 +196,7 @@ public class AddressArgPatternTest {
 
     private void verifyHostPort(String host, String port) {
         String args = host + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(host.trim(), m.group("host"));
         assertEquals(port.trim(), m.group("port"));
@@ -208,7 +208,7 @@ public class AddressArgPatternTest {
 
     private void verifyProtocolPort(String protocol, String port) {
         String args = protocol + ":" + port;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(port.trim(), m.group("port"));
         assertEquals(protocol.trim(), m.group("protocol"));
@@ -219,7 +219,7 @@ public class AddressArgPatternTest {
     }
 
     private void verifySinglePort(String args) {
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(args.trim().substring(1), m.group("port"));
 
@@ -230,7 +230,7 @@ public class AddressArgPatternTest {
     }
 
     private void verifySingleHost(String args) {
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(args.trim(), m.group("host"));
         assertNull("Did not expect match for protocol group", m.group("protocol"));
@@ -241,7 +241,7 @@ public class AddressArgPatternTest {
 
     private void verifyProtocolHost(String protocol, String host) {
         String args = protocol + host;
-        Matcher m = CliArgHelper.addressArgPattern.matcher(args);
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
         assertTrue("Expected a match: " + args, m.matches());
         assertEquals(protocol.trim(), m.group("protocol"));
         assertEquals(host.trim(), m.group("host"));

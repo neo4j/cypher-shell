@@ -2,6 +2,7 @@ package org.neo4j.shell.cli;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
+import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.inf.*;
 
 import javax.annotation.Nonnull;
@@ -23,12 +24,74 @@ public class CliArgHelper {
         FAIL_AT_END
     }
 
+    public enum Format {
+        DEFAULT,
+        PLAIN
+    }
 
-    public static final Pattern addressArgPattern =
+
+    public static final Pattern ADDRESS_ARG_PATTERN =
             Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
     @Nonnull
     public static CliArgs parse(@Nonnull String... args) {
+        ArgumentParser parser = setupParser();
+
+        Namespace ns = null;
+        try {
+            ns = parser.parseArgs(args);
+        } catch (ArgumentParserException e) {
+            parser.handleError(e);
+            System.exit(1);
+        }
+
+        CliArgs cliArgs = new CliArgs();
+
+        // Parse address string
+        Matcher addressMatcher = parseAddressMatcher(parser, ns.getString("address"));
+
+        cliArgs.setHost(addressMatcher.group("host"), "localhost");
+        // Safe, regex only matches integers
+        String portString = addressMatcher.group("port");
+        cliArgs.setPort(portString == null ? 7687 : Integer.parseInt(portString));
+        // Also parse username and password from address if available
+        cliArgs.setUsername(addressMatcher.group("username"), "");
+        cliArgs.setPassword(addressMatcher.group("password"), "");
+
+        // Only overwrite user/pass from address string if the arguments were specified
+        String user = ns.getString("username");
+        if (!user.isEmpty()) {
+            cliArgs.setUsername(user, cliArgs.username);
+        }
+        String pass = ns.getString("password");
+        if (!pass.isEmpty()) {
+            cliArgs.setPassword(pass, cliArgs.password);
+        }
+
+        // Other arguments
+        // cypher string might not be given, represented by null
+        cliArgs.setCypher(ns.getString("cypher"));
+        // Fail behavior as sensible default and returns a proper type
+        cliArgs.setFailBehavior(ns.get("fail-behavior"));
+
+        //Set Output format
+        cliArgs.setFormat(ns.get("format"));
+
+        return cliArgs;
+    }
+
+    private static Matcher parseAddressMatcher(ArgumentParser parser, String address) {
+        Matcher matcher = ADDRESS_ARG_PATTERN.matcher(address);
+        if (!matcher.matches()) {
+            parser.printUsage();
+            System.err.println("neo4j-shell: error: Failed to parse address: '" + address + "'");
+            System.err.println("\n  Address should be of the form: [username:password@][host][:port]");
+            System.exit(1);
+        }
+        return matcher;
+    }
+
+    private static ArgumentParser setupParser() {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("neo4j-shell")
                 .defaultHelp(true)
                 .description("A command line shell where you can execute Cypher against an instance of Neo4j");
@@ -57,55 +120,16 @@ public class CliArgHelper {
                 .action(new StoreConstArgumentAction());
         parser.setDefault("fail-behavior", FAIL_FAST);
 
+        parser.addArgument("--format")
+                .help("output format")
+                .choices(new CollectionArgumentChoice<>(Format.DEFAULT.name(), Format.PLAIN.name()))
+                .setDefault(Format.DEFAULT)
+                .action(new StoreConstArgumentAction());
+
         parser.addArgument("cypher")
                 .nargs("?")
                 .help("an optional string of cypher to execute and then exit");
-
-        Namespace ns = null;
-        try {
-            ns = parser.parseArgs(args);
-        } catch (ArgumentParserException e) {
-            parser.handleError(e);
-            System.exit(1);
-        }
-
-        CliArgs cliArgs = new CliArgs();
-
-        // Parse address string
-        String address = ns.getString("address");
-        Matcher m = addressArgPattern.matcher(address);
-        if (!m.matches()) {
-            parser.printUsage();
-            System.err.println("neo4j-shell: error: Failed to parse address: '" + address + "'");
-            System.err.println("\n  Address should be of the form: [username:password@][host][:port]");
-            System.exit(1);
-        }
-
-        cliArgs.setHost(m.group("host"), "localhost");
-        // Safe, regex only matches integers
-        String portString = m.group("port");
-        cliArgs.setPort(portString == null ? 7687 : Integer.parseInt(portString));
-        // Also parse username and password from address if available
-        cliArgs.setUsername(m.group("username"), "");
-        cliArgs.setPassword(m.group("password"), "");
-
-        // Only overwrite user/pass from address string if the arguments were specified
-        String user = ns.getString("username");
-        if (!user.isEmpty()) {
-            cliArgs.setUsername(user, cliArgs.username);
-        }
-        String pass = ns.getString("password");
-        if (!pass.isEmpty()) {
-            cliArgs.setPassword(pass, cliArgs.password);
-        }
-
-        // Other arguments
-        // cypher string might not be given, represented by null
-        cliArgs.setCypher(ns.getString("cypher"));
-        // Fail behavior as sensible default and returns a proper type
-        cliArgs.setFailBehavior(ns.get("fail-behavior"));
-
-        return cliArgs;
+        return parser;
     }
 
 
@@ -116,6 +140,7 @@ public class CliArgHelper {
         private String username = "";
         private String password = "";
         private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
+        private Format format = Format.DEFAULT;
         private Optional<String> cypher = Optional.empty();
 
         public boolean getSuppressColor() {
@@ -158,6 +183,13 @@ public class CliArgHelper {
         }
 
         /**
+         * Set the desired format
+         */
+        public void setFormat(@Nonnull Format format) {
+            this.format = format;
+        }
+
+        /**
          * Set the specified cypher string to execute
          */
         public void setCypher(@Nullable String cypher) {
@@ -192,6 +224,11 @@ public class CliArgHelper {
         @Nonnull
         public Optional<String> getCypher() {
             return cypher;
+        }
+
+        @Nonnull
+        public Format getFormat() {
+            return format;
         }
     }
 }
