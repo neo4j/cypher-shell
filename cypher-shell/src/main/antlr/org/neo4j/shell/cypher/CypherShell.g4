@@ -218,7 +218,7 @@ relationshipPattern : ( leftArrowHead ws dash ws relationshipDetail? ws dash ws 
                     | ( dash ws relationshipDetail? ws dash )
                     ;
 
-relationshipDetail : '[' variable? '?'? relationshipTypes? ( '*' rangeLiteral )? properties? ']' ;
+relationshipDetail : '[' ws variable? '?'? ( relationshipTypes ws )? ( '*' rangeLiteral ws )?  ( properties ws )? ']' ;
 
 properties : mapLiteral
            | parameter
