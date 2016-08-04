@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -26,16 +27,20 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     private final BoltStateHandler boltStateHandler;
+    private final PrettyPrinter prettyPrinter;
     protected CommandHelper commandHelper;
     protected final Map<String, Object> queryParams = new HashMap<>();
 
-    public CypherShell(@Nonnull Logger logger) {
-        this(logger, new BoltStateHandler());
+    public CypherShell(@Nonnull Logger logger, @Nonnull CliArgHelper.Format format) {
+        this(logger, new BoltStateHandler(), format);
     }
 
-    protected CypherShell(@Nonnull Logger logger, @Nonnull BoltStateHandler boltStateHandler) {
+    protected CypherShell(@Nonnull Logger logger,
+                          @Nonnull BoltStateHandler boltStateHandler,
+                          @Nonnull CliArgHelper.Format format) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
+        this.prettyPrinter = new PrettyPrinter(format);
     }
 
     @Override
@@ -64,7 +69,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<StatementResult> result = doCypherSilently(cypher);
         if (result.isPresent()) {
-            logger.printOut(PrettyPrinter.format(result.get()));
+            logger.printOut(prettyPrinter.format(result.get()));
         }
     }
 

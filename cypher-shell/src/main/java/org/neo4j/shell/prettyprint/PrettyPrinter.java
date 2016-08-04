@@ -7,6 +7,7 @@ import org.neo4j.driver.v1.exceptions.value.Uncoercible;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.shell.cli.CliArgHelper;
 
 import javax.annotation.Nonnull;
 import java.util.LinkedList;
@@ -17,14 +18,21 @@ import java.util.Map;
  * Print the result from neo4j in a intelligible fashion.
  */
 public class PrettyPrinter {
-    public static String format(@Nonnull final StatementResult result) {
+
+    private StatisticsCollector statisticsCollector;
+
+    public PrettyPrinter(@Nonnull CliArgHelper.Format format) {
+        this.statisticsCollector = new StatisticsCollector(format);
+    }
+
+    public String format(@Nonnull final StatementResult result) {
         // TODO: 6/22/16 Format nicely
         if (!result.hasNext()) {
-            return "";
+            return statisticsCollector.collect(result);
         }
 
         StringBuilder sb = new StringBuilder();
-        for (String key: result.keys()) {
+        for (String key : result.keys()) {
             if (sb.length() > 0) {
                 sb.append(" | ");
             }
@@ -34,13 +42,17 @@ public class PrettyPrinter {
         while (result.hasNext()) {
             sb.append("\n").append(format(result.next()));
         }
+        String statistics = statisticsCollector.collect(result);
+        if (!statistics.isEmpty()) {
+            sb.append("\n").append(statistics);
+        }
         return sb.toString();
     }
 
     private static String format(@Nonnull final Record record) {
         // TODO: 6/22/16 Format nicely
         StringBuilder sb = new StringBuilder();
-        for (Value value: record.values()) {
+        for (Value value : record.values()) {
             if (sb.length() > 0) {
                 sb.append(" | ");
             }

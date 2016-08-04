@@ -1,5 +1,6 @@
 package org.neo4j.shell.test.bolt;
 
+import org.neo4j.driver.internal.summary.InternalSummaryCounters;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.summary.*;
 import org.neo4j.shell.test.Util;
@@ -17,7 +18,7 @@ class FakeResultSummary implements ResultSummary {
 
     @Override
     public SummaryCounters counters() {
-        throw new Util.NotImplementedYetException("Not implemented yet");
+        return InternalSummaryCounters.EMPTY_STATS;
     }
 
     @Override

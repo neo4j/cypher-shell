@@ -2,6 +2,7 @@ package org.neo4j.shell.test;
 
 
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.state.OfflineBoltStateHandler;
 
@@ -13,6 +14,6 @@ import org.neo4j.shell.state.OfflineBoltStateHandler;
 public class OfflineTestShell extends CypherShell {
 
     public OfflineTestShell(Logger logger) {
-        super(logger, new OfflineBoltStateHandler());
+        super(logger, new OfflineBoltStateHandler(), CliArgHelper.Format.VERBOSE);
     }
 }
