@@ -188,7 +188,7 @@ literalIds : ( ws ',' ws )* ;
 
 where : WHERE sp expression ;
 
-pattern : patternPart ( ',' patternPart )* ;
+pattern : patternPart ( ws ',' ws patternPart )* ;
 
 patternPart : ( variable ws '=' ws anonymousPatternPart )
             | anonymousPatternPart
