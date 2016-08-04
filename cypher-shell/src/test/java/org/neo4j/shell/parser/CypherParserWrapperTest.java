@@ -5,6 +5,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.shell.cypher.CypherShellParser;
 import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.IncompleteCypherError;
 
@@ -20,6 +21,12 @@ public class CypherParserWrapperTest {
 
     @Before
     public void setup() {
+    }
+
+    @Test
+    public void parserDisablesDefaultPrints() throws Exception {
+        CypherShellParser parser = CypherParserWrapper.getParser("bob");
+        assertEquals(0, parser.getErrorListeners().size());
     }
 
     @Test

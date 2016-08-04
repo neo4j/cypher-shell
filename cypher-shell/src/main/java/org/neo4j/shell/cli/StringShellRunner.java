@@ -40,6 +40,7 @@ public class StringShellRunner implements ShellRunner {
         return exitCode;
     }
 
+    @Nonnull
     @Override
     public Historian getHistorian() {
         return Historian.empty;

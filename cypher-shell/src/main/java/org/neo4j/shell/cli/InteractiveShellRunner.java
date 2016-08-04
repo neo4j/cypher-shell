@@ -26,8 +26,8 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
  * along the way.
  */
 public class InteractiveShellRunner implements ShellRunner {
-    private final static String freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ").renderedString();
-    private final static String continuationPrompt = AnsiFormattedText.s().bold().append("  ...> ").renderedString();
+    private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
+    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("  ...> ");
     private final Logger logger;
     private final ConsoleReader reader;
     private final Historian historian;
@@ -41,6 +41,17 @@ public class InteractiveShellRunner implements ShellRunner {
         this.statementParser = statementParser;
         reader = setupConsoleReader(logger, inputStream);
         this.historian = FileHistorian.setupHistory(reader, logger, historyFile);
+    }
+
+    private static ConsoleReader setupConsoleReader(@Nonnull Logger logger,
+                                                    @Nonnull InputStream inputStream) throws IOException {
+        ConsoleReader reader = new ConsoleReader(inputStream, logger.getOutputStream());
+        // Disable expansion of bangs: !
+        reader.setExpandEvents(false);
+        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
+        reader.setHandleUserInterrupt(true);
+
+        return reader;
     }
 
     @Override
@@ -68,6 +79,7 @@ public class InteractiveShellRunner implements ShellRunner {
         return exitCode;
     }
 
+    @Nonnull
     @Override
     public Historian getHistorian() {
         return historian;
@@ -85,7 +97,7 @@ public class InteractiveShellRunner implements ShellRunner {
         StringBuilder sb = new StringBuilder();
 
         while (true) {
-            String line = reader.readLine(sb.length() == 0 ? freshPrompt : continuationPrompt);
+            String line = reader.readLine(getPrompt(sb).renderedString());
             if (line == null) {
                 // User hit CTRL-D, or file ended
                 throw new NoMoreInputException();
@@ -103,14 +115,12 @@ public class InteractiveShellRunner implements ShellRunner {
         }
     }
 
-    private static ConsoleReader setupConsoleReader(@Nonnull Logger logger,
-                                                    @Nonnull InputStream inputStream) throws IOException {
-        ConsoleReader reader = new ConsoleReader(inputStream, logger.getOutputStream());
-        // Disable expansion of bangs: !
-        reader.setExpandEvents(false);
-        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
-        reader.setHandleUserInterrupt(true);
-
-        return reader;
+    /**
+     * @param sb if non-empty means multiline mode
+     * @return a prompt string depending on if we currently in multiline mode
+     */
+    @Nonnull
+    AnsiFormattedText getPrompt(@Nonnull StringBuilder sb) {
+        return sb.length() == 0 ? freshPrompt : continuationPrompt;
     }
 }

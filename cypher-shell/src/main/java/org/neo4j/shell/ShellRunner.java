@@ -26,6 +26,7 @@ public interface ShellRunner {
      *
      * @return an object which can provide the history of commands executed
      */
+    @Nonnull
     Historian getHistorian();
 
     /**
@@ -35,6 +36,7 @@ public interface ShellRunner {
      * @return a ShellRunner
      * @throws IOException
      */
+    @Nonnull
     static ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs, @Nonnull Logger logger) throws IOException {
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);

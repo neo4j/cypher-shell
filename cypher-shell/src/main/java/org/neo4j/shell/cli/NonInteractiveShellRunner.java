@@ -1,6 +1,5 @@
 package org.neo4j.shell.cli;
 
-import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -54,9 +53,9 @@ public class NonInteractiveShellRunner implements ShellRunner {
         for (String statement : statements) {
             try {
                 executer.execute(statement);
-            } catch (ExitException | UserInterruptException e) {
+            } catch (ExitException e) {
                 // These exceptions are always fatal
-                return 1;
+                return e.getCode();
             } catch (Throwable e) {
                 exitCode = 1;
                 logger.printError(getFormattedMessage(e));
@@ -73,6 +72,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
     }
 
+    @Nonnull
     @Override
     public Historian getHistorian() {
         return Historian.empty;

@@ -166,6 +166,14 @@ public class ShellStatementParserTest {
         assertEquals(txt, res.getOriginalText());
 
         txt = "one\ntwo\nthree\nfour";
+        res = splitOnLine(txt, 2);
+
+        assertEquals("one\ntwo", res.getBefore());
+        assertEquals("three", res.getLine());
+        assertEquals("four", res.getAfter());
+        assertEquals(txt, res.getOriginalText());
+
+        txt = "one\ntwo\nthree\nfour";
         res = splitOnLine(txt, 3);
 
         assertEquals("one\ntwo\nthree", res.getBefore());

@@ -12,6 +12,7 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.CypherSyntaxError;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
@@ -177,6 +178,11 @@ public class InteractiveShellRunnerTest {
         assertEquals(2, history.size());
         assertEquals(cmd1, history.get(0));
         assertEquals(cmd2, history.get(1));
+
+        history = historian.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(cmd1, history.get(0));
+        assertEquals(cmd2, history.get(1));
     }
 
     @Test
@@ -267,5 +273,28 @@ public class InteractiveShellRunnerTest {
         // then
         assertEquals(1, statements.size());
         assertThat(statements.get(0), is("CREATE (n:Person) RETURN n\n"));
+    }
+
+    @Test
+    public void testPrompt() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        StringBuilder sb = new StringBuilder();
+
+        // when
+        assertEquals(0, sb.length());
+        AnsiFormattedText prompt = runner.getPrompt(sb);
+
+        // then
+        assertEquals("neo4j> ", prompt.plainString());
+
+        // when
+        sb.append("bo bo bo");
+        prompt = runner.getPrompt(sb);
+
+        // then
+        assertEquals("  ...> ", prompt.plainString());
     }
 }
