@@ -42,6 +42,8 @@ subprojects {
         timestampedReports = false
         enableDefaultIncrementalAnalysis = true
         outputFormats = ['XML', 'HTML']
+        // These are generated classes
+        excludedClasses = ['org.neo4j.shell.cypher.*']
     }
 }
 
