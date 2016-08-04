@@ -118,12 +118,12 @@ create : CREATE ws pattern ;
 
 createUnique : CREATE sp UNIQUE ws pattern ;
 
-set : SET setItem ( ',' setItem )* ;
+set : SET ws setItem ( ws ',' ws setItem )* ;
 
-setItem : ( propertyExpression '=' expression )
-        | ( variable '=' expression )
-        | ( variable '+=' expression )
-        | ( variable nodeLabels )
+setItem : ( propertyExpression ws '=' ws expression )
+        | ( variable ws '=' ws expression )
+        | ( variable ws '+=' ws expression )
+        | ( variable ws nodeLabels )
         ;
 
 delete : ( DELETE expression ( ',' expression )* )
