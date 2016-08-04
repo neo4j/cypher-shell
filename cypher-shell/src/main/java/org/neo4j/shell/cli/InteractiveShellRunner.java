@@ -12,6 +12,7 @@ import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.util.Pair;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -27,7 +28,8 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
  */
 public class InteractiveShellRunner implements ShellRunner {
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
-    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("  ...> ");
+    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append(".....> ");
+
     private final Logger logger;
     private final ConsoleReader reader;
     private final Historian historian;
@@ -95,6 +97,7 @@ public class InteractiveShellRunner implements ShellRunner {
     @Nonnull
     public List<String> readUntilStatement() throws IOException, NoMoreInputException, CypherSyntaxError {
         StringBuilder sb = new StringBuilder();
+        boolean inMultiline = false;
 
         while (true) {
             String line = reader.readLine(getPrompt(sb).renderedString());
@@ -102,15 +105,37 @@ public class InteractiveShellRunner implements ShellRunner {
                 // User hit CTRL-D, or file ended
                 throw new NoMoreInputException();
             }
-            if (sb.length() == 0 && line.trim().isEmpty()) {
-                // Ignore empty lines when nothing has been parsed yet
+
+            // If a newline is escaped, always add to string builder and wait for more input
+            Pair<Boolean, String> withoutBackslash = lineWithoutEscapedNewline(line);
+            line = withoutBackslash.getSecond();
+            if (withoutBackslash.getFirst()) {
+                sb.append(line);
+                inMultiline = true;
+                continue;
+            }
+
+            // There was no escaped newline, empty lines are ignored unless in multiline mode
+            if (!inMultiline && line.trim().isEmpty()) {
                 continue;
             }
             sb.append(line).append("\n");
-            try {
+
+            if (inMultiline &&
+                    (line.trim().isEmpty() || line.trim().endsWith(";"))) {
+                // An empty line or a semicolon in multiline mode is a signal to execute
                 return statementParser.parse(sb.toString());
-            } catch (IncompleteCypherError ignored) { // NOPMD - we really DO want to ignore this exception
-                // Try to read more lines
+            } else if (!inMultiline) {
+                // Try to execute the line directly if not in multiline mode
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                try {
+                    return statementParser.parse(sb.toString());
+                } catch (IncompleteCypherError ignored) {
+                    // The parser has detected an incomplete query, wait for more input
+                    inMultiline = true;
+                }
             }
         }
     }
@@ -122,5 +147,40 @@ public class InteractiveShellRunner implements ShellRunner {
     @Nonnull
     AnsiFormattedText getPrompt(@Nonnull StringBuilder sb) {
         return sb.length() == 0 ? freshPrompt : continuationPrompt;
+    }
+
+    /**
+     * Parses a line for escaped newlines (trailing backslashes).
+     * These newlines can be escaped (e.g. double backslash), in which case the method will de-duplicate
+     * it for you (but still return false in that case).
+     *
+     * @param line to parse
+     * @return a pair of (had escaped newline, line without escaped newline / line with escaped backslash de-duplicated)
+     */
+    static Pair<Boolean, String> lineWithoutEscapedNewline(@Nonnull String line) {
+        final int lastBackSlashIndex = line.lastIndexOf('\\');
+
+        // no backslash found
+        if (lastBackSlashIndex < 0) {
+            return new Pair<>(false, line);
+        }
+
+        // It only escapes stuff it it is the last character (except for whitespace)
+        if (lastBackSlashIndex != line.length() - 1 &&
+                !line.substring(lastBackSlashIndex + 1).trim().isEmpty()) {
+            return new Pair<>(false, line);
+        }
+
+        // Make sure it is not an escaped backslash
+        if (line.length() > 1 && line.charAt(lastBackSlashIndex - 1) == '\\') {
+            if (lastBackSlashIndex == line.length() - 1) {
+                return new Pair<>(false, line.substring(0, lastBackSlashIndex));
+            } else {
+                return new Pair<>(false,
+                        line.substring(0, lastBackSlashIndex) + line.substring(lastBackSlashIndex + 1));
+            }
+        }
+
+        return new Pair<>(true, line.substring(0, lastBackSlashIndex));
     }
 }

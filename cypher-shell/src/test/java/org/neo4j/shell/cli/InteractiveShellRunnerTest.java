@@ -16,6 +16,7 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.util.Pair;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
@@ -30,6 +31,8 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -220,7 +223,7 @@ public class InteractiveShellRunnerTest {
     @Test
     public void impliedMultiline() throws Exception {
         // given
-        String inputString = "CREATE\n(n:Person) RETURN n\n";
+        String inputString = "CREATE\n(n:Person) RETURN n\n\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
         InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
 
@@ -229,7 +232,7 @@ public class InteractiveShellRunnerTest {
 
         // then
         assertEquals(1, statements.size());
-        assertThat(statements.get(0), is("CREATE\n(n:Person) RETURN n\n"));
+        assertThat(statements.get(0), is("CREATE\n(n:Person) RETURN n\n\n"));
     }
 
     @Test
@@ -295,6 +298,142 @@ public class InteractiveShellRunnerTest {
         prompt = runner.getPrompt(sb);
 
         // then
-        assertEquals("  ...> ", prompt.plainString());
+        assertEquals(".....> ", prompt.plainString());
+    }
+
+    @Test
+    public void canEnterExplicitMultilineMode() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person) \nRETURN n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        List<String> statements = runner.readUntilStatement();
+
+        // then
+        assertEquals(1, statements.size());
+        assertThat(statements.get(0), is("  CREATE (n:Person) \nRETURN n\n\n"));
+    }
+
+    @Test
+    public void furtherBackSlashesAreNotPassedOn() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person {name: \"backslash\\ \n\"}) RETURN n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        List<String> statements = runner.readUntilStatement();
+
+        // then
+        assertEquals(1, statements.size());
+        assertThat(statements.get(0), is("  CREATE (n:Person {name: \"backslash\"}) RETURN n\n\n"));
+    }
+
+    @Test
+    public void escapedBackSlashesAtEOLArePassedOnDeDuplicated() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person {name: \"backslash\\\\ \n\"}) RETURN n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        List<String> statements = runner.readUntilStatement();
+
+        // then
+        assertEquals(1, statements.size());
+        assertThat(statements.get(0), is("  CREATE (n:Person {name: \"backslash\\ \n\"}) RETURN n\n\n"));
+    }
+
+    @Test
+    public void multilineRequiresNewLineOrSemicolonToEnd() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person) RETURN n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        runner.runUntilEnd(cmdExecuter);
+
+        // then
+        verifyNoMoreInteractions(cmdExecuter);
+    }
+
+    @Test
+    public void multilineEndsOnEmptyLine() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person) RETURN n\n\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        runner.runUntilEnd(cmdExecuter);
+
+        // then
+        verify(cmdExecuter).execute("  CREATE (n:Person) RETURN n\n\n");
+    }
+
+    @Test
+    public void multilineEndsOnSemicolonOnNewLine() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person) RETURN n\n;\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        runner.runUntilEnd(cmdExecuter);
+
+        // then
+        verify(cmdExecuter).execute("  CREATE (n:Person) RETURN n\n;\n");
+    }
+
+    @Test
+    public void multilineEndsOnSemicolonOnSameLine() throws Exception {
+        // given
+        String inputString = "  \\   \nCREATE (n:Person) RETURN n;\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(logger, new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        runner.runUntilEnd(cmdExecuter);
+
+        // then
+        verify(cmdExecuter).execute("  CREATE (n:Person) RETURN n;\n");
+    }
+
+    @Test
+    public void testEscapedNewLineDetection() throws Exception {
+        Pair<Boolean, String> result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob \\\n");
+        assertTrue("Single backslash is an escaped newline", result.getFirst());
+        assertEquals("Single backslash is an escaped newline", "Bob ", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob \\\\\n");
+        assertFalse("Escaped backslash is not an escaped newline", result.getFirst());
+        assertEquals("Bob \\\n", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob \\\\");
+        assertFalse("Escaped backslash as last chars", result.getFirst());
+        assertEquals("Bob \\", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob\n");
+        assertFalse("Line with no backslash", result.getFirst());
+        assertEquals("Bob\n", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob \\ fob\n");
+        assertFalse("Line with backslash in middle", result.getFirst());
+        assertEquals("Bob \\ fob\n", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("  \\   \n");
+        assertTrue("Backslash surrounded by spaces", result.getFirst());
+        assertEquals("  ", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("\\");
+        assertTrue("Just a backslash", result.getFirst());
+        assertEquals("", result.getSecond());
+
+        result = InteractiveShellRunner.lineWithoutEscapedNewline("Bob\\");
+        assertTrue("Back slash is last", result.getFirst());
+        assertEquals("Bob", result.getSecond());
     }
 }
