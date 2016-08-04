@@ -259,7 +259,9 @@ expression4 : ( ( '+' | '-' ) ws )* expression3 ;
 
 expression3 : expression2 ( ( ws '[' expression ']' ) | ( ws '[' expression? '..' expression? ']' ) | ( ( ( ws '=~' ) | ( sp IN ) | ( sp STARTS sp WITH ) | ( sp ENDS sp WITH ) | ( sp CONTAINS ) ) ws expression2 ) | ( sp IS sp NULL ) | ( sp IS sp NOT sp NULL ) )* ;
 
-expression2 : atom ( propertyLookup | nodeLabels )* ;
+expression2 : ( atom ( propertyLookup | nodeLabels )* )
+            | ( nodeLabels )
+            ;
 
 atom : numberLiteral
      | StringLiteral
