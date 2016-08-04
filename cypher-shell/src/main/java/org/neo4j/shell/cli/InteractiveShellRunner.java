@@ -97,7 +97,7 @@ public class InteractiveShellRunner implements ShellRunner {
             sb.append(line).append("\n");
             try {
                 return statementParser.parse(sb.toString());
-            } catch (IncompleteCypherError ignored) {
+            } catch (IncompleteCypherError ignored) { // NOPMD - we really DO want to ignore this exception
                 // Try to read more lines
             }
         }
