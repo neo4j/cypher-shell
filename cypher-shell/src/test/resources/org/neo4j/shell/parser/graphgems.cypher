@@ -38,7 +38,7 @@ START  startNode=node:node_auto_index(name="Start"),
        endNode=node:node_auto_index(name="Finish")
 MATCH  p=(startNode)-[:NAVIGATE_TO*]->(endNode)
 RETURN p AS shortestPath,
-       reduce(distance=0, r in relationships(p) : distance+r.distance) AS totalDistance
+       reduce(distance=0, r in relationships(p) | distance+r.distance) AS totalDistance
        ORDER BY totalDistance ASC
        LIMIT 1;
 

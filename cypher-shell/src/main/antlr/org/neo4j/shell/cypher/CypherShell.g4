@@ -237,7 +237,7 @@ labelName : symbolicName ;
 
 relTypeName : symbolicName ;
 
-expression : expression12 ;
+expression : ws expression12 ws ;
 
 expression12 : expression11 ( sp OR sp expression11 )* ;
 
@@ -304,7 +304,7 @@ relationshipsPattern : nodePattern ( ws patternElementChain )+ ;
 
 filterExpression : idInColl ( ws where )? ;
 
-idInColl : variable sp IN sp expression ;
+idInColl : ws variable sp IN sp expression ws ;
 
 functionInvocation : functionName ws '(' ws DISTINCT? ( expression ( ',' ws expression )* )? ws ')' ;
 
