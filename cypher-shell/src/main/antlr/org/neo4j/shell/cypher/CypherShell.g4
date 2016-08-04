@@ -162,9 +162,7 @@ skip : L_SKIP sp expression ;
 
 limit : LIMIT sp expression ;
 
-sortItem : ( expression ( DESCENDING | DESC ) )
-         | ( expression ( ASCENDING | ASC )? )
-         ;
+sortItem : ( expression ws ( DESCENDING | DESC | ASCENDING | ASC )? );
 
 hint : ws ( ( USING sp INDEX sp variable nodeLabel '(' propertyKeyName ')' ) | ( USING sp JOIN sp ON sp variable ( ws ',' ws variable )* ) | ( USING sp SCAN sp variable nodeLabel ) ) ;
 
