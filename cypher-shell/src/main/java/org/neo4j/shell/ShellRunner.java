@@ -1,11 +1,12 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.cli.CliArgHelper;
-import org.neo4j.shell.cli.CommandReader;
+import org.neo4j.shell.cli.FileHistorian;
 import org.neo4j.shell.cli.InteractiveShellRunner;
 import org.neo4j.shell.cli.NonInteractiveShellRunner;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.ShellStatementParser;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -25,6 +26,7 @@ public interface ShellRunner {
      *
      * @return an object which can provide the history of commands executed
      */
+    @Nonnull
     Historian getHistorian();
 
     /**
@@ -34,14 +36,16 @@ public interface ShellRunner {
      * @return a ShellRunner
      * @throws IOException
      */
+    @Nonnull
     static ShellRunner getShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs, @Nonnull Logger logger) throws IOException {
-        CommandReader commandReader = new CommandReader(logger, true);
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, logger);
         } else if (isInputInteractive()) {
-            return new InteractiveShellRunner(commandReader, logger);
+            return new InteractiveShellRunner(logger, new ShellStatementParser(),
+                    System.in, FileHistorian.getDefaultHistoryFile());
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), commandReader, logger);
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger,
+                    new ShellStatementParser(), System.in);
         }
     }
 

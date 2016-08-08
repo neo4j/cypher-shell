@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,5 +22,14 @@ public interface Historian {
         public List<String> getHistory() {
             return new ArrayList<>();
         }
+
+        @Override
+        public void flushHistory() {
+        }
     };
+
+    /**
+     * Flush history to disk
+     */
+    void flushHistory() throws IOException;
 }
