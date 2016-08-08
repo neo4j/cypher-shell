@@ -35,7 +35,7 @@ public class ShellStatementParser implements StatementParser {
     @Override
     public void parseMoreText(@Nonnull String line) {
         // See if it could possibly be a shell command, only valid if not in a current statement
-        if (!statementStarted() && shellCmdPattern.matcher(line).find()) {
+        if (statementNotStarted() && shellCmdPattern.matcher(line).find()) {
             parsedStatements.add(line);
             return;
         }
@@ -162,10 +162,10 @@ public class ShellStatementParser implements StatementParser {
     }
 
     /**
-     * @return true if a statement has begun (non whitespace has been seen) else false
+     * @return false if a statement has not begun (non whitespace has been seen) else true
      */
-    private boolean statementStarted() {
-        return !statement.toString().trim().isEmpty();
+    private boolean statementNotStarted() {
+        return statement.toString().trim().isEmpty();
     }
 
     @Override
