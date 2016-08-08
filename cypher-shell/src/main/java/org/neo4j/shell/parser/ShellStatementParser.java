@@ -56,46 +56,79 @@ public class ShellStatementParser implements StatementParser {
                 continue;
             }
 
-            // Handle comments
-            if (inComment()) {
-                if (isRightDelimiter(prev, current)) {
-                    // Then end it
-                    awaitedRightDelimiter = Optional.empty();
-                    continue;
-                }
-                // Didn't end the comment, continue
+            if (handleComments(prev, current)) {
                 continue;
             }
 
-            // Handle quotes
-            // backslash can escape stuff outside of comments (but inside quotes too!)
-            if (c == BACKSLASH) {
+            if (current == BACKSLASH) {
+                // backslash can escape stuff outside of comments (but inside quotes too!)
                 skipNext = true;
                 continue;
             }
 
-            if (inQuote()) {
-                if (isRightDelimiter(prev, current)) {
-                    // Then end it
-                    awaitedRightDelimiter = Optional.empty();
-                    continue;
-                }
-                // Didn't end the quote, continue
+            if (handleQuotes(prev, current)) {
                 continue;
             }
 
             // Not escaped, not in a quote, not in a comment
-            if (c == SEMICOLON) {
-                // end current statement
-                parsedStatements.add(statement.toString());
-                // start a new statement
-                statement = new StringBuilder();
+            if (handleSemicolon(current)) {
                 continue;
             }
 
             // If it's the start of a quote or comment
             awaitedRightDelimiter = getRightDelimiter(prev, current);
         }
+    }
+
+    /**
+     * @param current character
+     * @return true if parsing should go immediately to the next character, false otherwise
+     */
+    private boolean handleSemicolon(char current) {
+        if (current == SEMICOLON) {
+            // end current statement
+            parsedStatements.add(statement.toString());
+            // start a new statement
+            statement = new StringBuilder();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param prev character
+     * @param current character
+     * @return true if parsing should go immediately to the next character, false otherwise
+     */
+    private boolean handleQuotes(char prev, char current) {
+        if (inQuote()) {
+            if (isRightDelimiter(prev, current)) {
+                // Then end it
+                awaitedRightDelimiter = Optional.empty();
+                return true;
+            }
+            // Didn't end the quote, continue
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param prev character
+     * @param current character
+     * @return true if parsing should go immediately to the next character, false otherwise
+     */
+    private boolean handleComments(char prev, char current) {
+        if (inComment()) {
+            if (isRightDelimiter(prev, current)) {
+                // Then end it
+                awaitedRightDelimiter = Optional.empty();
+                return true;
+            }
+            // Didn't end the comment, continue
+            return true;
+        }
+        return false;
     }
 
     /**
