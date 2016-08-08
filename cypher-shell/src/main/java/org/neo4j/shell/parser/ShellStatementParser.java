@@ -32,6 +32,12 @@ public class ShellStatementParser implements StatementParser {
         awaitedRightDelimiter = Optional.empty();
     }
 
+    /**
+     * Parses text and adds to the list of parsed statements if a statement is found to be completed.
+     * Note that it is expected that lines include newlines.
+     *
+     * @param line to parse (including ending newline)
+     */
     @Override
     public void parseMoreText(@Nonnull String line) {
         // See if it could possibly be a shell command, only valid if not in a current statement
