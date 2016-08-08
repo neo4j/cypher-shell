@@ -3,9 +3,9 @@
 Use `make help` (`gradlew tasks`) to list possible tasks. But you
 probably want either
 
--  `make build` (`gradlew installShadowApp`) which will build an
+-  `make build` (`gradlew installDist`) which will build an
    uber-jar and runnable script for you at
-   `cypher-shell/build/installShadow/cypher-shell`
+   `cypher-shell/build/install/cypher-shell`
 
 - `make zip` which builds an uber-jar with runnable script and
    packages it up for you as: `out/cypher-shell.zip`

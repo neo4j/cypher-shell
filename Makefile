@@ -11,13 +11,13 @@ zip: out/temp/cypher-shell/bin/cypher-shell ## Build zip distribution file in 'o
 out/temp/cypher-shell/bin/cypher-shell: out build
 	rm -rf out/temp
 	mkdir -p out/temp
-	cp -r cypher-shell/build/installShadow/cypher-shell out/temp/cypher-shell
+	cp -r cypher-shell/build/install/cypher-shell out/temp/cypher-shell
 
 run: build ## Build and run cypher-shell with no arguments
-	cypher-shell/build/installShadow/cypher-shell/bin/cypher-shell
+	cypher-shell/build/install/cypher-shell/cypher-shell
 
 build: ## Build and test cypher-shell
-	./gradlew installShadowApp
+	./gradlew installDist
 
 test: ## Run all unit tests
 	./gradlew check pitest
