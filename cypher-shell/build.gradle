@@ -1,6 +1,3 @@
-apply plugin: 'java'
-apply plugin: 'application'
-
 mainClassName = 'org.neo4j.shell.Main'
 applicationName = 'cypher-shell'
 
