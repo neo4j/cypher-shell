@@ -46,7 +46,7 @@ public class NonInteractiveShellRunnerTest {
         String input = "good1;\n" +
                 "good2;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_FAST,
+                FailBehavior.FAIL_FAST,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
         int code = runner.runUntilEnd(cmdExecuter);
@@ -63,7 +63,7 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_FAST,
+                FailBehavior.FAIL_FAST,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
@@ -81,7 +81,7 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
@@ -103,7 +103,7 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
@@ -124,7 +124,7 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
@@ -143,7 +143,7 @@ public class NonInteractiveShellRunnerTest {
     public void nonInteractiveHasNoHistory() throws Exception {
         // given
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                CliArgHelper.FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END,
                 logger, statementParser,
                 new ByteArrayInputStream("".getBytes()));
 

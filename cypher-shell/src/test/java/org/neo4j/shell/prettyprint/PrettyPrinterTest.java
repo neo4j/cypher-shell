@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,7 +26,7 @@ public class PrettyPrinterTest {
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = new PrettyPrinter(CliArgHelper.Format.VERBOSE).format(result);
+        String actual = new PrettyPrinter(Format.VERBOSE).format(result);
 
         // then
         assertThat(actual, is("Added 10 nodes, Added 1 labels"));

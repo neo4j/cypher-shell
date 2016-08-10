@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
@@ -12,13 +13,13 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class Main {
 
     public static void main(String[] args) {
-        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse(args);
+        CliArgs cliArgs = CliArgHelper.parse(args);
 
         Main main = new Main();
         main.startShell(cliArgs);
     }
 
-    private void startShell(@Nonnull CliArgHelper.CliArgs cliArgs) {
+    void startShell(@Nonnull CliArgs cliArgs) {
         ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
@@ -29,8 +30,6 @@ public class Main {
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
             CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
-
-            addRuntimeHookToResetShell(shell);
 
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
 
@@ -45,12 +44,4 @@ public class Main {
         }
     }
 
-    private void addRuntimeHookToResetShell(final CypherShell shell) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                shell.reset();
-            }
-        });
-    }
 }

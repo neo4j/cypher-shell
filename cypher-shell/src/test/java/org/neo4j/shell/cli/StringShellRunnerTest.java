@@ -36,7 +36,7 @@ public class StringShellRunnerTest {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("No cypher string specified");
 
-        new StringShellRunner(new CliArgHelper.CliArgs(), logger);
+        new StringShellRunner(new CliArgs(), logger);
     }
 
     @Test

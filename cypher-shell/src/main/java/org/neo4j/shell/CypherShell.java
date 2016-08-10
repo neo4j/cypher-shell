@@ -1,7 +1,7 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -32,16 +32,17 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected CommandHelper commandHelper;
     protected final Map<String, Object> queryParams = new HashMap<>();
 
-    public CypherShell(@Nonnull Logger logger, @Nonnull CliArgHelper.Format format) {
+    public CypherShell(@Nonnull Logger logger, @Nonnull Format format) {
         this(logger, new BoltStateHandler(), format);
     }
 
     protected CypherShell(@Nonnull Logger logger,
                           @Nonnull BoltStateHandler boltStateHandler,
-                          @Nonnull CliArgHelper.Format format) {
+                          @Nonnull Format format) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
         this.prettyPrinter = new PrettyPrinter(format);
+        addRuntimeHookToResetShell();
     }
 
     @Override
@@ -166,5 +167,14 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     public void reset() {
         logger.printOut(AnsiFormattedText.s().colorRed().append("Bye!").formattedString());
         boltStateHandler.reset();
+    }
+
+    private void addRuntimeHookToResetShell() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                reset();
+            }
+        });
     }
 }

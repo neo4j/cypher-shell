@@ -9,7 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -19,13 +19,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
+import static org.neo4j.shell.test.Util.ctrl;
 
 public class CypherShellIntegrationTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
     private Logger logger = mock(Logger.class);
-    private CypherShell shell = new CypherShell(logger, CliArgHelper.Format.VERBOSE);
+    private CypherShell shell = new CypherShell(logger, Format.VERBOSE);
     private Command rollbackCommand = new Rollback(shell);
     private Command commitCommand = new Commit(shell);
     private Command beginCommand = new Begin(shell);
@@ -44,6 +45,7 @@ public class CypherShellIntegrationTest {
     public void cypherWithNoReturnStatements() throws CommandException {
         //when
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        char c = ctrl('C');
 
         //then
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);

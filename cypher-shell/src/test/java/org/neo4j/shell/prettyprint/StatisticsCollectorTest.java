@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -19,7 +19,7 @@ public class StatisticsCollectorTest {
         StatementResult result = mock(StatementResult.class);
 
         // when
-        String actual = new StatisticsCollector(CliArgHelper.Format.PLAIN).collect(result);
+        String actual = new StatisticsCollector(Format.PLAIN).collect(result);
 
         // then
         assertThat(actual, is(""));
@@ -38,7 +38,7 @@ public class StatisticsCollectorTest {
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = new StatisticsCollector(CliArgHelper.Format.VERBOSE).collect(result);
+        String actual = new StatisticsCollector(Format.VERBOSE).collect(result);
 
         // then
         assertThat(actual, is("Added 10 nodes, Added 1 labels"));
