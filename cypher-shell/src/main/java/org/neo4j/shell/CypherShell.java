@@ -169,7 +169,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         boltStateHandler.reset();
     }
 
-    private void addRuntimeHookToResetShell() {
+    protected void addRuntimeHookToResetShell() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {

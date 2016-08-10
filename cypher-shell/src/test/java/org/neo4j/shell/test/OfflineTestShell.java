@@ -16,4 +16,9 @@ public class OfflineTestShell extends CypherShell {
     public OfflineTestShell(Logger logger) {
         super(logger, new OfflineBoltStateHandler(), Format.VERBOSE);
     }
+
+    @Override
+    protected void addRuntimeHookToResetShell() {
+        //Do Nothing
+    }
 }
