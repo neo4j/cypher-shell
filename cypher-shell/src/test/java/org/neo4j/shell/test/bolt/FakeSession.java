@@ -17,6 +17,11 @@ class FakeSession implements Session {
     }
 
     @Override
+    public void reset() {
+        throw new UnsupportedOperationException("no implementation yet");
+    }
+
+    @Override
     public boolean isOpen() {
         return open;
     }
