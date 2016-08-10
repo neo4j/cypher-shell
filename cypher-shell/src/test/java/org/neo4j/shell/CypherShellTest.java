@@ -57,6 +57,15 @@ public class CypherShellTest {
     }
 
     @Test
+    public void verifyDelegationOfResetMethod() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
+
+        shell.reset();
+        verify(mockedBoltStateHandler).reset();
+    }
+
+    @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
 

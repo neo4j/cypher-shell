@@ -1,7 +1,6 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
-import jline.console.UserInterruptException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -38,18 +37,17 @@ public class InteractiveShellRunner implements ShellRunner {
                                   @Nonnull File historyFile) throws IOException {
         this.logger = logger;
         this.statementParser = statementParser;
-        reader = setupConsoleReader(logger, inputStream);
+        this.reader = setupConsoleReader(logger, inputStream);
         this.historian = FileHistorian.setupHistory(reader, logger, historyFile);
     }
 
-    private static ConsoleReader setupConsoleReader(@Nonnull Logger logger,
-                                                    @Nonnull InputStream inputStream) throws IOException {
+    private ConsoleReader setupConsoleReader(@Nonnull Logger logger,
+                                             @Nonnull InputStream inputStream) throws IOException {
         ConsoleReader reader = new ConsoleReader(inputStream, logger.getOutputStream());
         // Disable expansion of bangs: !
         reader.setExpandEvents(false);
-        // Have JLine throw exception on Ctrl-C so one can abort search and stuff without quitting
-        reader.setHandleUserInterrupt(true);
-
+        // Ensure Reader does not handle user input for ctrl+C behaviour
+        reader.setHandleUserInterrupt(false);
         return reader;
     }
 
@@ -65,9 +63,6 @@ public class InteractiveShellRunner implements ShellRunner {
             } catch (ExitException e) {
                 exitCode = e.getCode();
                 running = false;
-            } catch (UserInterruptException e) {
-                // Not very nice to print "UserInterruptException"
-                logger.printError(AnsiFormattedText.s().colorRed().append("KeyboardInterrupt").formattedString());
             } catch (NoMoreInputException e) {
                 // User pressed Ctrl-D and wants to exit
                 running = false;

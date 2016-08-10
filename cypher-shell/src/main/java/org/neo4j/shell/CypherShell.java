@@ -7,6 +7,7 @@ import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
@@ -160,5 +161,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
+    }
+
+    public void reset() {
+        logger.printOut(AnsiFormattedText.s().colorRed().append("Bye!").formattedString());
+        boltStateHandler.reset();
     }
 }

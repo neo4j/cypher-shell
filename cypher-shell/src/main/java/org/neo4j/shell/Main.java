@@ -30,6 +30,8 @@ public class Main {
 
             CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
 
+            addRuntimeHookToResetShell(shell);
+
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
 
             shell.setCommandHelper(commandHelper);
@@ -41,5 +43,14 @@ public class Main {
             logger.printError(getFormattedMessage(e));
             System.exit(1);
         }
+    }
+
+    private void addRuntimeHookToResetShell(final CypherShell shell) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                shell.reset();
+            }
+        });
     }
 }

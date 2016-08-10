@@ -1,14 +1,7 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementRunner;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -24,9 +17,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     protected Driver driver;
     protected Session session;
     protected Transaction tx = null;
-
-    public BoltStateHandler() {
-    }
 
     /**
      * Returns an appropriate runner, depending on the current transaction state.
@@ -116,6 +106,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     /**
      * Get a driver to connect with
+     *
      * @param connectionConfig
      * @param authToken
      * @return
@@ -140,5 +131,9 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             session = null;
             driver = null;
         }
+    }
+
+    public void reset() {
+        session.reset();
     }
 }
