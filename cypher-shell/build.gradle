@@ -1,3 +1,9 @@
+jar {
+  manifest {
+    attributes 'Main-Class': 'org.neo4j.shell.Main'
+  }
+}
+
 distributions {
   main {
     baseName = 'cypher-shell'
