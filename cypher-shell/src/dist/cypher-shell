@@ -67,14 +67,12 @@ _show_java_help() {
 
 build_classpath() {
   APP_HOME="$(cd "$(dirname "$0")" && pwd)"
-  CLASSPATH="$(find "$APP_HOME" -name "cypher-shell-*-all.jar" )"
+  JARPATH="$(find "$APP_HOME" -name "cypher-shell-*-all.jar" )"
 }
 
 check_java
 build_classpath
 
 exec "$JAVA_CMD" ${JAVA_OPTS:-} \
-  -classpath "$CLASSPATH" \
-  -Dfile.encoding=UTF-8 \
-  org.neo4j.shell.Main \
+  -jar "$JARPATH" \
   "$@"

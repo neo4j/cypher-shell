@@ -70,10 +70,10 @@ set CMD_LINE_ARGS=%$
 @rem Setup the command line
 
 dir cypher-shell-*-all.jar /b/s>temp
-set /p CLASSPATH=<temp
+set /p JARPATH=<temp
 
 @rem Execute cypher-shell
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CYPHER_SHELL_OPTS%  -classpath "%CLASSPATH%" org.neo4j.shell.Main %CMD_LINE_ARGS%
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CYPHER_SHELL_OPTS%  -jar "%JARPATH%" %CMD_LINE_ARGS%
 
 :end
 @rem End local scope for the variables with windows NT shell
