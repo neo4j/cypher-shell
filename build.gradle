@@ -19,6 +19,9 @@ allprojects {
 
     repositories {
         jcenter()
+        maven {
+            url "http://m2.neo4j.org/content/repositories/snapshots"
+        }
     }
 }
 
@@ -48,7 +51,7 @@ subprojects {
 ext {
     argparse4jVersion = '0.7.0'
     junitVersion = '4.12'
-    neo4jJavaVersion = '1.0.1'
+    neo4jJavaVersion = '1.1-SNAPSHOT'
     findbugsVersion = '3.0.0'
     jansiVersion = '1.13'
     jlineVersion = '2.14.2'

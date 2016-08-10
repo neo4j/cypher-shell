@@ -6,8 +6,7 @@ applicationName = 'cypher-shell'
 
 dependencies {
     compile "net.sourceforge.argparse4j:argparse4j:$argparse4jVersion"
-//    compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
-    compile files('/Users/praveena.gunasekhar/projects/neo/neo4j-java-driver/driver/target/neo4j-java-driver-1.1-SNAPSHOT.jar')
+    compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
     compile "com.google.code.findbugs:annotations:$findbugsVersion"
     compile "org.fusesource.jansi:jansi:$jansiVersion"
     compile("jline:jline:$jlineVersion") {
