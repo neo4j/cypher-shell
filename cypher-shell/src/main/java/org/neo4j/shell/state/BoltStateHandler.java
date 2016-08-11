@@ -131,8 +131,21 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
     }
 
+    /**
+     * Reset the current session. This rolls back any open transactions.
+     */
     public void reset() {
-//        session.reset();
+        // TODO once drivers release next milestone
+        //if (session != null) {
+            // session.reset();
+        //}
+
+        // Clear current state
+        if (tx != null) {
+            tx.failure();
+            tx.close();
+            tx = null;
+        }
     }
 
     /**
