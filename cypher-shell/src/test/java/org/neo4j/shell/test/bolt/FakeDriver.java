@@ -8,6 +8,11 @@ import org.neo4j.driver.v1.exceptions.Neo4jException;
  * A fake driver which returns a fake session
  */
 public class FakeDriver implements Driver {
+    //    @Override
+    public boolean isEncrypted() {
+        throw new UnsupportedOperationException("no implementation yet");
+    }
+
     @Override
     public Session session() {
         return new FakeSession();

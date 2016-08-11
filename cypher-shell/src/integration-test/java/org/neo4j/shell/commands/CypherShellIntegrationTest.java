@@ -9,7 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -25,7 +25,7 @@ public class CypherShellIntegrationTest {
     public final ExpectedException thrown = ExpectedException.none();
 
     private Logger logger = mock(Logger.class);
-    private CypherShell shell = new CypherShell(logger, CliArgHelper.Format.VERBOSE);
+    private CypherShell shell = new CypherShell(logger, Format.VERBOSE);
     private Command rollbackCommand = new Rollback(shell);
     private Command commitCommand = new Commit(shell);
     private Command beginCommand = new Begin(shell);

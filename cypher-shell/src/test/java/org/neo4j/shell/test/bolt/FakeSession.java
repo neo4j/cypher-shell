@@ -16,6 +16,10 @@ class FakeSession implements Session {
         return new FakeTransaction();
     }
 
+    //    @Override
+    public void reset() {
+    }
+
     @Override
     public boolean isOpen() {
         return open;

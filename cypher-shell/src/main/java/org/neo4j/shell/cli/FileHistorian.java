@@ -39,16 +39,7 @@ public class FileHistorian implements Historian {
             reader.setHistory(history);
 
             // Make sure we flush history on exit
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        history.flush();
-                    } catch (IOException e) {
-                        logger.printError("Failed to save history:\n" + e.getMessage());
-                    }
-                }
-            });
+            addShutdownHookToFlushHistory(logger, history);
 
             return new FileHistorian(history);
         } catch (IOException e) {
@@ -58,6 +49,19 @@ public class FileHistorian implements Historian {
             reader.setHistory(history);
             return new FileHistorian(history);
         }
+    }
+
+    private static void addShutdownHookToFlushHistory(@Nonnull final Logger logger, final FileHistory history) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    history.flush();
+                } catch (IOException e) {
+                    logger.printError("Failed to save history:\n" + e.getMessage());
+                }
+            }
+        });
     }
 
     @Nonnull

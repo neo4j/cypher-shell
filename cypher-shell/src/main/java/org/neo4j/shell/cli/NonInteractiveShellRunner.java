@@ -22,12 +22,12 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
  */
 public class NonInteractiveShellRunner implements ShellRunner {
 
-    private final CliArgHelper.FailBehavior failBehavior;
+    private final FailBehavior failBehavior;
     private final Logger logger;
     private final StatementParser statementParser;
     private final InputStream inputStream;
 
-    public NonInteractiveShellRunner(@Nonnull CliArgHelper.FailBehavior failBehavior,
+    public NonInteractiveShellRunner(@Nonnull FailBehavior failBehavior,
                                      @Nonnull Logger logger,
                                      @Nonnull StatementParser statementParser,
                                      @Nonnull InputStream inputStream) {
@@ -60,7 +60,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
             } catch (Throwable e) {
                 exitCode = 1;
                 logger.printError(getFormattedMessage(e));
-                if (CliArgHelper.FailBehavior.FAIL_AT_END != failBehavior) {
+                if (FailBehavior.FAIL_AT_END != failBehavior) {
                     return exitCode;
                 }
             }

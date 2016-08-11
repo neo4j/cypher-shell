@@ -7,7 +7,7 @@ import org.neo4j.driver.v1.exceptions.value.Uncoercible;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
-import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.Format;
 
 import javax.annotation.Nonnull;
 import java.util.LinkedList;
@@ -21,7 +21,7 @@ public class PrettyPrinter {
 
     private StatisticsCollector statisticsCollector;
 
-    public PrettyPrinter(@Nonnull CliArgHelper.Format format) {
+    public PrettyPrinter(@Nonnull Format format) {
         this.statisticsCollector = new StatisticsCollector(format);
     }
 

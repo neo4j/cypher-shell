@@ -17,7 +17,7 @@ public class StringShellRunner implements ShellRunner {
     private final String cypher;
     private final Logger logger;
 
-    public StringShellRunner(@Nonnull CliArgHelper.CliArgs cliArgs,
+    public StringShellRunner(@Nonnull CliArgs cliArgs,
                              @Nonnull Logger logger) {
         this.logger = logger;
         Optional<String> cypherString = cliArgs.getCypher();

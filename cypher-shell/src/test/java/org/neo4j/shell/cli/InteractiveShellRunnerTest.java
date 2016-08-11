@@ -16,25 +16,14 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.contains;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.neo4j.shell.test.Util.ctrl;
 
 public class InteractiveShellRunnerTest {
@@ -120,30 +109,6 @@ public class InteractiveShellRunnerTest {
         verifyNoMoreInteractions(cmdExecuter);
 
         verify(logger).printError("@|RED Found a bad line|@");
-    }
-
-    @Test
-    public void ctrlCDoesNotKillInteractiveShell() throws Exception {
-        String input = "good1;\n" +
-                "good2;\n" +
-                ctrl('C') +
-                "good3;\n";
-        InteractiveShellRunner runner = new InteractiveShellRunner(logger, statementParser, new ByteArrayInputStream(input.getBytes()),
-                historyFile);
-
-        doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit"));
-
-        int code = runner.runUntilEnd(cmdExecuter);
-
-        assertEquals("Wrong exit code", 0, code);
-
-        verify(logger).printError("@|RED KeyboardInterrupt|@");
-
-        verify(cmdExecuter).execute("good1;");
-        verify(cmdExecuter).execute("\ngood2;");
-        verify(cmdExecuter).execute("\ngood3;");
-        verifyNoMoreInteractions(cmdExecuter);
-
     }
 
     @Test

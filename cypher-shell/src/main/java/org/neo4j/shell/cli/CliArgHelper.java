@@ -6,35 +6,16 @@ import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.inf.*;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.neo4j.shell.cli.CliArgHelper.FailBehavior.FAIL_AT_END;
-import static org.neo4j.shell.cli.CliArgHelper.FailBehavior.FAIL_FAST;
+import static org.neo4j.shell.cli.FailBehavior.FAIL_AT_END;
+import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
 
 /**
  * Command line argument parsing and related stuff
  */
 public class CliArgHelper {
-
-    public enum FailBehavior {
-        FAIL_FAST,
-        FAIL_AT_END
-    }
-
-    public enum Format {
-        VERBOSE,
-        PLAIN;
-
-        public static Format parse(String format) {
-            if (format.equalsIgnoreCase(PLAIN.name())) {
-                return PLAIN;
-            }
-            return VERBOSE;
-        }
-    }
 
 
     public static final Pattern ADDRESS_ARG_PATTERN =
@@ -68,11 +49,11 @@ public class CliArgHelper {
         // Only overwrite user/pass from address string if the arguments were specified
         String user = ns.getString("username");
         if (!user.isEmpty()) {
-            cliArgs.setUsername(user, cliArgs.username);
+            cliArgs.setUsername(user, cliArgs.getUsername());
         }
         String pass = ns.getString("password");
         if (!pass.isEmpty()) {
-            cliArgs.setPassword(pass, cliArgs.password);
+            cliArgs.setPassword(pass, cliArgs.getPassword());
         }
 
         // Other arguments
@@ -140,102 +121,4 @@ public class CliArgHelper {
     }
 
 
-    public static class CliArgs {
-        private boolean suppressColor = false;
-        private String host = "localhost";
-        private int port = 7687;
-        private String username = "";
-        private String password = "";
-        private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
-        private Format format = Format.VERBOSE;
-        private Optional<String> cypher = Optional.empty();
-
-        public boolean getSuppressColor() {
-            return suppressColor;
-        }
-
-        /**
-         * Set the host to the primary value, or if null, the fallback value.
-         */
-        void setHost(@Nullable String primary, @Nonnull String fallback) {
-            host = primary == null ? fallback : primary;
-        }
-
-        /**
-         * Set the port to the value.
-         */
-        void setPort(int port) {
-            this.port = port;
-        }
-
-        /**
-         * Set the username to the primary value, or if null, the fallback value.
-         */
-        void setUsername(@Nullable String primary, @Nonnull String fallback) {
-            username = primary == null ? fallback : primary;
-        }
-
-        /**
-         * Set the password to the primary value, or if null, the fallback value.
-         */
-        void setPassword(@Nullable String primary, @Nonnull String fallback) {
-            password = primary == null ? fallback : primary;
-        }
-
-        /**
-         * Set the desired fail behavior
-         */
-        void setFailBehavior(@Nonnull FailBehavior failBehavior) {
-            this.failBehavior = failBehavior;
-        }
-
-        /**
-         * Set the desired format
-         */
-        public void setFormat(@Nonnull Format format) {
-            this.format = format;
-        }
-
-        /**
-         * Set the specified cypher string to execute
-         */
-        public void setCypher(@Nullable String cypher) {
-            this.cypher = Optional.ofNullable(cypher);
-        }
-
-        @Nonnull
-        public String getHost() {
-            return host;
-        }
-
-        @Nonnull
-        public int getPort() {
-            return port;
-        }
-
-        @Nonnull
-        public String getUsername() {
-            return username;
-        }
-
-        @Nonnull
-        public String getPassword() {
-            return password;
-        }
-
-        @Nonnull
-        public FailBehavior getFailBehavior() {
-            return failBehavior;
-        }
-
-        @Nonnull
-        public Optional<String> getCypher() {
-            return cypher;
-        }
-
-        @Nonnull
-        public Format getFormat() {
-            return format;
-        }
-    }
 }

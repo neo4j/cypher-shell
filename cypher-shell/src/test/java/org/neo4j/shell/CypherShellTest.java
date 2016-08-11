@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.StatementRunner;
 import org.neo4j.shell.cli.CliArgHelper;
+import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -47,7 +49,7 @@ public class CypherShellTest {
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, Format.VERBOSE);
 
         shell.connect(cc);
         verify(mockedBoltStateHandler).connect(cc);
@@ -57,8 +59,17 @@ public class CypherShellTest {
     }
 
     @Test
+    public void verifyDelegationOfResetMethod() throws CommandException {
+        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, Format.VERBOSE);
+
+        shell.reset();
+        verify(mockedBoltStateHandler).reset();
+    }
+
+    @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, CliArgHelper.Format.VERBOSE);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, Format.VERBOSE);
 
         shell.beginTransaction();
         verify(mockedBoltStateHandler).beginTransaction();
@@ -168,7 +179,7 @@ public class CypherShellTest {
 
     @Test
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
-        CliArgHelper.CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
+        CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
         ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
 
@@ -203,7 +214,7 @@ public class CypherShellTest {
         BoltStateHandler bh = mockedBoltStateHandler;
         doReturn(runner).when(bh).getStatementRunner();
 
-        CypherShell shell = new CypherShell(logger, bh, CliArgHelper.Format.VERBOSE);
+        CypherShell shell = new CypherShell(logger, bh, Format.VERBOSE);
 
         // when
         shell.set("bob", "99");
