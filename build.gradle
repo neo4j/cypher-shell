@@ -4,6 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
         classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.9'
     }
 }
@@ -26,11 +27,13 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: 'java'
+    apply plugin: 'distribution'
+    apply plugin: 'com.github.johnrengelman.shadow'
     apply from: "$rootProject.projectDir/gradle/integration-test.gradle"
     apply plugin: 'pmd'
     apply plugin: 'jacoco'
     apply plugin: 'info.solidsoft.pitest'
-
 
     jacocoTestReport {
         reports {

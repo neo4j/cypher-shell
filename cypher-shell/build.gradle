@@ -1,8 +1,18 @@
-apply plugin: 'java'
-apply plugin: 'application'
+jar {
+  manifest {
+    attributes 'Main-Class': 'org.neo4j.shell.Main'
+  }
+}
 
-mainClassName = 'org.neo4j.shell.Main'
-applicationName = 'cypher-shell'
+distributions {
+  main {
+    baseName = 'cypher-shell'
+    contents {
+      from {'src/dist'}
+      from shadowJar
+    }
+  }
+}
 
 dependencies {
     compile "net.sourceforge.argparse4j:argparse4j:$argparse4jVersion"
