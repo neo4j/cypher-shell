@@ -23,22 +23,26 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class NonInteractiveShellRunner implements ShellRunner {
 
     private final FailBehavior failBehavior;
+    @Nonnull
+    private final StatementExecuter executer;
     private final Logger logger;
     private final StatementParser statementParser;
     private final InputStream inputStream;
 
     public NonInteractiveShellRunner(@Nonnull FailBehavior failBehavior,
+                                     @Nonnull StatementExecuter executer,
                                      @Nonnull Logger logger,
                                      @Nonnull StatementParser statementParser,
                                      @Nonnull InputStream inputStream) {
         this.failBehavior = failBehavior;
+        this.executer = executer;
         this.logger = logger;
         this.statementParser = statementParser;
         this.inputStream = inputStream;
     }
 
     @Override
-    public int runUntilEnd(@Nonnull StatementExecuter executer) {
+    public int runUntilEnd() {
         List<String> statements;
         try {
             new BufferedReader(new InputStreamReader(inputStream))

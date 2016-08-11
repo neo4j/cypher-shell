@@ -164,8 +164,8 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         this.commandHelper = commandHelper;
     }
 
+    @Override
     public void reset() {
-        logger.printOut(AnsiFormattedText.s().colorRed().append("Bye!").formattedString());
         boltStateHandler.reset();
     }
 
@@ -173,6 +173,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                logger.printOut(AnsiFormattedText.s().colorRed().append("Bye!").formattedString());
                 reset();
             }
         });

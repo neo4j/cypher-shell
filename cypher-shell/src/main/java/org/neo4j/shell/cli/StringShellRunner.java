@@ -16,9 +16,12 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class StringShellRunner implements ShellRunner {
     private final String cypher;
     private final Logger logger;
+    private final StatementExecuter executer;
 
     public StringShellRunner(@Nonnull CliArgs cliArgs,
+                             @Nonnull StatementExecuter executer,
                              @Nonnull Logger logger) {
+        this.executer = executer;
         this.logger = logger;
         Optional<String> cypherString = cliArgs.getCypher();
         if (cypherString.isPresent()) {
@@ -29,7 +32,7 @@ public class StringShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull StatementExecuter executer) {
+    public int runUntilEnd() {
         int exitCode = 0;
         try {
             executer.execute(cypher.trim());

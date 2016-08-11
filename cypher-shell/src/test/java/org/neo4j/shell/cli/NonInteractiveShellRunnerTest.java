@@ -47,9 +47,10 @@ public class NonInteractiveShellRunnerTest {
                 "good2;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_FAST,
+                cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
-        int code = runner.runUntilEnd(cmdExecuter);
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 0, code);
         verify(logger, times(0)).printError(anyString());
@@ -63,11 +64,11 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                FailBehavior.FAIL_FAST,
+                FailBehavior.FAIL_FAST, cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
-        int code = runner.runUntilEnd(cmdExecuter);
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
         verify(logger).printError(eq("@|RED Found a bad line|@"));
@@ -81,11 +82,11 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
-        int code = runner.runUntilEnd(cmdExecuter);
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
         verify(logger, times(2)).printError(eq("@|RED Found a bad line|@"));
@@ -103,12 +104,12 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
         // when
-        int code = runner.runUntilEnd(cmdExecuter);
+        int code = runner.runUntilEnd();
 
         // then
         assertEquals(1, code);
@@ -124,14 +125,14 @@ public class NonInteractiveShellRunnerTest {
                         "good2;\n" +
                         "bad;\n";
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
         // when
         doThrow(new ExitException(99)).when(cmdExecuter).execute(anyString());
 
-        int code = runner.runUntilEnd(cmdExecuter);
+        int code = runner.runUntilEnd();
 
         // then
         assertEquals(99, code);
@@ -143,7 +144,7 @@ public class NonInteractiveShellRunnerTest {
     public void nonInteractiveHasNoHistory() throws Exception {
         // given
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
-                FailBehavior.FAIL_AT_END,
+                FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream("".getBytes()));
 

@@ -1,7 +1,6 @@
 package org.neo4j.shell.cli;
 
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -27,24 +26,20 @@ public class StringShellRunnerTest {
     private Logger logger = mock(Logger.class);
     private StatementExecuter statementExecuter = mock(StatementExecuter.class);
 
-    @Before
-    public void setup() throws CommandException {
-    }
-
     @Test
     public void nullCypherShouldThrowException() throws IOException {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("No cypher string specified");
 
-        new StringShellRunner(new CliArgs(), logger);
+        new StringShellRunner(new CliArgs(), statementExecuter, logger);
     }
 
     @Test
     public void cypherShouldBePassedToRun() throws IOException, CommandException {
         String cypherString = "nonsense string";
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse(cypherString), logger);
+        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse(cypherString), statementExecuter, logger);
 
-        int code = runner.runUntilEnd(statementExecuter);
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 0, code);
         verify(statementExecuter).execute("nonsense string");
@@ -55,9 +50,9 @@ public class StringShellRunnerTest {
     public void errorsShouldThrow() throws IOException, CommandException {
         doThrow(new ClientException("Error kaboom")).when(statementExecuter).execute(anyString());
 
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), logger);
+        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
 
-        int code = runner.runUntilEnd(statementExecuter);
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 1, code);
         verify(logger).printError("@|RED Error kaboom|@");
@@ -66,7 +61,7 @@ public class StringShellRunnerTest {
     @Test
     public void shellRunnerHasNoHistory() throws Exception {
         // given
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), logger);
+        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
 
         // when then
         assertEquals(Historian.empty, runner.getHistorian());
