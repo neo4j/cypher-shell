@@ -1,7 +1,14 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementRunner;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -136,16 +143,16 @@ public class BoltStateHandler implements TransactionHandler, Connector {
      * Reset the current session. This rolls back any open transactions.
      */
     public void reset() {
-        // TODO once drivers release next milestone
-        //if (session != null) {
+        if (isConnected()) {
+            // TODO once drivers release next milestone
             // session.reset();
-        //}
 
-        // Clear current state
-        if (tx != null) {
-            tx.failure();
-            tx.close();
-            tx = null;
+            // Clear current state
+            if (tx != null) {
+                tx.failure();
+                tx.close();
+                tx = null;
+            }
         }
     }
 
