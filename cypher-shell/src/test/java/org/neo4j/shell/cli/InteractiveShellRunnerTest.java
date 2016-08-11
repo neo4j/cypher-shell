@@ -112,25 +112,6 @@ public class InteractiveShellRunnerTest {
     }
 
     @Test
-    public void ctrlCKillsInteractiveShell() throws Exception {
-        String input = "good1;\n" +
-                "good2;\n" +
-                ctrl('C') +
-                "good3;\n";
-        InteractiveShellRunner runner = new InteractiveShellRunner(logger, statementParser, new ByteArrayInputStream(input.getBytes()),
-                historyFile);
-
-        int code = runner.runUntilEnd(cmdExecuter);
-
-        assertEquals("Wrong exit code", 0, code);
-
-        verify(cmdExecuter).execute("good1;");
-        verify(cmdExecuter).execute("\ngood2;");
-        verify(cmdExecuter).execute("\ngood3;");
-        verifyNoMoreInteractions(cmdExecuter);
-    }
-
-    @Test
     public void historyIsRecorded() throws Exception {
         // given
 
