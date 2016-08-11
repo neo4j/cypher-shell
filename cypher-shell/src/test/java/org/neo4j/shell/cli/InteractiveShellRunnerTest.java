@@ -15,16 +15,27 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
+import sun.misc.Signal;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
-import static org.neo4j.shell.test.Util.ctrl;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class InteractiveShellRunnerTest {
     @Rule
@@ -283,5 +294,20 @@ public class InteractiveShellRunnerTest {
 
         // then
         verify(cmdExecuter).execute("CREATE (n:Person) RETURN n;");
+    }
+
+    @Test
+    public void testSignalHandle() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, logger, new ShellStatementParser(),
+                inputStream, historyFile);
+
+        // when
+        runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
+
+        // then
+        verify(cmdExecuter).reset();
+        verify(logger).printError("@|RED \nKeyboardInterrupt|@");
     }
 }

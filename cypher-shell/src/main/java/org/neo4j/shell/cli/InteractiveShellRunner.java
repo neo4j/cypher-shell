@@ -27,7 +27,7 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
     private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append(".....> ");
-    private static final String INTERUPT_SIGNAL = "INT";
+    static final String INTERRUPT_SIGNAL = "INT";
 
     private final Logger logger;
     private final ConsoleReader reader;
@@ -47,7 +47,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         this.historian = FileHistorian.setupHistory(reader, logger, historyFile);
 
         // Catch ctrl-c
-        Signal.handle(new Signal(INTERUPT_SIGNAL), this);
+        Signal.handle(new Signal(INTERRUPT_SIGNAL), this);
     }
 
     private ConsoleReader setupConsoleReader(@Nonnull Logger logger,
