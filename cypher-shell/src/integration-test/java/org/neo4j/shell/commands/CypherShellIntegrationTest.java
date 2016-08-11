@@ -19,7 +19,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.neo4j.shell.test.Util.ctrl;
 
 public class CypherShellIntegrationTest {
     @Rule
@@ -45,7 +44,6 @@ public class CypherShellIntegrationTest {
     public void cypherWithNoReturnStatements() throws CommandException {
         //when
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        char c = ctrl('C');
 
         //then
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);

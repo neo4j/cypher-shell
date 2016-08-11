@@ -134,6 +134,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     public void reset() {
-        session.reset();
+//        session.reset();
     }
 }
