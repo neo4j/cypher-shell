@@ -10,5 +10,16 @@ import javax.annotation.Nonnull;
  */
 public interface StatementExecuter {
 
-    void execute(@Nonnull String command) throws ExitException, CommandException;
+    /**
+     * Execute a statement
+     * @param statement to execute
+     * @throws ExitException if a command to exit was executed
+     * @throws CommandException if something went wrong
+     */
+    void execute(@Nonnull String statement) throws ExitException, CommandException;
+
+    /**
+     * Stops any running statements
+     */
+    void reset();
 }

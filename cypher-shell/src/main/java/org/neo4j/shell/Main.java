@@ -27,16 +27,16 @@ public class Main {
 
         Logger logger = new AnsiLogger();
         try {
-            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, logger);
-
             CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
+
+            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
 
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
 
             shell.setCommandHelper(commandHelper);
             shell.connect(connectionConfig);
 
-            int code = shellRunner.runUntilEnd(shell);
+            int code = shellRunner.runUntilEnd();
             System.exit(code);
         } catch (Throwable e) {
             logger.printError(getFormattedMessage(e));

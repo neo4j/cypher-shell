@@ -16,7 +16,7 @@ public interface ShellRunner {
      *
      * @return error code to exit with
      */
-    int runUntilEnd(@Nonnull StatementExecuter executer);
+    int runUntilEnd();
 
     /**
      *
@@ -33,14 +33,16 @@ public interface ShellRunner {
      * @throws IOException
      */
     @Nonnull
-    static ShellRunner getShellRunner(@Nonnull CliArgs cliArgs, @Nonnull Logger logger) throws IOException {
+    static ShellRunner getShellRunner(@Nonnull CliArgs cliArgs,
+                                      @Nonnull StatementExecuter executer,
+                                      @Nonnull Logger logger) throws IOException {
         if (cliArgs.getCypher().isPresent()) {
-            return new StringShellRunner(cliArgs, logger);
+            return new StringShellRunner(cliArgs, executer, logger);
         } else if (isInputInteractive()) {
-            return new InteractiveShellRunner(logger, new ShellStatementParser(),
+            return new InteractiveShellRunner(executer, logger, new ShellStatementParser(),
                     System.in, FileHistorian.getDefaultHistoryFile());
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), logger,
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), executer, logger,
                     new ShellStatementParser(), System.in);
         }
     }
