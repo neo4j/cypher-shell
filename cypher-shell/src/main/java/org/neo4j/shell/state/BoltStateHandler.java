@@ -4,13 +4,13 @@ import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
-import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import java.util.logging.Level;
 
 /**
@@ -83,7 +83,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         try {
             driver = getDriver(connectionConfig, authToken);
             session = driver.session();
-            // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
+            // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
             try {
@@ -109,15 +109,16 @@ public class BoltStateHandler implements TransactionHandler, Connector {
      * @param authToken
      * @return
      */
-    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
+    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         return GraphDatabase.driver(connectionConfig.driverUrl(),
                 authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
     }
 
     /**
      * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
+     * Intended only to be used if connect fails.
      */
-    private void silentDisconnect() {
+    void silentDisconnect() {
         try {
             if (session != null) {
                 session.close();

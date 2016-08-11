@@ -3,9 +3,15 @@ package org.neo4j.shell.cli;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
-import net.sourceforge.argparse4j.inf.*;
+import net.sourceforge.argparse4j.inf.ArgumentGroup;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,26 +23,34 @@ import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
  */
 public class CliArgHelper {
 
-
-    public static final Pattern ADDRESS_ARG_PATTERN =
+    static final Pattern ADDRESS_ARG_PATTERN =
             Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
-    @Nonnull
+    /**
+     *
+     * @param args to parse
+     * @return null in case of error, commandline arguments otherwise
+     */
+    @Nullable
     public static CliArgs parse(@Nonnull String... args) {
-        ArgumentParser parser = setupParser();
+        final ArgumentParser parser = setupParser();
+        final Namespace ns;
 
-        Namespace ns = null;
         try {
             ns = parser.parseArgs(args);
         } catch (ArgumentParserException e) {
             parser.handleError(e);
-            System.exit(1);
+            return null;
+        }
+
+        // Parse address string, returns null on error
+        final Matcher addressMatcher = parseAddressMatcher(parser, ns.getString("address"));
+
+        if (addressMatcher == null) {
+            return null;
         }
 
         CliArgs cliArgs = new CliArgs();
-
-        // Parse address string
-        Matcher addressMatcher = parseAddressMatcher(parser, ns.getString("address"));
 
         cliArgs.setHost(addressMatcher.group("host"), "localhost");
         // Safe, regex only matches integers
@@ -68,13 +82,17 @@ public class CliArgHelper {
         return cliArgs;
     }
 
+    @Nullable
     private static Matcher parseAddressMatcher(ArgumentParser parser, String address) {
         Matcher matcher = ADDRESS_ARG_PATTERN.matcher(address);
         if (!matcher.matches()) {
-            parser.printUsage();
-            System.err.println("cypher-shell: error: Failed to parse address: '" + address + "'");
-            System.err.println("\n  Address should be of the form: [username:password@][host][:port]");
-            System.exit(1);
+            // Match behavior in built-in error handling
+            PrintWriter printWriter = new PrintWriter(System.err);
+            parser.printUsage(printWriter);
+            printWriter.println("cypher-shell: error: Failed to parse address: '" + address + "'");
+            printWriter.println("\n  Address should be of the form: [username:password@][host][:port]");
+            printWriter.flush();
+            return null;
         }
         return matcher;
     }

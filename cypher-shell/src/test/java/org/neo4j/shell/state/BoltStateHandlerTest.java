@@ -4,26 +4,39 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BoltStateHandlerTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    Logger logger = mock(Logger.class);
+    private Logger logger = mock(Logger.class);
     private final Driver mockDriver = mock(Driver.class);
-    OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
+    private OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
 
     @Before
     public void setup() {
@@ -164,6 +177,46 @@ public class BoltStateHandlerTest {
         }
 
         boltStateHandler.connect();
+    }
+
+    @Test
+    public void resetClearsTransactionState() throws Exception {
+        // given
+        boltStateHandler.connect();
+        boltStateHandler.beginTransaction();
+
+        Transaction tx = boltStateHandler.getCurrentTransaction();
+
+        assertNotNull("Expected a transaction", tx);
+
+        // when
+        boltStateHandler.reset();
+
+        // then
+        assertNull("Transaction state should be reset", boltStateHandler.getCurrentTransaction());
+        assertFalse(tx.isOpen());
+        assertFalse(((FakeTransaction) tx).isSuccess());
+    }
+
+    @Test
+    public void silentDisconnectCleansUp() throws Exception {
+        // given
+        boltStateHandler.connect();
+
+        assertNotNull(boltStateHandler.session);
+        assertNotNull(boltStateHandler.fakeDriver);
+
+        assertTrue(((FakeDriver) boltStateHandler.fakeDriver).isOpen());
+        assertTrue(boltStateHandler.session.isOpen());
+
+        // when
+        boltStateHandler.silentDisconnect();
+
+        // then
+        assertFalse(((FakeDriver) boltStateHandler.driver).isOpen());
+        assertFalse(boltStateHandler.session.isOpen());
+        assertNull(boltStateHandler.session);
+        assertNull(boltStateHandler.fakeDriver);
     }
 
     /**
