@@ -155,8 +155,11 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             while (more) {
                 more = reader.backspace();
             }
+            // Clear parser state
+            statementParser.reset();
 
             // Redraw the prompt now because the error message has changed the terminal text
+            reader.setPrompt(getPrompt().renderedString());
             reader.redrawLine();
             reader.flush();
         } catch (IOException e) {
