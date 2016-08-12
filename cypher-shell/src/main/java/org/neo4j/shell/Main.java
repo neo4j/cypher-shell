@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 
@@ -38,6 +39,8 @@ public class Main {
             shell.setCommandHelper(commandHelper);
             shell.connect(connectionConfig);
 
+            printWelcomeMessage(logger, connectionConfig);
+
             int code = shellRunner.runUntilEnd();
             System.exit(code);
         } catch (Throwable e) {
@@ -46,4 +49,16 @@ public class Main {
         }
     }
 
+    private static void printWelcomeMessage(@Nonnull Logger logger,
+                                            @Nonnull ConnectionConfig connectionConfig) {
+        logger.printIfVerbose(AnsiFormattedText
+                .from("Connected to Neo4j at ")
+                .bold().append(connectionConfig.driverUrl()).boldOff()
+                .append(" as user ")
+                .bold().append(connectionConfig.username()).boldOff()
+                .append(".\nType ")
+                .bold().append(":help").boldOff()
+                .append(" for a list of available commands.")
+                .formattedString());
+    }
 }
