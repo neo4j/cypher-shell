@@ -88,13 +88,14 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             try {
                 silentDisconnect();
             } catch (Exception e) {// NOPMD
-            // This is to ensure we are able to show the original message by exception t to the user
+            // This is to ensure we are able to show the original message by exception to to the user
             }
             throw t;
         }
     }
 
-    public StatementResult runCypher(@Nonnull String cypher, Map<String, Object> queryParams) throws CommandException {
+    public StatementResult runCypher(@Nonnull String cypher,
+                                     @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
         return statementRunner.run(cypher, queryParams);
     }

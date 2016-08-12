@@ -14,6 +14,8 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -118,6 +120,13 @@ public class BoltStateHandlerTest {
 
         Transaction tx = boltStateHandler.getCurrentTransaction();
         assertNotNull("Expected a transaction", tx);
+    }
+
+    @Test
+    public void shouldRunCypherQuery() throws CommandException {
+        boltStateHandler.connect();
+
+        assertEquals("999", boltStateHandler.runCypher("RETURN 999", new HashMap<>()).single().get(0).toString());
     }
 
     @Test
