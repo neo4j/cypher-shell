@@ -4,16 +4,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 import static org.junit.Assert.*;
@@ -166,5 +164,30 @@ public class BoltStateHandlerTest {
         }
 
         boltStateHandler.connect();
+    }
+
+    /**
+     * Bolt state with faked bolt interactions
+     */
+    private static class OfflineBoltStateHandler extends BoltStateHandler {
+
+        private final Driver fakeDriver;
+
+        public OfflineBoltStateHandler(Driver driver) {
+            this.fakeDriver = driver;
+        }
+
+        public Transaction getCurrentTransaction() {
+            return tx;
+        }
+
+        public void connect() throws CommandException {
+            connect(new ConnectionConfig("", 1, "", ""));
+        }
+
+        @Override
+        protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
+            return fakeDriver;
+        }
     }
 }

@@ -5,7 +5,6 @@ import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
-import org.neo4j.shell.state.OfflineBoltStateHandler;
 
 import static org.mockito.Mockito.mock;
 
