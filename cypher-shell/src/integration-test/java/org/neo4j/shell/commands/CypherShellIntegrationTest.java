@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
@@ -19,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,13 +30,20 @@ public class CypherShellIntegrationTest {
     public final ExpectedException thrown = ExpectedException.none();
 
     private Logger logger = mock(Logger.class);
-    private CypherShell shell = new CypherShell(logger);
-    private Command rollbackCommand = new Rollback(shell);
-    private Command commitCommand = new Commit(shell);
-    private Command beginCommand = new Begin(shell);
+    private Command rollbackCommand;
+    private Command commitCommand;
+    private Command beginCommand ;
+    private CypherShell shell;
 
     @Before
     public void setUp() throws Exception {
+        doReturn(Format.VERBOSE).when(logger).getFormat();
+
+        shell = new CypherShell(logger);
+        rollbackCommand = new Rollback(shell);
+        commitCommand = new Commit(shell);
+        beginCommand = new Begin(shell);
+
         shell.connect(new ConnectionConfig("localhost", 7687, "neo4j", "neo"));
     }
 
