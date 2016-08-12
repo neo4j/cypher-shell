@@ -131,15 +131,13 @@ public class CypherShellTest {
     public void executeShouldPrintResult() throws CommandException {
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
-        StatementRunner statementRunner = mock(StatementRunner.class);
         StatementResult resultMock = mock(StatementResult.class);
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
         PrettyPrinter prettyPrinter = mock(PrettyPrinter.class);
 
         when(boltStateHandler.isConnected()).thenReturn(true);
-        when(boltStateHandler.getStatementRunner()).thenReturn(statementRunner);
-        when(statementRunner.run(anyString(), anyMap())).thenReturn(resultMock);
+        when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(resultMock);
         when(prettyPrinter.format(resultMock)).thenReturn("999");
         when(mockedDriver.session()).thenReturn(session);
 
@@ -224,12 +222,9 @@ public class CypherShellTest {
         thrown.expectMessage("Failed to set value of parameter");
 
         // given
-        StatementRunner runner = mock(StatementRunner.class);
-        when(runner.run(anyString(), anyMapOf(String.class, Object.class))).thenReturn(null);
-        BoltStateHandler bh = mockedBoltStateHandler;
-        doReturn(runner).when(bh).getStatementRunner();
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMapOf(String.class, Object.class))).thenReturn(null);
 
-        CypherShell shell = new CypherShell(logger, bh, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         // when
         shell.set("bob", "99");

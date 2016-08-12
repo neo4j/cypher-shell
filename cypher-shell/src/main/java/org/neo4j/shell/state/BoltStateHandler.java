@@ -4,10 +4,12 @@ import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
+import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -17,22 +19,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     protected Driver driver;
     protected Session session;
     protected Transaction tx = null;
-
-    /**
-     * Returns an appropriate runner, depending on the current transaction state.
-     *
-     * @return a statementrunner to execute cypher, or throws an exception if not connected
-     */
-    @Nonnull
-    public StatementRunner getStatementRunner() throws CommandException {
-        if (!isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-        if (tx != null) {
-            return tx;
-        }
-        return session;
-    }
 
     @Override
     public void beginTransaction() throws CommandException {
@@ -108,6 +94,11 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
     }
 
+    public StatementResult runCypher(@Nonnull String cypher, Map<String, Object> queryParams) throws CommandException {
+        StatementRunner statementRunner = getStatementRunner();
+        return statementRunner.run(cypher, queryParams);
+    }
+
     /**
      * Get a driver to connect with
      *
@@ -139,5 +130,21 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     public void reset() {
 //        session.reset();
+    }
+
+    /**
+     * Returns an appropriate runner, depending on the current transaction state.
+     *
+     * @return a statementrunner to execute cypher, or throws an exception if not connected
+     */
+    @Nonnull
+    private StatementRunner getStatementRunner() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
+        if (tx != null) {
+            return tx;
+        }
+        return session;
     }
 }

@@ -117,18 +117,15 @@ public class BoltStateHandlerTest {
 
         Transaction tx = boltStateHandler.getCurrentTransaction();
         assertNotNull("Expected a transaction", tx);
-
-        assertEquals("Transaction should be the runner", tx, boltStateHandler.getStatementRunner());
     }
 
     @Test
     public void shouldExecuteInSessionByDefault() throws CommandException {
         boltStateHandler.connect();
-        Transaction tx = boltStateHandler.getCurrentTransaction();
-        assertNull("Did not expect a transaction", tx);
 
-        assertEquals("Transaction should be the runner",
-                boltStateHandler.getCurrentSession(), boltStateHandler.getStatementRunner());
+        Transaction tx = boltStateHandler.getCurrentTransaction();
+
+        assertNull("Did not expect a transaction", tx);
     }
 
     @Test

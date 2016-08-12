@@ -157,7 +157,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     @Nonnull
     protected Optional<StatementResult> doCypherSilently(@Nonnull final String cypher) throws CommandException {
-        return Optional.ofNullable(boltStateHandler.getStatementRunner().run(cypher, queryParams));
+        return Optional.ofNullable(boltStateHandler.runCypher(cypher, queryParams));
     }
 
     public void setCommandHelper(@Nonnull CommandHelper commandHelper) {

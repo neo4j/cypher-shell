@@ -29,10 +29,6 @@ public class OfflineBoltStateHandler extends BoltStateHandler {
         return tx;
     }
 
-    public Session getCurrentSession() {
-        return session;
-    }
-
     public void connect() throws CommandException {
         connect(new ConnectionConfig("", 1, "", ""));
     }
