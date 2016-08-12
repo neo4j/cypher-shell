@@ -101,7 +101,8 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         } catch (Throwable t) {
             try {
                 silentDisconnect();
-            } catch (Exception e) {
+            } catch (Exception e) {// NOPMD
+            // This is to ensure we are able to show the original message by exception t to the user
             }
             throw t;
         }
