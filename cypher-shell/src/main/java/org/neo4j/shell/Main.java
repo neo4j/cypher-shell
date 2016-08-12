@@ -27,7 +27,9 @@ public class Main {
 
         Logger logger = new AnsiLogger();
         try {
-            CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
+            logger.setFormat(cliArgs.getFormat());
+
+            CypherShell shell = new CypherShell(logger);
 
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
 

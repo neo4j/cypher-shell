@@ -27,24 +27,27 @@ public class PrettyPrinter {
 
     public String format(@Nonnull final StatementResult result) {
         // TODO: 6/22/16 Format nicely
-        if (!result.hasNext()) {
-            return statisticsCollector.collect(result);
-        }
-
         StringBuilder sb = new StringBuilder();
-        for (String key : result.keys()) {
-            if (sb.length() > 0) {
-                sb.append(" | ");
+        if (result.hasNext()) {
+            // TODO respect format
+            for (String key : result.keys()) {
+                if (sb.length() > 0) {
+                    sb.append(" | ");
+                }
+                sb.append(key);
             }
-            sb.append(key);
+
+            while (result.hasNext()) {
+                sb.append("\n").append(format(result.next()));
+            }
         }
 
-        while (result.hasNext()) {
-            sb.append("\n").append(format(result.next()));
-        }
         String statistics = statisticsCollector.collect(result);
         if (!statistics.isEmpty()) {
-            sb.append("\n").append(statistics);
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(statistics);
         }
         return sb.toString();
     }
