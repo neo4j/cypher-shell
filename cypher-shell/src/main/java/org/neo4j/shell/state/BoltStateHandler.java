@@ -10,6 +10,7 @@ import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 /**
@@ -94,10 +95,11 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
     }
 
-    public StatementResult runCypher(@Nonnull String cypher,
+    @Nonnull
+    public Optional<StatementResult> runCypher(@Nonnull String cypher,
                                      @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
-        return statementRunner.run(cypher, queryParams);
+        return Optional.ofNullable(statementRunner.run(cypher, queryParams));
     }
 
     /**

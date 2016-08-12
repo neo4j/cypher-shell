@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 /**
  * A fake StatementResult with fake records and fake values
  */
-class FakeStatementResult implements StatementResult {
+public class FakeStatementResult implements StatementResult {
 
     private final List<Record> records;
     private int currentRecord = -1;

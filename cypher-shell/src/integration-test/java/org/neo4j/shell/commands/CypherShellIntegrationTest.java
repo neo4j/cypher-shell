@@ -14,9 +14,11 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -110,5 +112,27 @@ public class CypherShellIntegrationTest {
 
         List<String> result = captor.getAllValues();
         assertThat(result.get(1), is("n\n{name: \"Joe Smith\"}"));
+    }
+
+    @Test
+    public void setUnsetVariables() throws CommandException {
+        assertTrue(shell.getAll().isEmpty());
+
+        long randomLong = System.currentTimeMillis();
+        Optional result = shell.set("bob", String.valueOf(randomLong));
+        assertTrue(result.isPresent());
+        assertEquals(randomLong, result.get());
+
+        shell.execute("RETURN { bob }");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger).printOut(captor.capture());
+
+        List<String> queryResult = captor.getAllValues();
+        assertThat(queryResult.get(0), is("{ bob }\n" + randomLong));
+        assertEquals(randomLong, shell.getAll().get("bob"));
+
+        shell.remove("bob");
+        assertTrue(shell.getAll().isEmpty());
     }
 }

@@ -4,9 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.cli.StringShellRunner;
@@ -16,9 +14,7 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
-import org.neo4j.shell.state.OfflineBoltStateHandler;
 import org.neo4j.shell.test.OfflineTestShell;
-import org.neo4j.shell.test.bolt.FakeSession;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -27,7 +23,6 @@ import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -109,24 +104,23 @@ public class CypherShellTest {
 
     @Test
     public void verifyVariableMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        Driver driver = mock(Driver.class);
-        when(driver.session()).thenReturn(new FakeSession());
-        OfflineBoltStateHandler offlineBoltStateHandler = new OfflineBoltStateHandler(driver);
-        OfflineTestShell shell = new OfflineTestShell(logger, offlineBoltStateHandler, mockedPrettyPrinter);
-        shell.connect(cc);
+        StatementResult setResult = mock(StatementResult.class);
+        Value value = mock(Value.class);
+        Record recordMock = mock(Record.class);
 
-        assertTrue(shell.isConnected());
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(setResult));
+        when(setResult.single()).thenReturn(recordMock);
+        when(recordMock.get("bob")).thenReturn(value);
+        when(value.asObject()).thenReturn("99");
 
-        assertTrue(shell.getAll().isEmpty());
+        assertTrue(offlineTestShell.getAll().isEmpty());
 
-        Optional result = shell.set("bob", "99");
-        assertTrue(result.isPresent());
+        Optional result = offlineTestShell.set("bob", "99");
         assertEquals("99", result.get());
-        assertEquals("99", shell.getAll().get("bob"));
+        assertEquals("99", offlineTestShell.getAll().get("bob"));
 
-        shell.remove("bob");
-        assertTrue(shell.getAll().isEmpty());
+        offlineTestShell.remove("bob");
+        assertTrue(offlineTestShell.getAll().isEmpty());
     }
 
     @Test
@@ -138,7 +132,7 @@ public class CypherShellTest {
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
 
         when(boltStateHandler.isConnected()).thenReturn(true);
-        when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(resultMock);
+        when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(resultMock));
         when(mockedPrettyPrinter.format(resultMock)).thenReturn("999");
         when(mockedDriver.session()).thenReturn(session);
 
@@ -203,7 +197,7 @@ public class CypherShellTest {
         thrown.expectMessage("Failed to set value of parameter");
 
         // given
-        when(mockedBoltStateHandler.runCypher(anyString(), anyMapOf(String.class, Object.class))).thenReturn(null);
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.empty());
 
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
