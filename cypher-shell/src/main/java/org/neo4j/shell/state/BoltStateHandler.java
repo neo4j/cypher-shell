@@ -99,7 +99,10 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
-            silentDisconnect();
+            try {
+                silentDisconnect();
+            } catch (Exception e) {
+            }
             throw t;
         }
     }

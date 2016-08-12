@@ -15,6 +15,16 @@ import javax.annotation.Nonnull;
  */
 public class OfflineBoltStateHandler extends BoltStateHandler {
 
+    private final Driver fakeDriver;
+
+    public OfflineBoltStateHandler() {
+        this.fakeDriver = new FakeDriver();
+    }
+
+    public OfflineBoltStateHandler(Driver driver) {
+        this.fakeDriver = driver;
+    }
+
     public Transaction getCurrentTransaction() {
         return tx;
     }
@@ -29,6 +39,6 @@ public class OfflineBoltStateHandler extends BoltStateHandler {
 
     @Override
     protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
-        return new FakeDriver();
+        return fakeDriver;
     }
 }
