@@ -7,10 +7,8 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.StatementRunner;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -20,6 +18,7 @@ import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.state.OfflineBoltStateHandler;
 import org.neo4j.shell.test.OfflineTestShell;
+import org.neo4j.shell.test.bolt.FakeSession;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -36,15 +35,19 @@ import static org.mockito.Mockito.*;
 public class CypherShellTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
+    private final Driver fakeDriver = mock(Driver.class);
     private BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
-    private final PrettyPrinter mockedPrettyPrinter = new PrettyPrinter(Format.VERBOSE);
+    private final PrettyPrinter mockedPrettyPrinter = mock(PrettyPrinter.class);
     private Logger logger = mock(Logger.class);
     private OfflineTestShell offlineTestShell;
 
     @Before
     public void setup() {
         doReturn(System.out).when(logger).getOutputStream();
-        offlineTestShell = new OfflineTestShell(logger);
+        when(fakeDriver.session()).thenReturn(new FakeSession());
+        offlineTestShell = new OfflineTestShell(logger,
+                new OfflineBoltStateHandler(fakeDriver),
+                mockedPrettyPrinter);
 
         CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, offlineTestShell);
 
@@ -87,7 +90,7 @@ public class CypherShellTest {
 
     @Test
     public void setWhenDisconnectedShouldThrow() throws CommandException {
-        CypherShell shell = new OfflineTestShell(logger);
+        CypherShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
 
         assertFalse(shell.isConnected());
 
@@ -101,7 +104,7 @@ public class CypherShellTest {
     @Test
     public void verifyVariableMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        OfflineTestShell shell = new OfflineTestShell(logger);
+        OfflineTestShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
         shell.connect(cc);
 
         assertTrue(shell.isConnected());
@@ -119,7 +122,7 @@ public class CypherShellTest {
 
     @Test
     public void executeOfflineThrows() throws CommandException {
-        OfflineTestShell shell = new OfflineTestShell(logger);
+        OfflineTestShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
 
         thrown.expect(CommandException.class);
         thrown.expectMessage("Not connected to Neo4j");
@@ -134,14 +137,13 @@ public class CypherShellTest {
         StatementResult resultMock = mock(StatementResult.class);
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
-        PrettyPrinter prettyPrinter = mock(PrettyPrinter.class);
 
         when(boltStateHandler.isConnected()).thenReturn(true);
         when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(resultMock);
-        when(prettyPrinter.format(resultMock)).thenReturn("999");
+        when(mockedPrettyPrinter.format(resultMock)).thenReturn("999");
         when(mockedDriver.session()).thenReturn(session);
 
-        OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, prettyPrinter);
+        OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
         shell.execute("RETURN 999");
         verify(logger).printOut(contains("999"));
     }

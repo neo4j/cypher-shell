@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * A fake session which returns fake StatementResults
  */
-class FakeSession implements Session {
+public class FakeSession implements Session {
     private boolean open = true;
 
     @Override

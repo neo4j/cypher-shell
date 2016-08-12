@@ -2,10 +2,8 @@ package org.neo4j.shell.state;
 
 import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
-import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -16,10 +14,6 @@ import javax.annotation.Nonnull;
 public class OfflineBoltStateHandler extends BoltStateHandler {
 
     private final Driver fakeDriver;
-
-    public OfflineBoltStateHandler() {
-        this.fakeDriver = new FakeDriver();
-    }
 
     public OfflineBoltStateHandler(Driver driver) {
         this.fakeDriver = driver;

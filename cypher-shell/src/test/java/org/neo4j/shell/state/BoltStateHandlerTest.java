@@ -4,16 +4,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Matchers;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
-import org.neo4j.shell.test.bolt.FakeTransaction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
-import sun.misc.REException;
+import org.neo4j.shell.test.bolt.FakeSession;
+import org.neo4j.shell.test.bolt.FakeTransaction;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -23,10 +22,12 @@ public class BoltStateHandlerTest {
     public final ExpectedException thrown = ExpectedException.none();
 
     Logger logger = mock(Logger.class);
-    OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler();
+    private final Driver mockDriver = mock(Driver.class);
+    OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
 
     @Before
     public void setup() {
+        when(mockDriver.session()).thenReturn(new FakeSession());
         doReturn(System.out).when(logger).getOutputStream();
     }
 
