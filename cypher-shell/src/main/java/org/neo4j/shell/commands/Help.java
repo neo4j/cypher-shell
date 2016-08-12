@@ -77,6 +77,7 @@ public class Help implements Command {
         logger.printOut(AnsiFormattedText.from("\nusage: ")
                                          .bold().append(cmd.getName())
                                          .boldOff()
+                                         .append(" ")
                                          .append(cmd.getUsage())
                                          .append("\n\n")
                                          .append(cmd.getHelp())

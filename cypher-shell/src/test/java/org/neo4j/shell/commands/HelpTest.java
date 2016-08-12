@@ -80,7 +80,7 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|BOLD bob|@usage for bob\n"
+        verify(logger).printOut("\nusage: @|BOLD bob|@ usage for bob\n"
                                + "\nhelp for bob\n");
     }
 
@@ -103,7 +103,7 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|BOLD :bob|@usage for :bob\n"
+        verify(logger).printOut("\nusage: @|BOLD :bob|@ usage for :bob\n"
                 + "\nhelp for :bob\n");
     }
 
