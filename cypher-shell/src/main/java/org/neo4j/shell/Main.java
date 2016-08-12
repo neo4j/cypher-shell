@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
+import org.neo4j.shell.commands.Help;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
@@ -57,7 +58,7 @@ public class Main {
                 .append(" as user ")
                 .bold().append(connectionConfig.username()).boldOff()
                 .append(".\nType ")
-                .bold().append(":help").boldOff()
+                .bold().append(Help.COMMAND_NAME).boldOff()
                 .append(" for a list of available commands.")
                 .formattedString());
     }
