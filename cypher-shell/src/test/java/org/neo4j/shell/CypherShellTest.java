@@ -31,11 +31,9 @@ import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
-
 public class CypherShellTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
-    private final Driver fakeDriver = mock(Driver.class);
     private BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
     private final PrettyPrinter mockedPrettyPrinter = mock(PrettyPrinter.class);
     private Logger logger = mock(Logger.class);
@@ -44,10 +42,7 @@ public class CypherShellTest {
     @Before
     public void setup() {
         doReturn(System.out).when(logger).getOutputStream();
-        when(fakeDriver.session()).thenReturn(new FakeSession());
-        offlineTestShell = new OfflineTestShell(logger,
-                new OfflineBoltStateHandler(fakeDriver),
-                mockedPrettyPrinter);
+        offlineTestShell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, offlineTestShell);
 
@@ -89,22 +84,36 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setWhenDisconnectedShouldThrow() throws CommandException {
-        CypherShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
+    public void setWhenOfflineShouldThrow() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("not connected");
 
-        assertFalse(shell.isConnected());
+        CypherShell shell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        when(mockedBoltStateHandler.isConnected()).thenReturn(false);
 
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenThrow(new CommandException("not connected"));
+
+        shell.set("bob", "99");
+    }
+
+    @Test
+    public void executeOfflineThrows() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Not connected to Neo4j");
 
-        shell.set("bob", "99");
-        assertEquals("99", shell.getAll().get("bob"));
+        OfflineTestShell shell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        when(mockedBoltStateHandler.isConnected()).thenReturn(false);
+
+        shell.execute("RETURN 999");
     }
 
     @Test
     public void verifyVariableMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("", 1, "", "");
-        OfflineTestShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
+        Driver driver = mock(Driver.class);
+        when(driver.session()).thenReturn(new FakeSession());
+        OfflineBoltStateHandler offlineBoltStateHandler = new OfflineBoltStateHandler(driver);
+        OfflineTestShell shell = new OfflineTestShell(logger, offlineBoltStateHandler, mockedPrettyPrinter);
         shell.connect(cc);
 
         assertTrue(shell.isConnected());
@@ -118,16 +127,6 @@ public class CypherShellTest {
 
         shell.remove("bob");
         assertTrue(shell.getAll().isEmpty());
-    }
-
-    @Test
-    public void executeOfflineThrows() throws CommandException {
-        OfflineTestShell shell = new OfflineTestShell(logger, new OfflineBoltStateHandler(fakeDriver), mockedPrettyPrinter);
-
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Not connected to Neo4j");
-
-        shell.execute("RETURN 999");
     }
 
     @Test
@@ -149,40 +148,27 @@ public class CypherShellTest {
     }
 
     @Test
+    public void shouldParseCommandsAndArgs() {
+        assertTrue(offlineTestShell.getCommandExecutable(":help").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(":help :set").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(":set \"A piece of string\"").isPresent());
+    }
+
+    @Test
     public void commandNameShouldBeParsed() {
-
-        Optional<CommandExecutable> exe = offlineTestShell.getCommandExecutable("   :help    ");
-
-        assertTrue(exe.isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable("   :help    ").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable("   :help    \n").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable("   :help   arg1 arg2 ").isPresent());
     }
 
     @Test
-    public void commandNameShouldBeParsedWithNewline() {
-
-        Optional<CommandExecutable> exe = offlineTestShell.getCommandExecutable("   :help    \n");
-
-        assertTrue(exe.isPresent());
-    }
-
-    @Test
-    public void commandWithArgsShouldBeParsed() throws CommandException {
+    public void incorrectCommandsThrowException() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Incorrect number of arguments");
 
         Optional<CommandExecutable> exe = offlineTestShell.getCommandExecutable("   :help   arg1 arg2 ");
 
-        assertTrue(exe.isPresent());
-
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Incorrect number of arguments");
-
         offlineTestShell.executeCmd(exe.get());
-    }
-
-    @Test
-    public void commandWithArgsShouldBeParsedAndExecuted() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Incorrect number of arguments");
-
-        offlineTestShell.execute("   :help   arg1 arg2 ");
     }
 
     @Test
@@ -201,13 +187,6 @@ public class CypherShellTest {
         if (!(shellRunner instanceof StringShellRunner)) {
             fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
         }
-    }
-
-    @Test
-    public void shouldParseCommandsAndArgs() {
-        assertTrue(offlineTestShell.getCommandExecutable(":help").isPresent());
-        assertTrue(offlineTestShell.getCommandExecutable(":help :set").isPresent());
-        assertTrue(offlineTestShell.getCommandExecutable(":set \"A piece of string\"").isPresent());
     }
 
     @Test
