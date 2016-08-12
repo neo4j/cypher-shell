@@ -33,15 +33,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected final Map<String, Object> queryParams = new HashMap<>();
 
     public CypherShell(@Nonnull Logger logger, @Nonnull Format format) {
-        this(logger, new BoltStateHandler(), format);
+        this(logger, new BoltStateHandler(), new PrettyPrinter(format));
     }
 
     protected CypherShell(@Nonnull Logger logger,
                           @Nonnull BoltStateHandler boltStateHandler,
-                          @Nonnull Format format) {
+                          @Nonnull PrettyPrinter prettyPrinter) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
-        this.prettyPrinter = new PrettyPrinter(format);
+        this.prettyPrinter = prettyPrinter;
         addRuntimeHookToResetShell();
     }
 
@@ -69,7 +69,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param cypher non-empty cypher text to executeLine
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
-        final Optional<StatementResult> result = doCypherSilently(cypher);
+        final Optional<StatementResult> result = boltStateHandler.runCypher(cypher, queryParams);
         if (result.isPresent()) {
             logger.printOut(prettyPrinter.format(result.get()));
         }
@@ -131,13 +131,19 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        final Optional<StatementResult> result = doCypherSilently("RETURN " + valueString + " as " + name);
-        if (!result.isPresent()) {
-            throw new CommandException("Failed to set value of parameter");
-        }
+        final Optional<StatementResult> result = setParamsAndValidate(name, valueString);
         final Object value = result.get().single().get(name).asObject();
         queryParams.put(name, value);
         return Optional.ofNullable(value);
+    }
+
+    private Optional<StatementResult> setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
+        String cypher = "RETURN " + valueString + " as " + name;
+        final Optional<StatementResult> result = boltStateHandler.runCypher(cypher, queryParams);
+        if (!result.isPresent()) {
+            throw new CommandException("Failed to set value of parameter");
+        }
+        return result;
     }
 
     @Override
@@ -150,14 +156,6 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Nonnull
     public Optional remove(@Nonnull String name) {
         return Optional.ofNullable(queryParams.remove(name));
-    }
-
-    /**
-     * Run a cypher statement, and return the result.
-     */
-    @Nonnull
-    protected Optional<StatementResult> doCypherSilently(@Nonnull final String cypher) throws CommandException {
-        return Optional.ofNullable(boltStateHandler.getStatementRunner().run(cypher, queryParams));
     }
 
     public void setCommandHelper(@Nonnull CommandHelper commandHelper) {

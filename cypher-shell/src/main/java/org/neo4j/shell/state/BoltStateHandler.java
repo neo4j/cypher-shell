@@ -4,10 +4,13 @@ import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
+import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 /**
@@ -17,22 +20,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     protected Driver driver;
     protected Session session;
     protected Transaction tx = null;
-
-    /**
-     * Returns an appropriate runner, depending on the current transaction state.
-     *
-     * @return a statementrunner to execute cypher, or throws an exception if not connected
-     */
-    @Nonnull
-    public StatementRunner getStatementRunner() throws CommandException {
-        if (!isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-        if (tx != null) {
-            return tx;
-        }
-        return session;
-    }
 
     @Override
     public void beginTransaction() throws CommandException {
@@ -99,9 +86,20 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
-            silentDisconnect();
+            try {
+                silentDisconnect();
+            } catch (Exception e) {// NOPMD
+            // This is to ensure we are able to show the original message by exception to to the user
+            }
             throw t;
         }
+    }
+
+    @Nonnull
+    public Optional<StatementResult> runCypher(@Nonnull String cypher,
+                                     @Nonnull Map<String, Object> queryParams) throws CommandException {
+        StatementRunner statementRunner = getStatementRunner();
+        return Optional.ofNullable(statementRunner.run(cypher, queryParams));
     }
 
     /**
@@ -135,5 +133,21 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     public void reset() {
 //        session.reset();
+    }
+
+    /**
+     * Returns an appropriate runner, depending on the current transaction state.
+     *
+     * @return a statementrunner to execute cypher, or throws an exception if not connected
+     */
+    @Nonnull
+    private StatementRunner getStatementRunner() throws CommandException {
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
+        }
+        if (tx != null) {
+            return tx;
+        }
+        return session;
     }
 }
