@@ -170,7 +170,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                logger.printIfVerbose(AnsiFormattedText.s().colorRed().append("Bye!").formattedString());
+                logger.printIfVerbose(AnsiFormattedText.s().append("Bye!").formattedString());
                 reset();
             }
         });
