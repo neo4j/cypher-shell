@@ -53,13 +53,13 @@ public class BoltStateHandlerTest {
 
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
-        StatementResult mock = mock(StatementResult.class);
+        StatementResult resultMock = mock(StatementResult.class);
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
         when(mockedDriver.session()).thenReturn(session);
-        when(session.run("RETURN 1")).thenReturn(mock);
-        when(mock.consume()).thenThrow(new RuntimeException("original exception"));
+        when(session.run("RETURN 1")).thenReturn(resultMock);
+        when(resultMock.consume()).thenThrow(new RuntimeException("original exception"));
         doThrow(new RuntimeException("INIT method message")).when(session).close();
 
         boltStateHandler.connect();

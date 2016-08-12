@@ -33,15 +33,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected final Map<String, Object> queryParams = new HashMap<>();
 
     public CypherShell(@Nonnull Logger logger, @Nonnull Format format) {
-        this(logger, new BoltStateHandler(), format);
+        this(logger, new BoltStateHandler(), new PrettyPrinter(format));
     }
 
     protected CypherShell(@Nonnull Logger logger,
                           @Nonnull BoltStateHandler boltStateHandler,
-                          @Nonnull Format format) {
+                          @Nonnull PrettyPrinter prettyPrinter) {
         this.logger = logger;
         this.boltStateHandler = boltStateHandler;
-        this.prettyPrinter = new PrettyPrinter(format);
+        this.prettyPrinter = prettyPrinter;
         addRuntimeHookToResetShell();
     }
 
