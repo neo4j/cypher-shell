@@ -72,7 +72,7 @@ public class CliArgHelper {
         Matcher matcher = ADDRESS_ARG_PATTERN.matcher(address);
         if (!matcher.matches()) {
             parser.printUsage();
-            System.err.println("neo4j-shell: error: Failed to parse address: '" + address + "'");
+            System.err.println("cypher-shell: error: Failed to parse address: '" + address + "'");
             System.err.println("\n  Address should be of the form: [username:password@][host][:port]");
             System.exit(1);
         }
@@ -80,7 +80,7 @@ public class CliArgHelper {
     }
 
     private static ArgumentParser setupParser() {
-        ArgumentParser parser = ArgumentParsers.newArgumentParser("neo4j-shell")
+        ArgumentParser parser = ArgumentParsers.newArgumentParser("cypher-shell")
                 .defaultHelp(true)
                 .description("A command line shell where you can execute Cypher against an instance of Neo4j");
 
