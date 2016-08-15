@@ -1,17 +1,7 @@
-.PHONY: help build clean zip
+.PHONY: help build clean zip test integration-test tyrekicking-test
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-zip: out/temp/cypher-shell/bin/cypher-shell ## Build zip distribution file in 'out/'
-	cd out/temp && zip -r cypher-shell.zip cypher-shell
-	mv out/temp/cypher-shell.zip out/cypher-shell.zip
-	rm -rf out/temp
-
-out/temp/cypher-shell/bin/cypher-shell: out build
-	rm -rf out/temp
-	mkdir -p out/temp
-	cp -r cypher-shell/build/install/cypher-shell out/temp/cypher-shell
 
 run: build ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
@@ -25,9 +15,32 @@ test: ## Run all unit tests
 integration-test: ## Run all integration tests
 	./gradlew integrationTest
 
-out:
-	mkdir -p out
+tyrekicking-test: tmp/cypher-shell.zip tmp/.tests-pass ## Test that the shell script can actually start
 
 clean: ## Clean out-directories
 	rm -rf out
+	rm -rf tmp
 	./gradlew clean
+
+zip: out/cypher-shell.zip ## Build and test zip distribution file in 'out/'
+
+untested-zip: tmp/cypher-shell.zip ## Build (but don't test) zip distribution file in 'tmp/'
+
+out/cypher-shell.zip: tmp/cypher-shell.zip tmp/.tests-pass
+	mkdir -p out
+	cp $< $@
+
+tmp/.tests-pass: tmp/cypher-shell.zip tyrekicking.sh
+	cp tyrekicking.sh tmp/
+	cd tmp && bash tyrekicking.sh
+	touch $@
+
+tmp/cypher-shell.zip: tmp/temp/cypher-shell/bin/cypher-shell ## Build (but don't test) zip distribution
+	cd tmp/temp && zip -r cypher-shell.zip cypher-shell
+	mv tmp/temp/cypher-shell.zip tmp/cypher-shell.zip
+	rm -rf tmp/temp
+
+tmp/temp/cypher-shell/bin/cypher-shell: build
+	rm -rf tmp
+	mkdir -p tmp/temp
+	cp -r cypher-shell/build/install/cypher-shell tmp/temp/cypher-shell
