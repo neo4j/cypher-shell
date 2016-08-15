@@ -7,6 +7,7 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.StatementRunner;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
@@ -15,9 +16,9 @@ import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nullable;
 import java.util.logging.Level;
 
 /**
@@ -104,7 +105,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     @Nonnull
     public Optional<StatementResult> runCypher(@Nonnull String cypher,
-                                     @Nonnull Map<String, Object> queryParams) throws CommandException {
+                                               @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
         return Optional.ofNullable(statementRunner.run(cypher, queryParams));
     }
@@ -145,10 +146,11 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     public void reset() {
         if (isConnected()) {
             // TODO once drivers release next milestone
+            // TODO also remove the NOPMD suppression below then
             // session.reset();
 
             // Clear current state
-            if (tx != null) {
+            if (tx != null) {//NOPMD
                 tx.failure();
                 tx.close();
                 tx = null;

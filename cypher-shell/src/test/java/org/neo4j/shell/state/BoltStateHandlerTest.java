@@ -12,7 +12,6 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
@@ -203,20 +202,17 @@ public class BoltStateHandlerTest {
         // given
         boltStateHandler.connect();
 
-        assertNotNull(boltStateHandler.session);
+        Session session = boltStateHandler.session;
+        assertNotNull(session);
         assertNotNull(boltStateHandler.fakeDriver);
 
-        assertTrue(((FakeDriver) boltStateHandler.fakeDriver).isOpen());
         assertTrue(boltStateHandler.session.isOpen());
 
         // when
         boltStateHandler.silentDisconnect();
 
         // then
-        assertFalse(((FakeDriver) boltStateHandler.driver).isOpen());
-        assertFalse(boltStateHandler.session.isOpen());
-        assertNull(boltStateHandler.session);
-        assertNull(boltStateHandler.fakeDriver);
+        assertFalse(session.isOpen());
     }
 
     /**
