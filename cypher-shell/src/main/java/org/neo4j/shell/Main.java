@@ -52,11 +52,16 @@ public class Main {
 
     private static void printWelcomeMessage(@Nonnull Logger logger,
                                             @Nonnull ConnectionConfig connectionConfig) {
-        logger.printIfVerbose(AnsiFormattedText
-                .from("Connected to Neo4j at ")
-                .bold().append(connectionConfig.driverUrl()).boldOff()
-                .append(" as user ")
-                .bold().append(connectionConfig.username()).boldOff()
+        AnsiFormattedText welcomeMessage = AnsiFormattedText.from("Connected to Neo4j at ")
+                .bold().append(connectionConfig.driverUrl()).boldOff();
+
+        if (!connectionConfig.username().isEmpty()) {
+            welcomeMessage = welcomeMessage
+                    .append(" as user ")
+                    .bold().append(connectionConfig.username()).boldOff();
+        }
+
+        logger.printIfVerbose(welcomeMessage
                 .append(".\nType ")
                 .bold().append(Help.COMMAND_NAME).boldOff()
                 .append(" for a list of available commands.")
