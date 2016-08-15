@@ -1,33 +1,56 @@
-.PHONY: help build clean zip
+.PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-zip: out/temp/cypher-shell/bin/cypher-shell ## Build zip distribution file in 'out/'
-	cd out/temp && zip -r cypher-shell.zip cypher-shell
-	mv out/temp/cypher-shell.zip out/cypher-shell.zip
-	rm -rf out/temp
-
-out/temp/cypher-shell/bin/cypher-shell: out build
-	rm -rf out/temp
-	mkdir -p out/temp
-	cp -r cypher-shell/build/install/cypher-shell out/temp/cypher-shell
-
-run: build ## Build and run cypher-shell with no arguments
+run: cypher-shell/build/install/cypher-shell/cypher-shell ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
 
-build: ## Build and test cypher-shell
-	./gradlew installDist
+zip: out/cypher-shell.zip ## Build and run all tests on zip distribution file in 'out/'
 
-test: ## Run all unit tests
-	./gradlew check pitest
+untested-zip: tmp/cypher-shell.zip ## Build (but don't test) zip distribution file in 'tmp/'
 
-integration-test: ## Run all integration tests
+build: cypher-shell/build/install/cypher-shell/cypher-shell ## Build cypher-shell
+
+test: cypher-shell/build/test-results/binary/test/results.bin ## Run all unit tests
+
+integration-test: cypher-shell/build/test-results/binary/integrationTest/results.bin ## Run all integration tests
+
+tyrekicking-test: tmp/.tests-pass ## Test that the shell script can actually start
+
+mutation-test: cypher-shell/build/reports/pitest/index.html ## Generate a mutation testing report
+
+%/integrationTest/results.bin:
 	./gradlew integrationTest
 
-out:
-	mkdir -p out
+%/test/results.bin:
+	./gradlew check
 
-clean: ## Clean out-directories
+%/install/cypher-shell/cypher-shell:
+	./gradlew installDist
+
+%/reports/pitest/index.html:
+	./gradlew pitest
+
+tmp/.tests-pass: tmp/cypher-shell.zip tyrekicking.sh
+	cp tyrekicking.sh tmp/
+	cd tmp && bash tyrekicking.sh
+	touch $@
+
+tmp/cypher-shell.zip: tmp/temp/cypher-shell/cypher-shell
+	cd tmp/temp && zip -r cypher-shell.zip cypher-shell
+	mv tmp/temp/cypher-shell.zip tmp/cypher-shell.zip
+
+tmp/temp/cypher-shell/cypher-shell: cypher-shell/build/install/cypher-shell/cypher-shell
+	rm -rf tmp
+	mkdir -p tmp/temp
+	cp -r cypher-shell/build/install/cypher-shell tmp/temp/cypher-shell
+
+out/cypher-shell.zip: tmp/cypher-shell.zip test integration-test tyrekicking-test
+	mkdir -p out
+	cp $< $@
+
+clean: ## Clean build directories
 	rm -rf out
+	rm -rf tmp
 	./gradlew clean

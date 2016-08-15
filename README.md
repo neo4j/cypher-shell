@@ -8,7 +8,12 @@ probably want either
    `cypher-shell/build/install/cypher-shell`
 
 - `make zip` which builds an uber-jar with runnable script and
-   packages it up for you as: `out/cypher-shell.zip`
+   packages it up for you as: `out/cypher-shell.zip` Note that this
+   will run a test on the script which requires a instance of neo4j
+   (see Integration tests below).
+
+- `make untested-zip` which builds the same zip file but doesn't test
+  it. It will be placed in `tmp/cypher-shell.zip`.
 
 ## How to run, the fast way
 
