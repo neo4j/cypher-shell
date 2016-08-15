@@ -2,6 +2,7 @@ package org.neo4j.shell.log;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.neo4j.shell.cli.Format;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
@@ -16,12 +17,14 @@ import static org.fusesource.jansi.internal.CLibrary.isatty;
 public class AnsiLogger implements Logger {
     private final PrintStream out;
     private final PrintStream err;
+    private Format format;
 
     public AnsiLogger() {
-        this(System.out, System.err);
+        this(Format.VERBOSE, System.out, System.err);
     }
 
-    public AnsiLogger(@Nonnull PrintStream out, @Nonnull PrintStream err) {
+    public AnsiLogger(@Nonnull Format format, @Nonnull PrintStream out, @Nonnull PrintStream err) {
+        this.format = format;
         this.out = out;
         this.err = err;
 
@@ -43,6 +46,17 @@ public class AnsiLogger implements Logger {
     @Override
     public PrintStream getErrorStream() {
         return err;
+    }
+
+    @Override
+    public void setFormat(@Nonnull Format format) {
+        this.format = format;
+    }
+
+    @Nonnull
+    @Override
+    public Format getFormat() {
+        return format;
     }
 
     @Override

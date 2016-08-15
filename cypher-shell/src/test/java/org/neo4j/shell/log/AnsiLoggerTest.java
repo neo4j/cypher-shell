@@ -2,12 +2,14 @@ package org.neo4j.shell.log;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.shell.cli.Format;
 
 import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
 public class AnsiLoggerTest {
@@ -20,7 +22,7 @@ public class AnsiLoggerTest {
     public void setup() {
         out = mock(PrintStream.class);
         err = mock(PrintStream.class);
-        logger = new AnsiLogger(out, err);
+        logger = new AnsiLogger(Format.VERBOSE, out, err);
     }
 
     @Test
@@ -69,5 +71,27 @@ public class AnsiLoggerTest {
         verify(err).println("bob");
         verify(err).println("nob");
         verify(err).println("cod");
+    }
+
+    @Test
+    public void printIfVerbose() throws Exception {
+        logger = new AnsiLogger(Format.VERBOSE, out, err);
+
+        logger.printIfVerbose("foo");
+        logger.printIfPlain("bar");
+
+        verify(out).println("foo");
+        verifyNoMoreInteractions(out);
+    }
+
+    @Test
+    public void printIfPlain() throws Exception {
+        logger = new AnsiLogger(Format.PLAIN, out, err);
+
+        logger.printIfVerbose("foo");
+        logger.printIfPlain("bar");
+
+        verify(out).println("bar");
+        verifyNoMoreInteractions(out);
     }
 }

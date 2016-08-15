@@ -3,6 +3,8 @@ package org.neo4j.shell;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
+import org.neo4j.shell.commands.Help;
+import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 
@@ -27,7 +29,9 @@ public class Main {
 
         Logger logger = new AnsiLogger();
         try {
-            CypherShell shell = new CypherShell(logger, cliArgs.getFormat());
+            logger.setFormat(cliArgs.getFormat());
+
+            CypherShell shell = new CypherShell(logger);
 
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
 
@@ -35,6 +39,8 @@ public class Main {
 
             shell.setCommandHelper(commandHelper);
             shell.connect(connectionConfig);
+
+            printWelcomeMessage(logger, connectionConfig);
 
             int code = shellRunner.runUntilEnd();
             System.exit(code);
@@ -44,4 +50,21 @@ public class Main {
         }
     }
 
+    private static void printWelcomeMessage(@Nonnull Logger logger,
+                                            @Nonnull ConnectionConfig connectionConfig) {
+        AnsiFormattedText welcomeMessage = AnsiFormattedText.from("Connected to Neo4j at ")
+                .bold().append(connectionConfig.driverUrl()).boldOff();
+
+        if (!connectionConfig.username().isEmpty()) {
+            welcomeMessage = welcomeMessage
+                    .append(" as user ")
+                    .bold().append(connectionConfig.username()).boldOff();
+        }
+
+        logger.printIfVerbose(welcomeMessage
+                .append(".\nType ")
+                .bold().append(Help.COMMAND_NAME).boldOff()
+                .append(" for a list of available commands.")
+                .formattedString());
+    }
 }
