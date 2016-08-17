@@ -4,6 +4,7 @@ import jline.console.ConsoleReader;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
+import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -27,20 +28,24 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
     private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append(".....> ");
+    private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("  trx> ");
     static final String INTERRUPT_SIGNAL = "INT";
 
     private final Logger logger;
     private final ConsoleReader reader;
     private final Historian historian;
     private final StatementParser statementParser;
+    private final TransactionHandler txHandler;
     private StatementExecuter executer;
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
+                                  @Nonnull TransactionHandler txHandler,
                                   @Nonnull Logger logger,
                                   @Nonnull StatementParser statementParser,
                                   @Nonnull InputStream inputStream,
                                   @Nonnull File historyFile) throws IOException {
         this.executer = executer;
+        this.txHandler = txHandler;
         this.logger = logger;
         this.statementParser = statementParser;
         this.reader = setupConsoleReader(logger, inputStream);
@@ -121,7 +126,13 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
      * @return suitable prompt depending on current parsing state
      */
     AnsiFormattedText getPrompt() {
-        return statementParser.containsText() ? continuationPrompt : freshPrompt;
+        if (statementParser.containsText()) {
+            return continuationPrompt;
+        }
+        if (txHandler.isTransactionOpen()) {
+            return transactionPrompt;
+        }
+        return freshPrompt;
     }
 
     /**

@@ -29,20 +29,22 @@ public interface ShellRunner {
      * Get an appropriate shellrunner depending on the given arguments and if we are running in a TTY.
      *
      * @param cliArgs
+     * @param cypherShell
+     * @param logger
      * @return a ShellRunner
      * @throws IOException
      */
     @Nonnull
     static ShellRunner getShellRunner(@Nonnull CliArgs cliArgs,
-                                      @Nonnull StatementExecuter executer,
+                                      @Nonnull CypherShell cypherShell,
                                       @Nonnull Logger logger) throws IOException {
         if (cliArgs.getCypher().isPresent()) {
-            return new StringShellRunner(cliArgs, executer, logger);
+            return new StringShellRunner(cliArgs, cypherShell, logger);
         } else if (isInputInteractive()) {
-            return new InteractiveShellRunner(executer, logger, new ShellStatementParser(),
+            return new InteractiveShellRunner(cypherShell, cypherShell, logger, new ShellStatementParser(),
                     System.in, FileHistorian.getDefaultHistoryFile());
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), executer, logger,
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell, logger,
                     new ShellStatementParser(), System.in);
         }
     }

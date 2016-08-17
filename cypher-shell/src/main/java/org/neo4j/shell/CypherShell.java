@@ -128,6 +128,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Override
+    public boolean isTransactionOpen() {
+        return boltStateHandler.isTransactionOpen();
+    }
+
+    @Override
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         final Optional<StatementResult> result = setParamsAndValidate(name, valueString);

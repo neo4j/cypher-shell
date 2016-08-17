@@ -34,7 +34,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx != null) {
+        if (isTransactionOpen()) {
             throw new CommandException("There is already an open transaction");
         }
         tx = session.beginTransaction();
@@ -45,7 +45,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx == null) {
+        if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to commit");
         }
         tx.success();
@@ -58,12 +58,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx == null) {
+        if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to rollback");
         }
         tx.failure();
         tx.close();
         tx = null;
+    }
+
+    @Override
+    public boolean isTransactionOpen() {
+        return tx != null;
     }
 
     @Override
@@ -150,7 +155,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             // session.reset();
 
             // Clear current state
-            if (tx != null) {//NOPMD
+            if (isTransactionOpen()) {//NOPMD
                 tx.failure();
                 tx.close();
                 tx = null;
@@ -168,7 +173,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx != null) {
+        if (isTransactionOpen()) {
             return tx;
         }
         return session;

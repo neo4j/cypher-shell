@@ -24,4 +24,9 @@ public interface TransactionHandler {
      * @throws CommandException if current transaction could not be rolled back
      */
     void rollbackTransaction() throws CommandException;
+
+    /**
+     * @return true if a transaction is currently open, false otherwise
+     */
+    boolean isTransactionOpen();
 }
