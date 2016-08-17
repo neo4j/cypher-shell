@@ -158,9 +158,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         } else {
             // Print a literal newline here to get around us being in the middle of the prompt
             logger.printError(AnsiFormattedText.s().colorRed().append("\nKeyboardInterrupt").formattedString());
+            // Clear any text which has been inputted
+            resetPrompt();
         }
-        // Clear any text which has been inputted
-        resetPrompt();
     }
 
     /**
