@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
@@ -16,8 +17,11 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.prettyprint.PrettyPrinter;
+import org.neo4j.shell.state.BoltStateHandler;
 import sun.misc.Signal;
 
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +29,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,6 +38,7 @@ import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -328,17 +334,69 @@ public class InteractiveShellRunnerTest {
     }
 
     @Test
-    public void testSignalHandle() throws Exception {
+    public void testSignalHandleOutsideExecution() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(),
-                inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
+                new ShellStatementParser(), inputStream, historyFile);
 
         // when
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
 
         // then
-        verify(cmdExecuter).reset();
+        verifyNoMoreInteractions(cmdExecuter);
         verify(logger).printError("@|RED \nKeyboardInterrupt|@");
+    }
+
+    @Test
+    public void testSignalHandleDuringExecution() throws Exception {
+        // given
+        BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
+        FakeInterruptableShell fakeShell = spy(new FakeInterruptableShell(logger, boltStateHandler));
+        InputStream inputStream = new ByteArrayInputStream("RETURN 1;\n".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(fakeShell, fakeShell, logger,
+                new ShellStatementParser(), inputStream, historyFile);
+
+        // during
+        new Thread(runner::runUntilEnd).start();
+
+        // when
+        Thread.sleep(1000L);
+        runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
+
+        // then
+        verify(fakeShell).execute("RETURN 1;");
+        verify(fakeShell).reset();
+        verify(boltStateHandler).reset();
+        verify(logger).printError("execution interrupted");
+        verifyNoMoreInteractions(logger);
+    }
+
+    private class FakeInterruptableShell extends CypherShell {
+
+        private AtomicReference<Thread> executionThread = new AtomicReference<>();
+
+        FakeInterruptableShell(@Nonnull Logger logger,
+                               @Nonnull BoltStateHandler boltStateHandler) {
+            super(logger, boltStateHandler, mock(PrettyPrinter.class));
+        }
+
+        @Override
+        public void execute(@Nonnull String statement) throws ExitException, CommandException {
+            try {
+                executionThread.set(Thread.currentThread());
+                Thread.sleep(4_000L);
+            } catch (InterruptedException e) {
+                logger.printError("execution interrupted");
+            }
+        }
+
+        @Override
+        public void reset() {
+            // Do whatever usually happens
+            super.reset();
+            // But also simulate reset by interrupting the thread
+            executionThread.get().interrupt();
+        }
     }
 }
