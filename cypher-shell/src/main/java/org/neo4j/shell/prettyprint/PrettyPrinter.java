@@ -1,13 +1,13 @@
 package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.exceptions.value.Uncoercible;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.cli.Format;
+import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
 import java.util.LinkedList;
@@ -25,24 +25,24 @@ public class PrettyPrinter {
         this.statisticsCollector = new StatisticsCollector(format);
     }
 
-    public String format(@Nonnull final StatementResult result) {
+    public String format(@Nonnull final BoltResult result) {
         // TODO: 6/22/16 Format nicely
         StringBuilder sb = new StringBuilder();
-        if (result.hasNext()) {
+        if (!result.getRecords().isEmpty()) {
             // TODO respect format
-            for (String key : result.keys()) {
+            for (String key : result.getRecords().get(0).keys()) {
                 if (sb.length() > 0) {
                     sb.append(" | ");
                 }
                 sb.append(key);
             }
 
-            while (result.hasNext()) {
-                sb.append("\n").append(format(result.next()));
+            for (Record record: result.getRecords()) {
+                sb.append("\n").append(format(record));
             }
         }
 
-        String statistics = statisticsCollector.collect(result);
+        String statistics = statisticsCollector.collect(result.getSummary());
         if (!statistics.isEmpty()) {
             if (sb.length() > 0) {
                 sb.append("\n");

@@ -375,4 +375,20 @@ public class ShellStatementParserTest {
         assertEquals(0, parser.consumeStatements().size());
         assertFalse(parser.containsText());
     }
+
+    @Test
+    public void testReset() throws Exception {
+        // given
+        parser.parseMoreText("/* `;\n;*/\n;");
+        parser.parseMoreText("bob");
+        assertTrue(parser.hasStatements());
+        assertTrue(parser.containsText());
+
+        // when
+        parser.reset();
+        
+        // then
+        assertFalse(parser.hasStatements());
+        assertFalse(parser.containsText());
+    }
 }

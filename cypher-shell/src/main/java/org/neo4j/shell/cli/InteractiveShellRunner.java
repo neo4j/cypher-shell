@@ -4,6 +4,7 @@ import jline.console.ConsoleReader;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
+import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 
@@ -27,20 +29,29 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
     private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append(".....> ");
+    private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("  trx> ");
     static final String INTERRUPT_SIGNAL = "INT";
+
+    // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
+    // being called from different thread
+    private final AtomicBoolean currentyExecuting;
 
     private final Logger logger;
     private final ConsoleReader reader;
     private final Historian historian;
     private final StatementParser statementParser;
-    private StatementExecuter executer;
+    private final TransactionHandler txHandler;
+    private final StatementExecuter executer;
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
+                                  @Nonnull TransactionHandler txHandler,
                                   @Nonnull Logger logger,
                                   @Nonnull StatementParser statementParser,
                                   @Nonnull InputStream inputStream,
                                   @Nonnull File historyFile) throws IOException {
+        this.currentyExecuting = new AtomicBoolean(false);
         this.executer = executer;
+        this.txHandler = txHandler;
         this.logger = logger;
         this.statementParser = statementParser;
         this.reader = setupConsoleReader(logger, inputStream);
@@ -67,7 +78,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         while (running) {
             try {
                 for (String statement : readUntilStatement()) {
+                    currentyExecuting.set(true);
                     executer.execute(statement);
+                    currentyExecuting.set(false);
                 }
             } catch (ExitException e) {
                 exitCode = e.getCode();
@@ -77,6 +90,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                 running = false;
             } catch (Throwable e) {
                 logger.printError(getFormattedMessage(e));
+            } finally {
+                currentyExecuting.set(false);
             }
         }
         return exitCode;
@@ -121,7 +136,13 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
      * @return suitable prompt depending on current parsing state
      */
     AnsiFormattedText getPrompt() {
-        return statementParser.containsText() ? continuationPrompt : freshPrompt;
+        if (statementParser.containsText()) {
+            return continuationPrompt;
+        }
+        if (txHandler.isTransactionOpen()) {
+            return transactionPrompt;
+        }
+        return freshPrompt;
     }
 
     /**
@@ -132,13 +153,14 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Override
     public void handle(final Signal signal) {
         // Stop any running cypher statements
-        if (executer != null) {
+        if (currentyExecuting.get()) {
             executer.reset();
+        } else {
+            // Print a literal newline here to get around us being in the middle of the prompt
+            logger.printError(AnsiFormattedText.s().colorRed().append("\nKeyboardInterrupt").formattedString());
+            // Clear any text which has been inputted
+            resetPrompt();
         }
-        // Print a literal newline here to get around us being in the middle of the prompt
-        logger.printError(AnsiFormattedText.s().colorRed().append("\nKeyboardInterrupt").formattedString());
-        // Clear any text which has been inputted
-        resetPrompt();
     }
 
     /**
@@ -155,8 +177,11 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             while (more) {
                 more = reader.backspace();
             }
+            // Clear parser state
+            statementParser.reset();
 
             // Redraw the prompt now because the error message has changed the terminal text
+            reader.setPrompt(getPrompt().renderedString());
             reader.redrawLine();
             reader.flush();
         } catch (IOException e) {

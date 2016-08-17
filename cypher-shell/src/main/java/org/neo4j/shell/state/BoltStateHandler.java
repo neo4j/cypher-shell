@@ -1,14 +1,22 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.StatementRunner;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
-import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -26,7 +34,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx != null) {
+        if (isTransactionOpen()) {
             throw new CommandException("There is already an open transaction");
         }
         tx = session.beginTransaction();
@@ -37,7 +45,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx == null) {
+        if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to commit");
         }
         tx.success();
@@ -50,12 +58,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx == null) {
+        if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to rollback");
         }
         tx.failure();
         tx.close();
         tx = null;
+    }
+
+    @Override
+    public boolean isTransactionOpen() {
+        return tx != null;
     }
 
     @Override
@@ -83,7 +96,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         try {
             driver = getDriver(connectionConfig, authToken);
             session = driver.session();
-            // Bug in Java driver forces us to runUntilEnd a statement to make it actually connect
+            // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
             try {
@@ -96,10 +109,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     @Nonnull
-    public Optional<StatementResult> runCypher(@Nonnull String cypher,
-                                     @Nonnull Map<String, Object> queryParams) throws CommandException {
+    public Optional<BoltResult> runCypher(@Nonnull String cypher,
+                                               @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
-        return Optional.ofNullable(statementRunner.run(cypher, queryParams));
+        StatementResult statementResult = statementRunner.run(cypher, queryParams);
+
+        if (statementResult == null) {
+            return Optional.empty();
+        }
+
+        // calling list()/consume() is what actually executes cypher on the server
+        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
     }
 
     /**
@@ -109,15 +129,16 @@ public class BoltStateHandler implements TransactionHandler, Connector {
      * @param authToken
      * @return
      */
-    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
+    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         return GraphDatabase.driver(connectionConfig.driverUrl(),
                 authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
     }
 
     /**
      * Disconnect from Neo4j, clearing up any session resources, but don't give any output.
+     * Intended only to be used if connect fails.
      */
-    private void silentDisconnect() {
+    void silentDisconnect() {
         try {
             if (session != null) {
                 session.close();
@@ -131,8 +152,21 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
     }
 
+    /**
+     * Reset the current session. This rolls back any open transactions.
+     */
     public void reset() {
-//        session.reset();
+        if (isConnected()) {
+            // TODO once drivers release next milestone
+            // TODO also remove the NOPMD suppression below then
+            //session.reset();
+
+            // Clear current state
+            // Bolt has already rolled back the transaction so we should not close it ourselves
+            if (isTransactionOpen()) {//NOPMD
+                tx = null;
+            }
+        }
     }
 
     /**
@@ -145,7 +179,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
-        if (tx != null) {
+        if (isTransactionOpen()) {
             return tx;
         }
         return session;

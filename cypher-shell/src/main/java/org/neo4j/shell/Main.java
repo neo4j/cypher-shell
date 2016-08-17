@@ -17,6 +17,12 @@ public class Main {
     public static void main(String[] args) {
         CliArgs cliArgs = CliArgHelper.parse(args);
 
+        // if null, then command line parsing went wrong
+        // CliArgs has already printed errors.
+        if (cliArgs == null) {
+            System.exit(1);
+        }
+
         Main main = new Main();
         main.startShell(cliArgs);
     }

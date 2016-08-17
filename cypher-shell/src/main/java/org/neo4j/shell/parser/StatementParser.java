@@ -33,4 +33,9 @@ public interface StatementParser {
      * @return false if no text (except whitespace) has been seen since last parsed statement, true otherwise.
      */
     boolean containsText();
+
+    /**
+     * Reset the state of the Parser, removing any and all state it has.
+     */
+    void reset();
 }

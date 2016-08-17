@@ -224,4 +224,11 @@ public class ShellStatementParser implements StatementParser {
     public boolean containsText() {
         return !statement.toString().trim().isEmpty();
     }
+
+    @Override
+    public void reset() {
+        statement = new StringBuilder();
+        parsedStatements.clear();
+        awaitedRightDelimiter = Optional.empty();
+    }
 }
