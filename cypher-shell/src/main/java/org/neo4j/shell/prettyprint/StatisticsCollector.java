@@ -1,6 +1,5 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.shell.cli.Format;
@@ -17,18 +16,17 @@ public class StatisticsCollector {
         this.format = format;
     }
 
-    public String collect(@Nonnull StatementResult result) {
+    public String collect(@Nonnull ResultSummary summary) {
         if (Format.VERBOSE == format) {
-            return collectStatistics(result);
+            return collectStatistics(summary);
         } else {
             return "";
         }
     }
 
-    private String collectStatistics(@Nonnull StatementResult result) {
-        List<String> statistics = new ArrayList<String>();
-        ResultSummary consume = result.consume();
-        SummaryCounters counters = consume.counters();
+    private String collectStatistics(@Nonnull ResultSummary summary) {
+        List<String> statistics = new ArrayList<>();
+        SummaryCounters counters = summary.counters();
         if (counters.nodesCreated() != 0) {
             statistics.add(String.format("Added %d nodes", counters.nodesCreated()));
         }

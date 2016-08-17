@@ -109,10 +109,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     @Nonnull
-    public Optional<StatementResult> runCypher(@Nonnull String cypher,
+    public Optional<BoltResult> runCypher(@Nonnull String cypher,
                                                @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
-        return Optional.ofNullable(statementRunner.run(cypher, queryParams));
+        StatementResult statementResult = statementRunner.run(cypher, queryParams);
+
+        if (statementResult == null) {
+            return Optional.empty();
+        }
+
+        // calling list()/consume() is what actually executes cypher on the server
+        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
     }
 
     /**
@@ -152,7 +159,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (isConnected()) {
             // TODO once drivers release next milestone
             // TODO also remove the NOPMD suppression below then
-            // session.reset();
+            //session.reset();
 
             // Clear current state
             if (isTransactionOpen()) {//NOPMD

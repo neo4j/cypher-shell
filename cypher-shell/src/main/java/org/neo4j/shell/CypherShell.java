@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -9,6 +8,7 @@ import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
+import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 
 import javax.annotation.Nonnull;
@@ -68,7 +68,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param cypher non-empty cypher text to executeLine
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
-        final Optional<StatementResult> result = boltStateHandler.runCypher(cypher, queryParams);
+        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
         if (result.isPresent()) {
             logger.printOut(prettyPrinter.format(result.get()));
         }
@@ -135,19 +135,19 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        final Optional<StatementResult> result = setParamsAndValidate(name, valueString);
-        final Object value = result.get().single().get(name).asObject();
+        final BoltResult result = setParamsAndValidate(name, valueString);
+        final Object value = result.getRecords().get(0).get(name).asObject();
         queryParams.put(name, value);
         return Optional.ofNullable(value);
     }
 
-    private Optional<StatementResult> setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
+    private BoltResult setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         String cypher = "RETURN " + valueString + " as " + name;
-        final Optional<StatementResult> result = boltStateHandler.runCypher(cypher, queryParams);
-        if (!result.isPresent()) {
+        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
+        if (!result.isPresent() || result.get().getRecords().isEmpty()) {
             throw new CommandException("Failed to set value of parameter");
         }
-        return result;
+        return result.get();
     }
 
     @Override

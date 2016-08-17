@@ -369,7 +369,6 @@ public class InteractiveShellRunnerTest {
         verify(fakeShell).reset();
         verify(boltStateHandler).reset();
         verify(logger).printError("execution interrupted");
-        verifyNoMoreInteractions(logger);
     }
 
     private class FakeInterruptableShell extends CypherShell {

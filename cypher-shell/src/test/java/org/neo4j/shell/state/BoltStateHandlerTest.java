@@ -136,7 +136,8 @@ public class BoltStateHandlerTest {
     public void shouldRunCypherQuery() throws CommandException {
         boltStateHandler.connect();
 
-        assertEquals("999", boltStateHandler.runCypher("RETURN 999", new HashMap<>()).get().single().get(0).toString());
+        assertEquals("999", boltStateHandler.runCypher("RETURN 999",
+                new HashMap<>()).get().getRecords().get(0).get(0).toString());
     }
 
     @Test

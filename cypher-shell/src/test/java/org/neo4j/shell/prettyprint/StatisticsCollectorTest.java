@@ -1,7 +1,6 @@
 package org.neo4j.shell.prettyprint;
 
 import org.junit.Test;
-import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.shell.cli.Format;
@@ -16,7 +15,7 @@ public class StatisticsCollectorTest {
     @Test
     public void returnEmptyStringForPlainFormatting() throws Exception {
         // given
-        StatementResult result = mock(StatementResult.class);
+        ResultSummary result = mock(ResultSummary.class);
 
         // when
         String actual = new StatisticsCollector(Format.PLAIN).collect(result);
@@ -28,17 +27,15 @@ public class StatisticsCollectorTest {
     @Test
     public void returnStatisticsForDefaultFormatting() throws Exception {
         // given
-        StatementResult result = mock(StatementResult.class);
         ResultSummary resultSummary = mock(ResultSummary.class);
         SummaryCounters summaryCounters = mock(SummaryCounters.class);
 
-        when(result.consume()).thenReturn(resultSummary);
         when(resultSummary.counters()).thenReturn(summaryCounters);
         when(summaryCounters.labelsAdded()).thenReturn(1);
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = new StatisticsCollector(Format.VERBOSE).collect(result);
+        String actual = new StatisticsCollector(Format.VERBOSE).collect(resultSummary);
 
         // then
         assertThat(actual, is("Added 10 nodes, Added 1 labels"));

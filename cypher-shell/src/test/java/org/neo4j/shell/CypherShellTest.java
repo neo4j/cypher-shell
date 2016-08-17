@@ -4,7 +4,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.cli.StringShellRunner;
@@ -13,10 +16,12 @@ import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
+import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static junit.framework.TestCase.assertTrue;
@@ -109,12 +114,12 @@ public class CypherShellTest {
 
     @Test
     public void verifyVariableMethods() throws CommandException {
-        StatementResult setResult = mock(StatementResult.class);
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
+        BoltResult boltResult = mock(BoltResult.class);
 
-        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(setResult));
-        when(setResult.single()).thenReturn(recordMock);
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
+        when(boltResult.getRecords()).thenReturn(Arrays.asList(recordMock));
         when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
@@ -132,13 +137,13 @@ public class CypherShellTest {
     public void executeShouldPrintResult() throws CommandException {
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        BoltResult result = mock(BoltResult.class);
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
 
         when(boltStateHandler.isConnected()).thenReturn(true);
-        when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(resultMock));
-        when(mockedPrettyPrinter.format(resultMock)).thenReturn("999");
+        when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(result));
+        when(mockedPrettyPrinter.format(result)).thenReturn("999");
         when(mockedDriver.session()).thenReturn(session);
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
