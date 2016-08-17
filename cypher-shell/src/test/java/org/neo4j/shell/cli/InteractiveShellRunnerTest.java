@@ -358,21 +358,24 @@ public class InteractiveShellRunnerTest {
                 new ShellStatementParser(), inputStream, historyFile);
 
         // during
-        new Thread(runner::runUntilEnd).start();
+        Thread t = new Thread(runner::runUntilEnd);
+        t.start();
+
+        // wait until execution has begun
+        while (!t.getState().equals(Thread.State.TIMED_WAITING)) {
+            Thread.sleep(100L);
+        }
 
         // when
-        Thread.sleep(1000L);
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
 
         // then
         verify(fakeShell).execute("RETURN 1;");
         verify(fakeShell).reset();
         verify(boltStateHandler).reset();
-        verify(logger).printError("execution interrupted");
     }
 
     private class FakeInterruptableShell extends CypherShell {
-
         private AtomicReference<Thread> executionThread = new AtomicReference<>();
 
         FakeInterruptableShell(@Nonnull Logger logger,
@@ -384,9 +387,9 @@ public class InteractiveShellRunnerTest {
         public void execute(@Nonnull String statement) throws ExitException, CommandException {
             try {
                 executionThread.set(Thread.currentThread());
-                Thread.sleep(4_000L);
-            } catch (InterruptedException e) {
-                logger.printError("execution interrupted");
+                Thread.sleep(10_000L);
+            } catch (InterruptedException ignored) {
+                throw new CommandException("execution interrupted");
             }
         }
 
