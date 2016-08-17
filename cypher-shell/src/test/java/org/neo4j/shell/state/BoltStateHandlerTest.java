@@ -194,8 +194,7 @@ public class BoltStateHandlerTest {
 
         // then
         assertNull("Transaction state should be reset", boltStateHandler.getCurrentTransaction());
-        assertFalse(tx.isOpen());
-        assertFalse(((FakeTransaction) tx).isSuccess());
+        assertFalse(boltStateHandler.isTransactionOpen());
     }
 
     @Test
