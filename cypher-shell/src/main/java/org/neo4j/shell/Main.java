@@ -31,7 +31,8 @@ public class Main {
         ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
-                cliArgs.getPassword());
+                cliArgs.getPassword(),
+                cliArgs.getEncryption());
 
         Logger logger = new AnsiLogger();
         try {

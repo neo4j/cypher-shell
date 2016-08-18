@@ -12,6 +12,7 @@ public class CliArgs {
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
     private Format format = Format.VERBOSE;
     private Optional<String> cypher = Optional.empty();
+    private boolean encryption;
 
     /**
      * Set the host to the primary value, or if null, the fallback value.
@@ -62,6 +63,13 @@ public class CliArgs {
         this.cypher = Optional.ofNullable(cypher);
     }
 
+    /**
+     * Set whether the connection should be encrypted
+     */
+    public void setEncryption(boolean encryption) {
+        this.encryption = encryption;
+    }
+
     @Nonnull
     public String getHost() {
         return host;
@@ -95,5 +103,9 @@ public class CliArgs {
     @Nonnull
     public Format getFormat() {
         return format;
+    }
+
+    public boolean getEncryption() {
+        return encryption;
     }
 }
