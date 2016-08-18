@@ -115,4 +115,15 @@ public class CliArgHelperTest {
         assertTrue("expected error detail: " + bout.toString(),
                 bout.toString().contains("\n  Address should be of the form:"));
     }
+
+    @Test
+    public void defaultsEncryptionToTrue() {
+        assertEquals(true, CliArgHelper.parse().getEncryption());
+    }
+
+    @Test
+    public void allowsEncryptionToBeTurnedOnOrOff() {
+        assertEquals(true, CliArgHelper.parse("--encryption", "true").getEncryption());
+        assertEquals(false, CliArgHelper.parse("--encryption", "false").getEncryption());
+    }
 }

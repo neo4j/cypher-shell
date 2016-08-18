@@ -13,6 +13,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
+import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
@@ -25,9 +26,18 @@ import java.util.logging.Level;
  * Handles interactions with the driver
  */
 public class BoltStateHandler implements TransactionHandler, Connector {
+    private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
     protected Session session;
     protected Transaction tx = null;
+
+    public BoltStateHandler() {
+        this(GraphDatabase::driver);
+    }
+
+    BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
+        this.driverProvider = driverProvider;
+    }
 
     @Override
     public void beginTransaction() throws CommandException {
@@ -102,7 +112,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             try {
                 silentDisconnect();
             } catch (Exception e) {// NOPMD
-            // This is to ensure we are able to show the original message by exception to to the user
+                // This is to ensure we are able to show the original message by exception to to the user
             }
             throw t;
         }
@@ -110,7 +120,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     @Nonnull
     public Optional<BoltResult> runCypher(@Nonnull String cypher,
-                                               @Nonnull Map<String, Object> queryParams) throws CommandException {
+                                          @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
         StatementResult statementResult = statementRunner.run(cypher, queryParams);
 
@@ -120,18 +130,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
         // calling list()/consume() is what actually executes cypher on the server
         return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
-    }
-
-    /**
-     * Get a driver to connect with
-     *
-     * @param connectionConfig
-     * @param authToken
-     * @return
-     */
-    protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        return GraphDatabase.driver(connectionConfig.driverUrl(),
-                authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
     }
 
     /**
@@ -183,5 +181,12 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             return tx;
         }
         return session;
+    }
+
+    private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
+        Config config = Config.build()
+                .withLogging(new ConsoleLogging(Level.OFF))
+                .withEncryptionLevel(connectionConfig.encryption()).toConfig();
+        return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
     }
 }

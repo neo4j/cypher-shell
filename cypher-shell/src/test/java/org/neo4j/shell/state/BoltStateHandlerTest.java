@@ -5,17 +5,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
+import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
@@ -154,7 +156,7 @@ public class BoltStateHandlerTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Specified username but no password");
 
-        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "user", ""));
+        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "user", "", false));
     }
 
     @Test
@@ -162,7 +164,7 @@ public class BoltStateHandlerTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Specified password but no username");
 
-        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "", "pass"));
+        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "", "pass", false));
     }
 
     @Test
@@ -204,7 +206,7 @@ public class BoltStateHandlerTest {
 
         Session session = boltStateHandler.session;
         assertNotNull(session);
-        assertNotNull(boltStateHandler.fakeDriver);
+        assertNotNull(boltStateHandler.driver);
 
         assertTrue(boltStateHandler.session.isOpen());
 
@@ -215,15 +217,30 @@ public class BoltStateHandlerTest {
         assertFalse(session.isOpen());
     }
 
+    @Test
+    public void turnOffEncryptionIfRequested() throws CommandException {
+        RecordingDriverProvider provider = new RecordingDriverProvider();
+        BoltStateHandler handler = new BoltStateHandler(provider);
+        ConnectionConfig config = new ConnectionConfig("", -1, "", "", false);
+        handler.connect(config);
+        assertEquals(Config.EncryptionLevel.NONE, provider.config.encryptionLevel());
+    }
+
+    @Test
+    public void turnOnEncryptionIfRequested() throws CommandException {
+        RecordingDriverProvider provider = new RecordingDriverProvider();
+        BoltStateHandler handler = new BoltStateHandler(provider);
+        ConnectionConfig config = new ConnectionConfig("", -1, "", "", true);
+        handler.connect(config);
+        assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
+    }
+
     /**
      * Bolt state with faked bolt interactions
      */
     private static class OfflineBoltStateHandler extends BoltStateHandler {
-
-        private final Driver fakeDriver;
-
         public OfflineBoltStateHandler(Driver driver) {
-            this.fakeDriver = driver;
+            super((uri, authToken, config) -> driver);
         }
 
         public Transaction getCurrentTransaction() {
@@ -231,12 +248,17 @@ public class BoltStateHandlerTest {
         }
 
         public void connect() throws CommandException {
-            connect(new ConnectionConfig("", 1, "", ""));
+            connect(new ConnectionConfig("", 1, "", "", false));
         }
+    }
+
+    private class RecordingDriverProvider implements TriFunction<String, AuthToken, Config, Driver> {
+        public Config config;
 
         @Override
-        protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
-            return fakeDriver;
+        public Driver apply(String uri, AuthToken authToken, Config config) {
+            this.config = config;
+            return new FakeDriver();
         }
     }
 }

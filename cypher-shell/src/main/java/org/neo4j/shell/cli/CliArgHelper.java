@@ -3,6 +3,7 @@ package org.neo4j.shell.cli;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
+import net.sourceforge.argparse4j.impl.type.BooleanArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentGroup;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -27,7 +28,6 @@ public class CliArgHelper {
             Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
 
     /**
-     *
      * @param args to parse
      * @return null in case of error, commandline arguments otherwise
      */
@@ -79,6 +79,8 @@ public class CliArgHelper {
         //Set Output format
         cliArgs.setFormat(Format.parse(ns.get("format")));
 
+        cliArgs.setEncryption(ns.getBoolean("encryption"));
+
         return cliArgs;
     }
 
@@ -112,6 +114,11 @@ public class CliArgHelper {
         connGroup.addArgument("-p", "--password")
                 .setDefault("")
                 .help("password to connect with");
+        connGroup.addArgument("--encryption")
+                .help("whether the connection to Neo4j should be encrypted; must be consistent with Neo4j's " +
+                        "configuration")
+                .type(new BooleanArgumentType())
+                .setDefault(true);
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
         failGroup.addArgument("--fail-fast")
@@ -135,6 +142,7 @@ public class CliArgHelper {
         parser.addArgument("cypher")
                 .nargs("?")
                 .help("an optional string of cypher to execute and then exit");
+
         return parser;
     }
 
