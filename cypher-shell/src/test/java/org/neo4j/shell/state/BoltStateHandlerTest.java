@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -14,6 +15,7 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeSession;
 import org.neo4j.shell.test.bolt.FakeTransaction;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
@@ -202,7 +204,7 @@ public class BoltStateHandlerTest {
 
         Session session = boltStateHandler.session;
         assertNotNull(session);
-        assertNotNull(boltStateHandler.driver);
+        assertNotNull(boltStateHandler.fakeDriver);
 
         assertTrue(boltStateHandler.session.isOpen());
 
@@ -217,8 +219,11 @@ public class BoltStateHandlerTest {
      * Bolt state with faked bolt interactions
      */
     private static class OfflineBoltStateHandler extends BoltStateHandler {
+
+        private final Driver fakeDriver;
+
         public OfflineBoltStateHandler(Driver driver) {
-            super((uri, authToken, config) -> driver);
+            this.fakeDriver = driver;
         }
 
         public Transaction getCurrentTransaction() {
@@ -227,6 +232,11 @@ public class BoltStateHandlerTest {
 
         public void connect() throws CommandException {
             connect(new ConnectionConfig("", 1, "", ""));
+        }
+
+        @Override
+        protected Driver getDriver(@Nonnull ConnectionConfig connectionConfig, AuthToken authToken) {
+            return fakeDriver;
         }
     }
 }
