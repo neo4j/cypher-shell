@@ -44,7 +44,7 @@ public class CypherShellIntegrationTest {
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
 
-        shell.connect(new ConnectionConfig("localhost", 7687, "neo4j", "neo", true));
+        shell.connect(new ConnectionConfig("localhost", 7687, "neo4j", "neo"));
     }
 
     @After
@@ -83,7 +83,7 @@ public class CypherShellIntegrationTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
 
-        ConnectionConfig config = new ConnectionConfig("localhost", 7687, "neo4j", "neo", true);
+        ConnectionConfig config = new ConnectionConfig("localhost", 7687, "neo4j", "neo");
         assertTrue("Shell should already be connected", shell.isConnected());
         shell.connect(config);
     }

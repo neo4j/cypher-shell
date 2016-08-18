@@ -184,9 +184,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        Config config = Config.build()
-                .withLogging(new ConsoleLogging(Level.OFF))
-                .withEncryptionLevel(connectionConfig.encryption()).toConfig();
-        return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
+        return driverProvider.apply(connectionConfig.driverUrl(),
+                authToken, Config.build().withLogging(new ConsoleLogging(Level.OFF)).toConfig());
     }
 }

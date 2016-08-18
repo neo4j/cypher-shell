@@ -1,12 +1,11 @@
 package org.neo4j.shell;
 
 import org.junit.Test;
-import org.neo4j.driver.v1.Config;
 
 import static org.junit.Assert.assertEquals;
 
 public class ConnectionConfigTest {
-    ConnectionConfig config = new ConnectionConfig("localhost", 1, "bob", "pass", false);
+    ConnectionConfig config = new ConnectionConfig("localhost", 1, "bob", "pass");
 
     @Test
     public void host() throws Exception {
@@ -33,9 +32,4 @@ public class ConnectionConfigTest {
         assertEquals("bolt://localhost:1", config.driverUrl());
     }
 
-    @Test
-    public void encryption() {
-        assertEquals(Config.EncryptionLevel.REQUIRED, new ConnectionConfig("", -1, "", "", true).encryption());
-        assertEquals(Config.EncryptionLevel.NONE, new ConnectionConfig("", -1, "", "", false).encryption());
-    }
 }

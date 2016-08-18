@@ -1,7 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.v1.Config;
-
 import javax.annotation.Nonnull;
 
 public class ConnectionConfig {
@@ -12,15 +10,12 @@ public class ConnectionConfig {
     private final String username;
     @Nonnull
     private final String password;
-    @Nonnull
-    private final Config.EncryptionLevel encryption;
 
-    public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password, boolean encryption) {
+    public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password) {
         this.host = host;
         this.port = port;
         this.username = username;
         this.password = password;
-        this.encryption = encryption ? Config.EncryptionLevel.REQUIRED: Config.EncryptionLevel.NONE;
     }
 
     public String host() {
@@ -41,9 +36,5 @@ public class ConnectionConfig {
 
     public String driverUrl() {
         return String.format("bolt://%s:%d", host(), port());
-    }
-
-    public Config.EncryptionLevel encryption() {
-        return encryption;
     }
 }
