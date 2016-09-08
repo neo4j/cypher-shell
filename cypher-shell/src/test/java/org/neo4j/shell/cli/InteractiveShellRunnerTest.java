@@ -260,7 +260,7 @@ public class InteractiveShellRunnerTest {
         prompt = runner.getPrompt();
 
         // then
-        assertEquals(".....> ", prompt.plainString());
+        assertEquals("       ", prompt.plainString());
     }
 
     @Test
@@ -274,21 +274,21 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals("  trx> ", prompt.plainString());
+        assertEquals("neo4j# ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("  trx> ", prompt.plainString());
+        assertEquals("neo4j# ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals(".....> ", prompt.plainString());
+        assertEquals("       ", prompt.plainString());
     }
 
     @Test
