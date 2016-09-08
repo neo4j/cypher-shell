@@ -162,4 +162,89 @@ class FakeValue implements Value {
     public Path asPath() {
         throw new Uncoercible(getClass().getSimpleName(), "Path");
     }
+
+    @Override
+    public Value get(String key, Value defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Object get(String key, Object defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Number get(String key, Number defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Entity get(String key, Entity defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Node get(String key, Node defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Path get(String key, Path defaultValue) {
+        return null;
+    }
+
+    @Override
+    public Relationship get(String key, Relationship defaultValue) {
+        return null;
+    }
+
+    @Override
+    public List<Object> get(String key, List<Object> defaultValue) {
+        return null;
+    }
+
+    @Override
+    public <T> List<T> get(String key, List<T> defaultValue, Function<Value, T> mapFunc) {
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> get(String key, Map<String, Object> defaultValue) {
+        return null;
+    }
+
+    @Override
+    public <T> Map<String, T> get(String key, Map<String, T> defaultValue, Function<Value, T> mapFunc) {
+        return null;
+    }
+
+    @Override
+    public int get(String key, int defaultValue) {
+        return 0;
+    }
+
+    @Override
+    public long get(String key, long defaultValue) {
+        return 0;
+    }
+
+    @Override
+    public boolean get(String key, boolean defaultValue) {
+        return false;
+    }
+
+    @Override
+    public String get(String key, String defaultValue) {
+        return null;
+    }
+
+    @Override
+    public float get(String key, float defaultValue) {
+        return 0;
+    }
+
+    @Override
+    public double get(String key, double defaultValue) {
+        return 0;
+    }
 }

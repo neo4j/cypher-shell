@@ -16,6 +16,16 @@ public class FakeSession implements Session {
         return new FakeTransaction();
     }
 
+    @Override
+    public Transaction beginTransaction(String bookmark) {
+        return null;
+    }
+
+    @Override
+    public String lastBookmark() {
+        return null;
+    }
+
     //    @Override
     public void reset() {
     }
@@ -28,6 +38,11 @@ public class FakeSession implements Session {
     @Override
     public void close() {
         open = false;
+    }
+
+    @Override
+    public String server() {
+        return null;
     }
 
     @Override

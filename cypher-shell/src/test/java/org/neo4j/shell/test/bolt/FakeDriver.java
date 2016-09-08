@@ -6,6 +6,11 @@ import org.neo4j.driver.v1.exceptions.Neo4jException;
 
 public class FakeDriver implements Driver {
     @Override
+    public boolean isEncrypted() {
+        return false;
+    }
+
+    @Override
     public Session session() {
         return new FakeSession();
     }

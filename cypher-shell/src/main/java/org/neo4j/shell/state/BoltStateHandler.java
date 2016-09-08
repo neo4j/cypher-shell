@@ -155,13 +155,11 @@ public class BoltStateHandler implements TransactionHandler, Connector {
      */
     public void reset() {
         if (isConnected()) {
-            // TODO once drivers release next milestone
-            // TODO also remove the NOPMD suppression below then
-            //session.reset();
+            session.reset();
 
             // Clear current state
             // Bolt has already rolled back the transaction so we should not close it ourselves
-            if (isTransactionOpen()) {//NOPMD
+            if (isTransactionOpen()) {
                 tx = null;
             }
         }
