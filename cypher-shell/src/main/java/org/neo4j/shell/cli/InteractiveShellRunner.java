@@ -28,8 +28,8 @@ import static org.neo4j.shell.exception.Helper.getFormattedMessage;
  */
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
-    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append(".....> ");
-    private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("  trx> ");
+    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("       ");
+    private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("neo4j# ");
     static final String INTERRUPT_SIGNAL = "INT";
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
