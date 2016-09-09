@@ -6,6 +6,7 @@ import org.neo4j.driver.v1.summary.*;
 import org.neo4j.shell.test.Util;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A fake result summary
@@ -49,5 +50,15 @@ class FakeResultSummary implements ResultSummary {
     @Override
     public List<Notification> notifications() {
         throw new Util.NotImplementedYetException("Not implemented yet");
+    }
+
+    @Override
+    public long resultAvailableAfter(TimeUnit unit) {
+        return 0;
+    }
+
+    @Override
+    public long resultConsumedAfter(TimeUnit unit) {
+        return 0;
     }
 }

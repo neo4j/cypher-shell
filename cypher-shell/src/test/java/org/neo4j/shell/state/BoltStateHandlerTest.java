@@ -4,12 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
@@ -20,16 +15,8 @@ import org.neo4j.shell.test.bolt.FakeTransaction;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class BoltStateHandlerTest {
     @Rule
@@ -182,21 +169,28 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void resetClearsTransactionState() throws Exception {
+    public void resetSessionOnReset() throws Exception {
         // given
+        Session sessionMock = mock(Session.class);
+        StatementResult resultMock = mock(StatementResult.class);
+        Driver driverMock = mock(Driver.class);
+        Transaction transactionMock = mock(Transaction.class);
+
+        when(driverMock.session()).thenReturn(sessionMock);
+        when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
+        when(sessionMock.isOpen()).thenReturn(true);
+        when(sessionMock.beginTransaction()).thenReturn(transactionMock);
+
+        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
+
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
-
-        Transaction tx = boltStateHandler.getCurrentTransaction();
-
-        assertNotNull("Expected a transaction", tx);
 
         // when
         boltStateHandler.reset();
 
         // then
-        assertNull("Transaction state should be reset", boltStateHandler.getCurrentTransaction());
-        assertFalse(boltStateHandler.isTransactionOpen());
+        verify(sessionMock).reset();
     }
 
     @Test
