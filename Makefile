@@ -54,3 +54,5 @@ clean: ## Clean build directories
 	rm -rf out
 	rm -rf tmp
 	./gradlew clean
+
+launch: clean build run
