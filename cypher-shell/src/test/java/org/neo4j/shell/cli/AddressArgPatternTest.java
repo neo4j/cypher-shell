@@ -1,252 +1,113 @@
 package org.neo4j.shell.cli;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.regex.Matcher;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
+@RunWith(Parameterized.class)
 public class AddressArgPatternTest {
+
+    private final String protocol;
+    private final String host;
+    private final String port;
+    private final String username;
+    private final String password;
+    private final String connString;
+
+    public AddressArgPatternTest(String protocol, String host, String port,
+                                 String username, String password) {
+
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+
+        StringBuilder connString = new StringBuilder().append(protocol);
+        // Only expect username/pass in case host is present
+        if (!host.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
+            connString.append(username).append(":").append(password).append("@");
+        }
+        if (!host.isEmpty()) {
+            connString.append(host);
+        }
+        if (!port.isEmpty()) {
+            connString.append(":").append(port);
+        }
+        this.connString = connString.toString();
+    }
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> parameters() {
+        Collection<Object[]> data = new ArrayList<>();
+        for (final String protocol : getProtocols()) {
+            for (final String username : getUsernames()) {
+                for (final String password : getPasswords()) {
+                    for (final String host : getHosts()) {
+                        for (final String port : getPorts()) {
+                            data.add(new String[]{protocol, host, port, username, password});
+                        }
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+    private static String[] getPorts() {
+        return new String[]{"", "1", "23642"};
+    }
+
+    private static String[] getHosts() {
+        return new String[]{"", "localhost", "127.0.0.1", "ec2-54-73-70-121.eu-west-1.compute.amazonaws.com"};
+    }
+
+    private static String[] getPasswords() {
+        return new String[]{"pass1", "p@assw0rd"};
+    }
+
+    private static String[] getUsernames() {
+        return new String[]{"", "bob1"};
+    }
+
+    private static String[] getProtocols() {
+        return new String[]{"", "bolt://"};
+    }
 
     @Test
     public void testUserPassProtocolHostPort() {
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("   bolt://bob1:pass@localhost:123");
-        assertTrue("Expected a match: " + "   bolt://bob1:pass@:123", m.matches());
-        assertEquals("123", m.group("port"));
-        assertEquals("bob1", m.group("username"));
-        assertEquals("pass", m.group("password"));
-        assertEquals("bolt://", m.group("protocol"));
-        assertEquals("localhost", m.group("host"));
-
-        Matcher m1 = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1  ");
-        assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1  ", m1.matches());
-        assertEquals("1", m1.group("port"));
-        assertEquals("bob1", m1.group("username"));
-        assertEquals("h@rdp@ss:w0rd", m1.group("password"));
-        assertEquals("bolt://", m1.group("protocol"));
-        assertEquals("99.99.99.99", m1.group("host"));
-
-        Matcher m2 = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("bolt://bob1:h@rdp@ss:w0rd@99.99.99.99:1");
-        assertTrue("Expected a match: " + "bolt://bob1h@rdp@ss:w0rd1", m2.matches());
-        assertEquals("1", m2.group("port"));
-        assertEquals("bob1", m2.group("username"));
-        assertEquals("h@rdp@ss:w0rd", m2.group("password"));
-        assertEquals("bolt://", m2.group("protocol"));
-        assertEquals("99.99.99.99", m2.group("host"));
-
-    }
-
-    @Test
-    public void testHosts() {
-        verifySingleHost("localhost");
-        verifySingleHost("127.0.0.1");
-
-        verifySingleHost("   localhost   ");
-        verifySingleHost("   127.0.0.1  ");
-    }
-
-    @Test
-    public void testProtocolHosts() {
-        verifyProtocolHost("bolt://", "localhost");
-        verifyProtocolHost("bolt://", "127.0.0.1");
-
-        verifyProtocolHost("     bolt://", "localhost    ");
-        verifyProtocolHost("    bolt://", "127.0.0.1    ");
-    }
-
-    @Test
-    public void testPorts() {
-        verifySinglePort(":1");
-        verifySinglePort(":1234");
-
-
-        verifySinglePort("   :12   ");
-        verifySinglePort("   :64321  ");
-    }
-
-    @Test
-    public void testProtocolPorts() {
-        verifyProtocolPort("bolt://", "1");
-        verifyProtocolPort("bolt://", "1234");
-
-        verifyProtocolPort("   bolt://", "12   ");
-        verifyProtocolPort("   bolt://", "64321  ");
-    }
-
-    @Test
-    public void testHostnamePort() {
-        verifyHostPort("localhost", "1");
-        verifyHostPort("   127.0.0.1", "12345  ");
-        verifyHostPort("   localhost", "1");
-        verifyHostPort("127.0.0.1", "12345  ");
-    }
-
-    @Test
-    public void testProtocolHostnamePort() {
-        verifyProtocolHostPort("bolt://", "localhost", "1");
-        verifyProtocolHostPort("   bolt://", "127.0.0.1", "12345  ");
-        verifyProtocolHostPort("   bolt://", "localhost", "1");
-        verifyProtocolHostPort("bolt://", "127.0.0.1", "12345  ");
-    }
-
-    @Test
-    public void testUserPassHost() {
-        verifyUserPassHost("   bob1", "pass", "neo4j.com");
-        verifyUserPassHost("   bob1", "h@rdp@ss:w0rd", "neo4j.com");
-        verifyUserPassHost("   bob1", "h@rdp@ss:w0rd", "neo4j.com");
-    }
-
-    @Test
-    public void testUserPassProtocolHost() {
-        verifyUserPassProtocolHost("    bolt://", "bob1", "pass", "neo4j.com");
-        verifyUserPassProtocolHost("   bolt://", "bob1", "h@rdp@ss:w0rd", "neo4j.com");
-        verifyUserPassProtocolHost("   bolt://", "bob1", "h@rdp@ss:w0rd", "neo4j.com");
-    }
-
-    @Test
-    public void testUserPassPort() {
-        verifyUserPassPort("   bob1", "pass", "123");
-        verifyUserPassPort("bob1", "h@rdp@ss:w0rd", "1  ");
-    }
-
-    @Test
-    public void testUserPassProtocolPort() {
-        verifyUserPassProtocolPort("   bolt://", "bob1", "pass", "123");
-        verifyUserPassProtocolPort("bolt://", "bob1", "h@rdp@ss:w0rd", "1  ");
-    }
-
-    @Test
-    public void testUserPassHostPort() {
-        verifyUserPassHostPort("bob1", "pass", "localhost", "123  ");
-        verifyUserPassHostPort("bob1", "h@rdp@ss:w0rd", "99.99.99.99", "1");
-        verifyUserPassHostPort("bob1", "h@rdp@ss:w0rd", "99.99.99.99", "1");
-    }
-
-    private void verifyUserPassHostPort(String user, String pass, String host, String port) {
-        String args = user + ":" + pass + "@" + host + ":" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-    }
-
-    private void verifyUserPassPort(String user, String pass, String port) {
-        String args = user + ":" + pass + "@:" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-        assertNull("Did not expect match for host group", m.group("host"));
-    }
-
-    private void verifyUserPassProtocolPort(String protocol, String user, String pass, String port) {
-        String args = protocol + user + ":" + pass + "@" + ":" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-        assertEquals(protocol.trim(), m.group("protocol"));
-
-        assertNull("Did not expect match for host group", m.group("host"));
-    }
-
-    private void verifyUserPassProtocolHost(String protocol, String user, String pass, String host) {
-        String args = protocol + user + ":" + pass + "@" + host;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-        assertEquals(protocol.trim(), m.group("protocol"));
-
-        assertNull("Did not expect match for port group", m.group("port"));
-    }
-
-    private void verifyUserPassHost(String user, String pass, String host) {
-        String args = user + ":" + pass + "@" + host;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(user.trim(), m.group("username"));
-        assertEquals(pass.trim(), m.group("password"));
-
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-        assertNull("Did not expect match for port group", m.group("port"));
-    }
-
-    private void verifyProtocolHostPort(String protocol, String host, String port) {
-        String args = protocol + host + ":" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(protocol.trim(), m.group("protocol"));
-
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-    }
-
-    private void verifyHostPort(String host, String port) {
-        String args = host + ":" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(host.trim(), m.group("host"));
-        assertEquals(port.trim(), m.group("port"));
-
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-    }
-
-    private void verifyProtocolPort(String protocol, String port) {
-        String args = protocol + ":" + port;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(port.trim(), m.group("port"));
-        assertEquals(protocol.trim(), m.group("protocol"));
-
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-        assertNull("Did not expect match for host group", m.group("host"));
-    }
-
-    private void verifySinglePort(String args) {
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(args.trim().substring(1), m.group("port"));
-
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-        assertNull("Did not expect match for host group", m.group("host"));
-    }
-
-    private void verifySingleHost(String args) {
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(args.trim(), m.group("host"));
-        assertNull("Did not expect match for protocol group", m.group("protocol"));
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-        assertNull("Did not expect match for port group", m.group("port"));
-    }
-
-    private void verifyProtocolHost(String protocol, String host) {
-        String args = protocol + host;
-        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher(args);
-        assertTrue("Expected a match: " + args, m.matches());
-        assertEquals(protocol.trim(), m.group("protocol"));
-        assertEquals(host.trim(), m.group("host"));
-        assertNull("Did not expect match for password group", m.group("password"));
-        assertNull("Did not expect match for username group", m.group("username"));
-        assertNull("Did not expect match for port group", m.group("port"));
+        Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("   " + connString + "  ");
+        assertTrue("Expected a match: " + connString, m.matches());
+        if (host.isEmpty()) {
+            assertNull("Host should have been null", m.group("host"));
+        } else {
+            assertEquals("Mismatched host", host, m.group("host"));
+        }
+        if (port.isEmpty()) {
+            assertNull("Port should have been null", m.group("port"));
+        } else {
+            assertEquals("Mismatched port", port, m.group("port"));
+        }
+        if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
+            assertNull("Username should have been null", m.group("username"));
+            assertNull("Password should have been null", m.group("password"));
+        } else {
+            assertEquals("Mismatched username", username, m.group("username"));
+            assertEquals("Mismatched password", password, m.group("password"));
+        }
+        if (protocol.isEmpty()) {
+            assertNull("Protocol should have been null", m.group("protocol"));
+        } else {
+            assertEquals("Mismatched protocol", protocol, m.group("protocol"));
+        }
     }
 }
