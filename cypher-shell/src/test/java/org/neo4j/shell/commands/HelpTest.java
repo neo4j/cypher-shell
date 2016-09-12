@@ -15,10 +15,7 @@ import java.util.List;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class HelpTest {
 
@@ -69,6 +66,8 @@ public class HelpTest {
         verify(logger).printOut("  @|BOLD bobby|@ description for bobby");
         verify(logger).printOut("\nFor help on a specific command type:");
         verify(logger).printOut("    :help@|BOLD  command|@\n");
+        verify(logger).printOut("\nFor help on cypher please visit:");
+        verify(logger).printOut("    " + Help.CYPHER_REFCARD_LINK + "\n");
     }
 
     @Test
@@ -81,7 +80,7 @@ public class HelpTest {
 
         // then
         verify(logger).printOut("\nusage: @|BOLD bob|@ usage for bob\n"
-                               + "\nhelp for bob\n");
+                + "\nhelp for bob\n");
     }
 
     @Test

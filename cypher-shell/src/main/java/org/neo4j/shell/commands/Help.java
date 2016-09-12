@@ -17,6 +17,7 @@ public class Help implements Command {
     public static final String COMMAND_NAME = ":help";
     private final Logger logger;
     private final CommandHelper commandHelper;
+    public static String CYPHER_REFCARD_LINK = "https://neo4j.com/docs/developer-manual/3.1-beta/cypher/";
 
     public Help(@Nonnull final Logger shell, @Nonnull final CommandHelper commandHelper) {
         this.logger = shell;
@@ -95,21 +96,26 @@ public class Help implements Command {
 
         allCommands.stream().forEach(cmd -> logger.printOut(
                 AnsiFormattedText.from("  ")
-                                 .bold().append(String.format("%-" + leftColWidth + "s", cmd.getName()))
-                                 .boldOff().append(" " + cmd.getDescription())
-                                 .formattedString()));
+                        .bold().append(String.format("%-" + leftColWidth + "s", cmd.getName()))
+                        .boldOff().append(" " + cmd.getDescription())
+                        .formattedString()));
 
         logger.printOut("\nFor help on a specific command type:");
         logger.printOut(AnsiFormattedText.from("    ")
-                                         .append(COMMAND_NAME)
-                                         .bold().append(" command")
-                                         .boldOff().append("\n").formattedString());
+                .append(COMMAND_NAME)
+                .bold().append(" command")
+                .boldOff().append("\n").formattedString());
+
+        logger.printOut("\nFor help on cypher please visit:");
+        logger.printOut(AnsiFormattedText.from("    ")
+                                         .append(CYPHER_REFCARD_LINK)
+                .append("\n").formattedString());
     }
 
     private int longestCmdLength(List<Command> allCommands) {
         String longestCommand = allCommands.stream()
-                                        .map(Command::getName)
-                                        .reduce("", (s1, s2) -> s1.length() > s2.length() ? s1 : s2);
+                .map(Command::getName)
+                .reduce("", (s1, s2) -> s1.length() > s2.length() ? s1 : s2);
         return longestCommand.length();
     }
 }
