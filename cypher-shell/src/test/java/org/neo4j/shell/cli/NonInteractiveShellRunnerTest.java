@@ -16,7 +16,6 @@ import org.neo4j.shell.parser.StatementParser;
 import java.io.ByteArrayInputStream;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
@@ -33,11 +32,13 @@ public class NonInteractiveShellRunnerTest {
     private Logger logger = mock(Logger.class);
     private StatementExecuter cmdExecuter = mock(StatementExecuter.class);
     private StatementParser statementParser;
+    private ClientException badLineError;
 
     @Before
     public void setup() throws CommandException {
         statementParser = new ShellStatementParser();
-        doThrow(new ClientException("Found a bad line")).when(cmdExecuter).execute(contains("bad"));
+        badLineError = new ClientException("Found a bad line");
+        doThrow(badLineError).when(cmdExecuter).execute(contains("bad"));
         doReturn(System.out).when(logger).getOutputStream();
     }
 
@@ -71,7 +72,7 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
-        verify(logger).printError(eq("@|RED Found a bad line|@"));
+        verify(logger).printError(badLineError);
     }
 
     @Test
@@ -89,14 +90,15 @@ public class NonInteractiveShellRunnerTest {
         int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
-        verify(logger, times(2)).printError(eq("@|RED Found a bad line|@"));
+        verify(logger, times(2)).printError(badLineError);
     }
 
     @Test
     public void runUntilEndExitsImmediatelyOnParseError() throws Exception {
         // given
         StatementParser statementParser = mock(StatementParser.class);
-        doThrow(new RuntimeException("BOOM")).when(statementParser).parseMoreText(anyString());
+        RuntimeException boom = new RuntimeException("BOOM");
+        doThrow(boom).when(statementParser).parseMoreText(anyString());
 
         String input =
                 "good1;\n" +
@@ -113,7 +115,7 @@ public class NonInteractiveShellRunnerTest {
 
         // then
         assertEquals(1, code);
-        verify(logger).printError("@|RED BOOM|@");
+        verify(logger).printError(boom);
     }
 
     @Test

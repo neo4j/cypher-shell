@@ -56,6 +56,7 @@ public class InteractiveShellRunnerTest {
     private File historyFile;
     private StatementParser statementParser;
     private TransactionHandler txHandler;
+    private ClientException badLineError;
 
     @Before
     public void setup() throws Exception {
@@ -64,7 +65,8 @@ public class InteractiveShellRunnerTest {
         cmdExecuter = mock(StatementExecuter.class);
         txHandler = mock(TransactionHandler.class);
         historyFile = temp.newFile();
-        doThrow(new ClientException("Found a bad line")).when(cmdExecuter).execute(contains("bad"));
+        badLineError = new ClientException("Found a bad line");
+        doThrow(badLineError).when(cmdExecuter).execute(contains("bad"));
         doReturn(System.out).when(logger).getOutputStream();
     }
 
@@ -102,7 +104,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\ngood3;");
         verifyNoMoreInteractions(cmdExecuter);
 
-        verify(logger, times(2)).printError("@|RED Found a bad line|@");
+        verify(logger, times(2)).printError(badLineError);
     }
 
     @Test
@@ -128,9 +130,10 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\nexit;");
         verifyNoMoreInteractions(cmdExecuter);
 
-        verify(logger).printError("@|RED Found a bad line|@");
+        verify(logger).printError(badLineError);
     }
 
+    @Test
     public void historyIsRecorded() throws Exception {
         // given
 

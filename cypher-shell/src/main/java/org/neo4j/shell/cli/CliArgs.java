@@ -13,6 +13,7 @@ public class CliArgs {
     private Format format = Format.VERBOSE;
     private Optional<String> cypher = Optional.empty();
     private boolean encryption;
+    private boolean debugMode;
 
     /**
      * Set the host to the primary value, or if null, the fallback value.
@@ -70,6 +71,13 @@ public class CliArgs {
         this.encryption = encryption;
     }
 
+    /**
+     * Enable/disable debug mode
+     */
+    void setDebugMode(boolean enabled) {
+        this.debugMode = enabled;
+    }
+
     @Nonnull
     public String getHost() {
         return host;
@@ -107,5 +115,9 @@ public class CliArgs {
 
     public boolean getEncryption() {
         return encryption;
+    }
+
+    public boolean getDebugMode() {
+        return debugMode;
     }
 }
