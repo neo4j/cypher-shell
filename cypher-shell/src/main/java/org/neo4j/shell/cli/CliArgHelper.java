@@ -25,7 +25,7 @@ import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
 public class CliArgHelper {
 
     static final Pattern ADDRESS_ARG_PATTERN =
-            Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[\\d\\.\\w]+)?(:(?<port>\\d+))?\\s*");
+            Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[a-zA-Z\\d\\-\\.]+)?(:(?<port>\\d+))?\\s*");
 
     /**
      * @param args to parse
