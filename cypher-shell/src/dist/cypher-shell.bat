@@ -69,11 +69,12 @@ set CMD_LINE_ARGS=%$
 :execute
 @rem Setup the command line
 
-dir cypher-shell-*-all.jar /b/s>temp
-set /p JARPATH=<temp
+SETLOCAL EnableDelayedExpansion
+SET CYPHER_SHELL_JAR=
+FOR /f "delims=" %%a in ('dir "%NEO4J_HOME%\cypher-shell-*-all.jar" /s/b') do set CYPHER_SHELL_JAR=!CYPHER_SHELL_JAR!%%a
 
 @rem Execute cypher-shell
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CYPHER_SHELL_OPTS%  -jar "%JARPATH%" %CMD_LINE_ARGS%
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CYPHER_SHELL_OPTS%  -jar "%CYPHER_SHELL_JAR%" %CMD_LINE_ARGS%
 
 :end
 @rem End local scope for the variables with windows NT shell
