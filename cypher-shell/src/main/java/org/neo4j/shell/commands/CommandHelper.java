@@ -34,7 +34,7 @@ public class CommandHelper {
         registerCommand(new Begin(transactionHandler));
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));
-        registerCommand(new Set(variableHolder));
+        registerCommand(new Param(variableHolder));
         registerCommand(new Params(logger, variableHolder));
     }
 

@@ -13,7 +13,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class SetTest {
+public class ParamTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -22,7 +22,7 @@ public class SetTest {
 
     @Before
     public void setup() {
-        this.cmd = new Set(mockShell);
+        this.cmd = new Param(mockShell);
     }
 
     @Test

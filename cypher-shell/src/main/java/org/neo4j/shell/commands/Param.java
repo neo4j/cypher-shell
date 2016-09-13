@@ -14,13 +14,13 @@ import java.util.regex.Pattern;
 /**
  * This command sets a variable to a name, for use as query parameter.
  */
-public class Set implements Command {
+public class Param implements Command {
     // Match arguments such as "(key) (value with possible spaces)" where key and value are any strings
     private static final Pattern argPattern = Pattern.compile("^\\s*(?<key>[^\\s]+)\\s+(?<value>.+)$");
-    public static final String COMMAND_NAME = ":set";
+    public static final String COMMAND_NAME = ":param";
     private final VariableHolder variableHolder;
 
-    public Set(@Nonnull final VariableHolder variableHolder) {
+    public Param(@Nonnull final VariableHolder variableHolder) {
         this.variableHolder = variableHolder;
     }
 
