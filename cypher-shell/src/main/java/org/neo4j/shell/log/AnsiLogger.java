@@ -28,10 +28,14 @@ public class AnsiLogger implements Logger {
         this.out = out;
         this.err = err;
 
-        if (isOutputInteractive()) {
-            Ansi.setEnabled(true);
-            AnsiConsole.systemInstall();
-        } else {
+        try {
+            if (isOutputInteractive()) {
+                Ansi.setEnabled(true);
+                AnsiConsole.systemInstall();
+            } else {
+                Ansi.setEnabled(false);
+            }
+        } catch (UnsatisfiedLinkError t) {
             Ansi.setEnabled(false);
         }
     }
@@ -71,6 +75,7 @@ public class AnsiLogger implements Logger {
 
     /**
      * @return true if the shell is outputting to a TTY, false otherwise (e.g., we are writing to a file)
+     * @throws java.lang.UnsatisfiedLinkError if system is not using libc (like Alpine Linux)
      */
     private static boolean isOutputInteractive() {
         return 1 == isatty(STDOUT_FILENO) && 1 == isatty(STDERR_FILENO);

@@ -50,9 +50,18 @@ public interface ShellRunner {
     }
 
     /**
+     * Checks if STDIN is a TTY. In case TTY checking is not possible (lack of libc), then the check falls back to
+     * the built in Java {@link System#console()} which checks if EITHER STDIN or STDOUT has been redirected.
+     *
      * @return true if the shell reading from a TTY, false otherwise (e.g., we are reading from a file)
      */
     static boolean isInputInteractive() {
-        return 1 == isatty(STDIN_FILENO);
+        try {
+            return 1 == isatty(STDIN_FILENO);
+        } catch (NoClassDefFoundError e) {
+            // system is not using libc (like Alpine Linux)
+            // Fallback to checking stdin OR stdout
+            return System.console() != null;
+        }
     }
 }
