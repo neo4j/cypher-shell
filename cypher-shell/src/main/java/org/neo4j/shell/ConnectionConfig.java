@@ -15,12 +15,25 @@ public class ConnectionConfig {
     @Nonnull
     private final Config.EncryptionLevel encryption;
 
-    public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password, boolean encryption) {
+    public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password,
+                            boolean encryption) {
         this.host = host;
         this.port = port;
-        this.username = username;
-        this.password = password;
-        this.encryption = encryption ? Config.EncryptionLevel.REQUIRED: Config.EncryptionLevel.NONE;
+        this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
+        this.password = fallbackToEnvVariable(password, "NEO4J_PASSWORD");
+        this.encryption = encryption ? Config.EncryptionLevel.REQUIRED : Config.EncryptionLevel.NONE;
+    }
+
+    /**
+     * @return preferredValue if not empty, else the contents of the fallback environment variable
+     */
+    @Nonnull
+    static String fallbackToEnvVariable(@Nonnull String preferredValue, @Nonnull String fallbackEnvVar) {
+        String result = System.getenv(fallbackEnvVar);
+        if (result == null || !preferredValue.isEmpty()) {
+            result = preferredValue;
+        }
+        return result;
     }
 
     public String host() {

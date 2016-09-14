@@ -113,10 +113,10 @@ public class CliArgHelper {
                 .setDefault("localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
-                .help("username to connect as");
+                .help("username to connect as. Can also be specified using environment variable NEO4J_USERNAME");
         connGroup.addArgument("-p", "--password")
                 .setDefault("")
-                .help("password to connect with");
+                .help("password to connect with. Can also be specified using environment variable NEO4J_PASSWORD");
         connGroup.addArgument("--encryption")
                 .help("whether the connection to Neo4j should be encrypted; must be consistent with Neo4j's " +
                         "configuration")
