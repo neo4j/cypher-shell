@@ -139,6 +139,51 @@ public class PrettyPrinterTest {
     }
 
     @Test
+    public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
+        BoltResult result = mock(BoltResult.class);
+
+        Record record = mock(Record.class);
+        Value relVal = mock(Value.class);
+        Value nodeVal = mock(Value.class);
+
+        Relationship relationship = mock(Relationship.class);
+        HashMap<String, Object> relProp = new HashMap<>();
+        relProp.put("prop1", "\"prop1, value\"");
+        relProp.put("prop2", "prop2_value");
+
+        Node node = mock(Node.class);
+        HashMap<String, Object> nodeProp = new HashMap<>();
+        nodeProp.put("prop1", "\"prop1:value\"");
+        nodeProp.put("prop2", "\"\"");
+
+
+        when(relVal.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.RELATIONSHIP());
+        when(nodeVal.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.NODE());
+
+        when(relVal.asRelationship()).thenReturn(relationship);
+        when(relationship.type()).thenReturn("RELATIONSHIP,TYPE");
+        when(relationship.asMap(anyObject())).thenReturn(unmodifiableMap(relProp));
+
+
+        when(nodeVal.asNode()).thenReturn(node);
+        when(node.labels()).thenReturn(asList("label 1", "label2"));
+        when(node.asMap(anyObject())).thenReturn(unmodifiableMap(nodeProp));
+
+
+        when(record.keys()).thenReturn(asList("rel", "node"));
+        when(record.values()).thenReturn(asList(relVal, nodeVal));
+
+        when(result.getRecords()).thenReturn(asList(record));
+
+        // when
+        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+
+        // then
+        assertThat(actual, is("rel, node\n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
+                "(:`label 1`:label2 {prop2: \"\", prop1: \"prop1:value\"})"));
+    }
+
+    @Test
     public void prettyPrintPaths() throws Exception {
         // given
         BoltResult result = mock(BoltResult.class);
