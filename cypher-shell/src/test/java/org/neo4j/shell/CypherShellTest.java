@@ -155,7 +155,7 @@ public class CypherShellTest {
     public void shouldParseCommandsAndArgs() {
         assertTrue(offlineTestShell.getCommandExecutable(":help").isPresent());
         assertTrue(offlineTestShell.getCommandExecutable(":help :set").isPresent());
-        assertTrue(offlineTestShell.getCommandExecutable(":set \"A piece of string\"").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(":param \"A piece of string\"").isPresent());
     }
 
     @Test
