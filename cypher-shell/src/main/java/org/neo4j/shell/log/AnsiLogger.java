@@ -2,6 +2,7 @@ package org.neo4j.shell.log;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.AnsiFormattedException;
 
@@ -123,6 +124,13 @@ public class AnsiLogger implements Logger {
 
             if (cause instanceof AnsiFormattedException) {
                 msg = msg.append(((AnsiFormattedException) cause).getFormattedMessage());
+            } else if (cause instanceof ClientException &&
+                    cause.getMessage() != null && cause.getMessage().contains("Missing username")) {
+                // Username and password was not specified
+                msg = msg.append(cause.getMessage())
+                         .append("\nPlease specify --username, and optionally --password, as argument(s)")
+                         .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
+                         .append("\nSee --help for more info.");
             } else {
                 if (cause.getMessage() != null) {
                     msg = msg.append(cause.getMessage());
