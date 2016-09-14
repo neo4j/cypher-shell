@@ -10,7 +10,10 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +21,9 @@ import java.util.stream.Collectors;
  */
 public class PrettyPrinter {
 
-    public static final String COMMA_SEPARATOR = ",";
+    public static final String COMMA_SEPARATOR = ", ";
+    private static final String COLON_SEPARATOR = ": ";
+    public static final String COLON = ":";
     private StatisticsCollector statisticsCollector;
 
     public PrettyPrinter(@Nonnull Format format) {
@@ -26,7 +31,6 @@ public class PrettyPrinter {
     }
 
     public String format(@Nonnull final BoltResult result) {
-        // TODO: 6/22/16 Format nicely
         StringBuilder sb = new StringBuilder();
         List<Record> records = result.getRecords();
         if (!records.isEmpty()) {
@@ -101,32 +105,44 @@ public class PrettyPrinter {
     }
 
     private static String toString(Map<String, Object> map) {
+        if (map.isEmpty()) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder("{");
         sb.append(
                 map.keySet().stream()
-                        .map(e -> e + ": " + map.get(e))
+                        .map(e -> e + COLON_SEPARATOR + map.get(e))
                         .collect(Collectors.joining(COMMA_SEPARATOR)));
         return sb.append("}").toString();
     }
 
     private static String toString(Relationship relationship) {
-        Map<String, Object> map = new HashMap<>();
-        String type = relationship.type();
-        map.put("type", type);
-        map.putAll(relationship.asMap(PrettyPrinter::toString));
 
-        return toString(map);
+        String type = COLON + relationship.type();
+
+        List<String> relationshipAsString = new ArrayList<>();
+        relationshipAsString.add(type);
+        relationshipAsString.add(toString(relationship.asMap(PrettyPrinter::toString)));
+
+        return "[" +
+                relationshipAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(" ")) +
+                "]";
     }
 
     private static String toString(@Nonnull final Node node) {
-        Map<String, Object> map = new HashMap<>();
-        map.putAll(node.asMap(PrettyPrinter::toString));
+        StringBuilder sb = new StringBuilder();
+        node.labels().forEach(label -> sb.append(COLON).append(label));
 
-        Iterable<String> labels = node.labels();
-        List<String> list = new ArrayList<>();
-        labels.forEach(list::add);
-        map.put("labels", toString(list));
+        List<String> nodeAsString = new ArrayList<>();
+        nodeAsString.add(sb.toString());
+        nodeAsString.add(toString(node.asMap(PrettyPrinter::toString)));
 
-        return toString(map);
+        return "(" +
+                nodeAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(" ")) +
+                ")";
+    }
+
+    private static boolean isNotBlank(String string) {
+        return string != null && !string.trim().isEmpty();
     }
 }

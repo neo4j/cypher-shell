@@ -75,7 +75,8 @@ public class CypherShellIntegrationTest {
         verify(logger, times(1)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(0), is("jane\n{name: \"Jane Smith\",labels: [TestPerson]}\nAdded 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat(result.get(0), is("jane\n(:TestPerson {name: \"Jane Smith\"})\n" +
+                "Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test
@@ -105,7 +106,7 @@ public class CypherShellIntegrationTest {
         verify(logger, times(3)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(2), is("n\n{name: \"Jane Smith\",labels: [TestPerson]}"));
+        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
     }
 
     @Test
@@ -121,7 +122,7 @@ public class CypherShellIntegrationTest {
         verify(logger, times(2)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(1), is("n\n{name: \"Joe Smith\",labels: [TestPerson]}"));
+        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Joe Smith\"})"));
     }
 
     @Test

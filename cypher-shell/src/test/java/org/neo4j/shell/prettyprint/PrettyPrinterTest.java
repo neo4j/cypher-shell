@@ -72,7 +72,7 @@ public class PrettyPrinterTest {
         String actual = new PrettyPrinter(Format.PLAIN).format(result);
 
         // then
-        assertThat(actual, is("col1,col2\n[val1_1,val1_2],[val2_1]\n[val2_1]"));
+        assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]"));
     }
 
     @Test
@@ -103,8 +103,8 @@ public class PrettyPrinterTest {
         String actual = new PrettyPrinter(Format.PLAIN).format(result);
 
         // then
-        assertThat(actual, is("col1,col2\n" +
-                "{prop2: prop2_value,prop1: prop1_value,labels: [label1,label2]}"));
+        assertThat(actual, is("col1, col2\n" +
+                "(:label1:label2 {prop2: prop2_value, prop1: prop1_value})"));
     }
 
     @Test
@@ -135,7 +135,7 @@ public class PrettyPrinterTest {
         String actual = new PrettyPrinter(Format.PLAIN).format(result);
 
         // then
-        assertThat(actual, is("rel\n{prop2: prop2_value,prop1: prop1_value,type: RELATIONSHIP_TYPE}"));
+        assertThat(actual, is("rel\n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]"));
     }
 
     @Test
@@ -192,10 +192,12 @@ public class PrettyPrinterTest {
 
         // then
         assertThat(actual, is("path\n" +
-                "[{prop1: prop1_value,labels: [start]}," +
-                "{type: RELATIONSHIP_TYPE}," +
-                "{labels: [middle]}," +
-                "{type: RELATIONSHIP_TYPE}," +
-                "{prop2: prop2_value,labels: [end]}]"));
+                "[" +
+                "(:start {prop1: prop1_value}), " +
+                "[:RELATIONSHIP_TYPE], " +
+                "(:middle), " +
+                "[:RELATIONSHIP_TYPE], " +
+                "(:end {prop2: prop2_value})" +
+                "]"));
     }
 }
