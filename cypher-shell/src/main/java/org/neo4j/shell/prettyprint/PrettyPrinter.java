@@ -21,9 +21,10 @@ import java.util.stream.Collectors;
  */
 public class PrettyPrinter {
 
-    public static final String COMMA_SEPARATOR = ", ";
+    private static final String COMMA_SEPARATOR = ", ";
     private static final String COLON_SEPARATOR = ": ";
-    public static final String COLON = ":";
+    private static final String COLON = ":";
+    private static final String SPACE = " ";
     private StatisticsCollector statisticsCollector;
 
     public PrettyPrinter(@Nonnull Format format) {
@@ -34,7 +35,6 @@ public class PrettyPrinter {
         StringBuilder sb = new StringBuilder();
         List<Record> records = result.getRecords();
         if (!records.isEmpty()) {
-            // TODO respect format
             sb.append(records.get(0).keys().stream().collect(Collectors.joining(COMMA_SEPARATOR)));
             sb.append("\n");
             sb.append(records.stream().map(PrettyPrinter::format).collect(Collectors.joining("\n")));
@@ -110,8 +110,8 @@ public class PrettyPrinter {
         }
         StringBuilder sb = new StringBuilder("{");
         sb.append(
-                map.keySet().stream()
-                        .map(e -> e + COLON_SEPARATOR + map.get(e))
+                map.entrySet().stream()
+                        .map(e -> e.getKey() + COLON_SEPARATOR + e.getValue())
                         .collect(Collectors.joining(COMMA_SEPARATOR)));
         return sb.append("}").toString();
     }
@@ -125,7 +125,7 @@ public class PrettyPrinter {
         relationshipAsString.add(toString(relationship.asMap(PrettyPrinter::toString)));
 
         return "[" +
-                relationshipAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(" ")) +
+                relationshipAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(SPACE)) +
                 "]";
     }
 
@@ -138,7 +138,7 @@ public class PrettyPrinter {
         nodeAsString.add(toString(node.asMap(PrettyPrinter::toString)));
 
         return "(" +
-                nodeAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(" ")) +
+                nodeAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(SPACE)) +
                 ")";
     }
 
