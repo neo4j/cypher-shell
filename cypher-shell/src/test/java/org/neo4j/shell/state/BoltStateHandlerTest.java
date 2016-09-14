@@ -139,22 +139,6 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void onlyUserWillThrow() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Specified username but no password");
-
-        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "user", "", false));
-    }
-
-    @Test
-    public void onlyPassWillThrow() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Specified password but no username");
-
-        boltStateHandler.connect(new ConnectionConfig("localhost", 1, "", "pass", false));
-    }
-
-    @Test
     public void canOnlyConnectOnce() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");

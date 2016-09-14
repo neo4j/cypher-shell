@@ -93,14 +93,10 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
 
         final AuthToken authToken;
-        if (connectionConfig.username().isEmpty() && connectionConfig.password().isEmpty()) {
-            authToken = null;
-        } else if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
+        if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
             authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
-        } else if (connectionConfig.username().isEmpty()) {
-            throw new CommandException("Specified password but no username");
         } else {
-            throw new CommandException("Specified username but no password");
+            authToken = null;
         }
 
         try {

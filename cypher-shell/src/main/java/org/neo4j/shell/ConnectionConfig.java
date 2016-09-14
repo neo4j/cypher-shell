@@ -9,11 +9,11 @@ public class ConnectionConfig {
     private final String host;
     private final int port;
     @Nonnull
-    private final String username;
-    @Nonnull
-    private final String password;
-    @Nonnull
     private final Config.EncryptionLevel encryption;
+    @Nonnull
+    private String username;
+    @Nonnull
+    private String password;
 
     public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password,
                             boolean encryption) {
@@ -58,5 +58,13 @@ public class ConnectionConfig {
 
     public Config.EncryptionLevel encryption() {
         return encryption;
+    }
+
+    public void setUsername(@Nonnull String username) {
+        this.username = username;
+    }
+
+    public void setPassword(@Nonnull String password) {
+        this.password = password;
     }
 }
