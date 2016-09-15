@@ -237,12 +237,7 @@ public class PrettyPrinterTest {
 
         // then
         assertThat(actual, is("path\n" +
-                "[" +
-                "(:start {prop1: prop1_value}), " +
-                "[:RELATIONSHIP_TYPE], " +
-                "(:middle), " +
-                "[:RELATIONSHIP_TYPE], " +
-                "(:end {prop2: prop2_value})" +
-                "]"));
+                "(:start {prop1: prop1_value})-[:RELATIONSHIP_TYPE]->" +
+                "(:middle)-[:RELATIONSHIP_TYPE]->(:end {prop2: prop2_value})"));
     }
 }

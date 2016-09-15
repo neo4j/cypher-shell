@@ -93,13 +93,13 @@ public class PrettyPrinter {
 
         path.iterator().forEachRemaining(segment -> {
             if (segment.relationship() != null) {
-                list.add(relationshipAsString(segment.relationship()));
+                list.add("-" + relationshipAsString(segment.relationship()) + "->");
             }
             if (segment.end() != null) {
                 list.add(nodeAsString(segment.end()));
             }
         });
-        return listAsString(list);
+        return list.stream().collect(Collectors.joining());
     }
 
     private String listAsString(List<String> list) {
@@ -121,16 +121,11 @@ public class PrettyPrinter {
     }
 
     private String relationshipAsString(Relationship relationship) {
-
-        String type = COLON + escapeIfNeeded(relationship.type());
-
         List<String> relationshipAsString = new ArrayList<>();
-        relationshipAsString.add(type);
+        relationshipAsString.add(COLON + escapeIfNeeded(relationship.type()));
         relationshipAsString.add(mapAsString(relationship.asMap(this::formatValue)));
 
-        return "[" +
-                relationshipAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(SPACE)) +
-                "]";
+        return "[" + joinWithSpace(relationshipAsString) + "]";
     }
 
     private String nodeAsString(@Nonnull final Node node) {
@@ -138,15 +133,17 @@ public class PrettyPrinter {
         nodeAsString.add(collectNodeLabels(node));
         nodeAsString.add(mapAsString(node.asMap(this::formatValue)));
 
-        return "(" +
-                nodeAsString.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(SPACE)) +
-                ")";
+        return "(" + joinWithSpace(nodeAsString) + ")";
     }
 
     private String collectNodeLabels(@Nonnull Node node) {
         StringBuilder sb = new StringBuilder();
         node.labels().forEach(label -> sb.append(COLON).append(escapeIfNeeded(label)));
         return sb.toString();
+    }
+
+    private String joinWithSpace(List<String> strings) {
+        return strings.stream().filter(str -> isNotBlank(str)).collect(Collectors.joining(SPACE));
     }
 
     private static boolean isNotBlank(String string) {
