@@ -195,20 +195,24 @@ public class PrettyPrinterTest {
         HashMap<String, Object> startProperties = new HashMap<>();
         startProperties.put("prop1", "prop1_value");
         when(start.labels()).thenReturn(asList("start"));
+        when(start.id()).thenReturn(1l);
 
         Node middle = mock(Node.class);
         when(middle.labels()).thenReturn(asList("middle"));
+        when(middle.id()).thenReturn(2l);
 
         Node end = mock(Node.class);
         HashMap<String, Object> endProperties = new HashMap<>();
         endProperties.put("prop2", "prop2_value");
         when(end.labels()).thenReturn(asList("end"));
+        when(end.id()).thenReturn(3l);
 
         Path path = mock(Path.class);
         when(path.start()).thenReturn(start);
 
         Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
+        when(relationship.startNodeId()).thenReturn(1l).thenReturn(3l);
 
 
         Path.Segment segment1 = mock(Path.Segment.class);
@@ -238,6 +242,116 @@ public class PrettyPrinterTest {
         // then
         assertThat(actual, is("path\n" +
                 "(:start {prop1: prop1_value})-[:RELATIONSHIP_TYPE]->" +
-                "(:middle)-[:RELATIONSHIP_TYPE]->(:end {prop2: prop2_value})"));
+                "(:middle)<-[:RELATIONSHIP_TYPE]-(:end {prop2: prop2_value})"));
+    }
+
+    @Test
+    public void prettyPrintSingleNodePath() throws Exception {
+        // given
+        BoltResult result = mock(BoltResult.class);
+
+        Record record = mock(Record.class);
+        Value value = mock(Value.class);
+
+        Node start = mock(Node.class);
+        when(start.labels()).thenReturn(asList("start"));
+        when(start.id()).thenReturn(1l);
+
+        Node end = mock(Node.class);
+        when(end.labels()).thenReturn(asList("end"));
+        when(end.id()).thenReturn(2l);
+
+        Path path = mock(Path.class);
+        when(path.start()).thenReturn(start);
+
+        Relationship relationship = mock(Relationship.class);
+        when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
+        when(relationship.startNodeId()).thenReturn(1l);
+
+
+        Path.Segment segment1 = mock(Path.Segment.class);
+        when(segment1.start()).thenReturn(start);
+        when(segment1.end()).thenReturn(end);
+        when(segment1.relationship()).thenReturn(relationship);
+
+        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.PATH());
+        when(value.asPath()).thenReturn(path);
+        when(path.iterator()).thenReturn(asList(segment1).iterator());
+
+        when(record.keys()).thenReturn(asList("path"));
+        when(record.values()).thenReturn(asList(value));
+
+        when(result.getRecords()).thenReturn(asList(record));
+
+        // when
+        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+
+        // then
+        assertThat(actual, is("path\n(:start)-[:RELATIONSHIP_TYPE]->(:end)"));
+    }
+
+    @Test
+    public void prettyPrintThreeSegmentPath() throws Exception {
+        // given
+        BoltResult result = mock(BoltResult.class);
+
+        Record record = mock(Record.class);
+        Value value = mock(Value.class);
+
+        Node start = mock(Node.class);
+        when(start.labels()).thenReturn(asList("start"));
+        when(start.id()).thenReturn(1l);
+
+        Node second = mock(Node.class);
+        when(second.labels()).thenReturn(asList("second"));
+        when(second.id()).thenReturn(2l);
+
+        Node third = mock(Node.class);
+        when(third.labels()).thenReturn(asList("third"));
+        when(third.id()).thenReturn(3l);
+
+        Node end = mock(Node.class);
+        when(end.labels()).thenReturn(asList("end"));
+        when(end.id()).thenReturn(4l);
+
+        Path path = mock(Path.class);
+        when(path.start()).thenReturn(start);
+
+        Relationship relationship = mock(Relationship.class);
+        when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
+        when(relationship.startNodeId()).thenReturn(1l).thenReturn(3l).thenReturn(3l);
+
+
+        Path.Segment segment1 = mock(Path.Segment.class);
+        when(segment1.start()).thenReturn(start);
+        when(segment1.end()).thenReturn(second);
+        when(segment1.relationship()).thenReturn(relationship);
+
+        Path.Segment segment2 = mock(Path.Segment.class);
+        when(segment2.start()).thenReturn(second);
+        when(segment2.end()).thenReturn(third);
+        when(segment2.relationship()).thenReturn(relationship);
+
+        Path.Segment segment3 = mock(Path.Segment.class);
+        when(segment3.start()).thenReturn(third);
+        when(segment3.end()).thenReturn(end);
+        when(segment3.relationship()).thenReturn(relationship);
+
+        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.PATH());
+        when(value.asPath()).thenReturn(path);
+        when(path.iterator()).thenReturn(asList(segment1, segment2, segment3).iterator());
+
+        when(record.keys()).thenReturn(asList("path"));
+        when(record.values()).thenReturn(asList(value));
+
+        when(result.getRecords()).thenReturn(asList(record));
+
+        // when
+        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+
+        // then
+        assertThat(actual, is("path\n" +
+                "(:start)-[:RELATIONSHIP_TYPE]->" +
+                "(:second)<-[:RELATIONSHIP_TYPE]-(:third)-[:RELATIONSHIP_TYPE]->(:end)"));
     }
 }

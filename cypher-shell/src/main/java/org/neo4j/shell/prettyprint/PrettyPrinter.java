@@ -86,19 +86,25 @@ public class PrettyPrinter {
 
     private String pathAsString(Path path) {
         List<String> list = new LinkedList<>();
-
-        if (path.start() != null) {
-            list.add(nodeAsString(path.start()));
+        Node lastTraversed = path.start();
+        if (lastTraversed != null) {
+            list.add(nodeAsString(lastTraversed));
         }
 
-        path.iterator().forEachRemaining(segment -> {
-            if (segment.relationship() != null) {
-                list.add("-" + relationshipAsString(segment.relationship()) + "->");
-            }
-            if (segment.end() != null) {
+        for (Path.Segment segment : path) {
+            Relationship relationship = segment.relationship();
+            if (relationship.startNodeId() == lastTraversed.id()) {
+                //-[:r]->
+                list.add("-" + relationshipAsString(relationship) + "->");
                 list.add(nodeAsString(segment.end()));
+                lastTraversed = segment.start();
+            } else {
+                list.add("<-" + relationshipAsString(relationship) + "-");
+                list.add(nodeAsString(segment.end()));
+                lastTraversed = segment.end();
             }
-        });
+        }
+
         return list.stream().collect(Collectors.joining());
     }
 
