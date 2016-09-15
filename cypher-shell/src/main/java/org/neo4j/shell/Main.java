@@ -10,8 +10,6 @@ import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 
-import static org.neo4j.shell.exception.Helper.getFormattedMessage;
-
 public class Main {
 
     public static void main(String[] args) {
@@ -25,36 +23,6 @@ public class Main {
 
         Main main = new Main();
         main.startShell(cliArgs);
-    }
-
-    void startShell(@Nonnull CliArgs cliArgs) {
-        ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
-                cliArgs.getPort(),
-                cliArgs.getUsername(),
-                cliArgs.getPassword(),
-                cliArgs.getEncryption());
-
-        Logger logger = new AnsiLogger();
-        try {
-            logger.setFormat(cliArgs.getFormat());
-
-            CypherShell shell = new CypherShell(logger);
-
-            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
-
-            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
-
-            shell.setCommandHelper(commandHelper);
-            shell.connect(connectionConfig);
-
-            printWelcomeMessage(logger, connectionConfig);
-
-            int code = shellRunner.runUntilEnd();
-            System.exit(code);
-        } catch (Throwable e) {
-            logger.printError(getFormattedMessage(e));
-            System.exit(1);
-        }
     }
 
     private static void printWelcomeMessage(@Nonnull Logger logger,
@@ -73,5 +41,35 @@ public class Main {
                 .bold().append(Help.COMMAND_NAME).boldOff()
                 .append(" for a list of available commands.")
                 .formattedString());
+    }
+
+    void startShell(@Nonnull CliArgs cliArgs) {
+        ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
+                cliArgs.getPort(),
+                cliArgs.getUsername(),
+                cliArgs.getPassword(),
+                cliArgs.getEncryption());
+
+        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
+        try {
+            logger.setFormat(cliArgs.getFormat());
+
+            CypherShell shell = new CypherShell(logger);
+
+            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
+
+            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
+
+            shell.setCommandHelper(commandHelper);
+            shell.connect(connectionConfig);
+
+            printWelcomeMessage(logger, connectionConfig);
+
+            int code = shellRunner.runUntilEnd();
+            System.exit(code);
+        } catch (Throwable e) {
+            logger.printError(e);
+            System.exit(1);
+        }
     }
 }

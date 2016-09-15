@@ -2,6 +2,7 @@ package org.neo4j.shell.cli;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
+import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.impl.type.BooleanArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentGroup;
@@ -81,6 +82,8 @@ public class CliArgHelper {
 
         cliArgs.setEncryption(ns.getBoolean("encryption"));
 
+        cliArgs.setDebugMode(ns.getBoolean("debug"));
+
         return cliArgs;
     }
 
@@ -138,6 +141,10 @@ public class CliArgHelper {
                 .choices(new CollectionArgumentChoice<>(
                         Format.VERBOSE.name().toLowerCase(), Format.PLAIN.name().toLowerCase()))
                 .setDefault(Format.VERBOSE.name().toLowerCase());
+
+        parser.addArgument("--debug")
+                .help("print additional debug information")
+                .action(new StoreTrueArgumentAction());
 
         parser.addArgument("cypher")
                 .nargs("?")

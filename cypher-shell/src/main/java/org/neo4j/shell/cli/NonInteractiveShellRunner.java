@@ -13,8 +13,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import static org.neo4j.shell.exception.Helper.getFormattedMessage;
-
 
 /**
  * A shell runner which reads all of STDIN and executes commands until completion. In case of errors, the failBehavior
@@ -50,7 +48,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
                     .forEach(line -> statementParser.parseMoreText(line + "\n"));
             statements = statementParser.consumeStatements();
         } catch (Throwable e) {
-            logger.printError(getFormattedMessage(e));
+            logger.printError(e);
             return 1;
         }
 
@@ -63,7 +61,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
                 return e.getCode();
             } catch (Throwable e) {
                 exitCode = 1;
-                logger.printError(getFormattedMessage(e));
+                logger.printError(e);
                 if (FailBehavior.FAIL_AT_END != failBehavior) {
                     return exitCode;
                 }

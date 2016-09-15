@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +24,18 @@ public class CliArgHelperTest {
     @Before
     public void setup() {
         mockedStdErr = mock(PrintStream.class);
+    }
+
+    @Test
+    public void testDebugIsNotDefault() {
+        assertFalse("Debug should not be the default mode",
+                CliArgHelper.parse(asArray()).getDebugMode());
+    }
+
+    @Test
+    public void testDebugIsParsed() {
+        assertTrue("Debug should have been parsed to true",
+                CliArgHelper.parse(asArray("--debug")).getDebugMode());
     }
 
     @Test

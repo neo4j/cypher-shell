@@ -20,18 +20,15 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.neo4j.shell.exception.Helper.getFormattedMessage;
-
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
  * along the way.
  */
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
+    static final String INTERRUPT_SIGNAL = "INT";
     private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
     private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("       ");
     private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("neo4j# ");
-    static final String INTERRUPT_SIGNAL = "INT";
-
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
     private final AtomicBoolean currentyExecuting;
@@ -89,7 +86,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                 // User pressed Ctrl-D and wants to exit
                 running = false;
             } catch (Throwable e) {
-                logger.printError(getFormattedMessage(e));
+                logger.printError(e);
             } finally {
                 currentyExecuting.set(false);
             }
@@ -185,7 +182,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             reader.redrawLine();
             reader.flush();
         } catch (IOException e) {
-            logger.printError(getFormattedMessage(e));
+            logger.printError(e);
         }
     }
 }

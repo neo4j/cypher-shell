@@ -48,14 +48,15 @@ public class StringShellRunnerTest {
 
     @Test
     public void errorsShouldThrow() throws IOException, CommandException {
-        doThrow(new ClientException("Error kaboom")).when(statementExecuter).execute(anyString());
+        ClientException kaboom = new ClientException("Error kaboom");
+        doThrow(kaboom).when(statementExecuter).execute(anyString());
 
         StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
 
         int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 1, code);
-        verify(logger).printError("@|RED Error kaboom|@");
+        verify(logger).printError(kaboom);
     }
 
     @Test
