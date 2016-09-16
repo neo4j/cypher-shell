@@ -154,7 +154,8 @@ public class PrettyPrinterTest {
         Node node = mock(Node.class);
         HashMap<String, Object> nodeProp = new HashMap<>();
         nodeProp.put("prop1", "\"prop1:value\"");
-        nodeProp.put("prop2", "\"\"");
+        nodeProp.put("1prop2", "\"\"");
+        nodeProp.put("ä", "not-escaped");
 
 
         when(relVal.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.RELATIONSHIP());
@@ -180,7 +181,7 @@ public class PrettyPrinterTest {
 
         // then
         assertThat(actual, is("rel, node\n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
-                "(:`label 1`:label2 {prop2: \"\", prop1: \"prop1:value\"})"));
+                "(:`label 1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
     }
 
     @Test

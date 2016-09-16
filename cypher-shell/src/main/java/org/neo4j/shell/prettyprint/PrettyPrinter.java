@@ -28,7 +28,7 @@ public class PrettyPrinter {
     private static final String COLON = ":";
     private static final String SPACE = " ";
     public static final String BACKTICK = "`";
-    private static final Pattern ALPHA_NUMERIC = Pattern.compile("^[a-zA-Z0-9_]*$");
+    private static final Pattern ALPHA_NUMERIC = Pattern.compile("^[\\p{L}_][\\p{L}0-9_]*");
     private StatisticsCollector statisticsCollector;
 
     public PrettyPrinter(@Nonnull Format format) {
