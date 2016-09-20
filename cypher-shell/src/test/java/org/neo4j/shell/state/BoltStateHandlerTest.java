@@ -175,6 +175,8 @@ public class BoltStateHandlerTest {
 
         // then
         verify(sessionMock).reset();
+        verify(transactionMock).failure();
+        verify(transactionMock).close();
     }
 
     @Test
