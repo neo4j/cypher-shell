@@ -5,14 +5,10 @@ import org.neo4j.driver.v1.Config;
 import javax.annotation.Nonnull;
 
 public class ConnectionConfig {
-    @Nonnull
     private final String host;
     private final int port;
-    @Nonnull
     private final Config.EncryptionLevel encryption;
-    @Nonnull
     private String username;
-    @Nonnull
     private String password;
 
     public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password,
@@ -36,6 +32,7 @@ public class ConnectionConfig {
         return result;
     }
 
+    @Nonnull
     public String host() {
         return host;
     }
@@ -44,18 +41,22 @@ public class ConnectionConfig {
         return port;
     }
 
+    @Nonnull
     public String username() {
         return username;
     }
 
+    @Nonnull
     public String password() {
         return password;
     }
 
+    @Nonnull
     public String driverUrl() {
         return String.format("bolt://%s:%d", host(), port());
     }
 
+    @Nonnull
     public Config.EncryptionLevel encryption() {
         return encryption;
     }
