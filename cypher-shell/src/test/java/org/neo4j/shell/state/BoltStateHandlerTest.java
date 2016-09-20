@@ -4,7 +4,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthToken;
+import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
@@ -15,6 +20,7 @@ import org.neo4j.shell.test.bolt.FakeTransaction;
 
 import java.util.HashMap;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -49,22 +55,27 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void shouldHandleSilentDisconnectExceptions() throws CommandException {
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("original exception");
-
+    public void exceptionsFromSilentDisconnectAreSuppressedToReportOriginalErrors() throws CommandException {
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
         StatementResult resultMock = mock(StatementResult.class);
+        RuntimeException originalException = new RuntimeException("original exception");
+        RuntimeException thrownFromSilentDisconnect = new RuntimeException("exception from silent disconnect");
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
         when(mockedDriver.session()).thenReturn(session);
         when(session.run("RETURN 1")).thenReturn(resultMock);
-        when(resultMock.consume()).thenThrow(new RuntimeException("original exception"));
-        doThrow(new RuntimeException("INIT method message")).when(session).close();
+        when(resultMock.consume()).thenThrow(originalException);
+        doThrow(thrownFromSilentDisconnect).when(session).close();
 
-        boltStateHandler.connect();
+        try {
+            boltStateHandler.connect();
+            fail("should fail on silent disconnect");
+        } catch (Exception e) {
+            assertThat(e.getSuppressed()[0], is(thrownFromSilentDisconnect));
+            assertThat(e, is(originalException));
+        }
     }
 
     @Test
