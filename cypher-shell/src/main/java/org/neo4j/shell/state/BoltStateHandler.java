@@ -1,15 +1,7 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.StatementRunner;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.*;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -105,11 +97,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             // Bug in Java driver forces us to run a statement to make it actually connect
             session.run("RETURN 1").consume();
         } catch (Throwable t) {
-            try {
-                silentDisconnect();
-            } catch (Exception e) {// NOPMD
-                // This is to ensure we are able to show the original message by exception to to the user
-            }
+            silentDisconnect();
             throw t;
         }
     }
