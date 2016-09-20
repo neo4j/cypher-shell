@@ -51,7 +51,7 @@ public class BoltStateHandlerTest {
     @Test
     public void shouldHandleSilentDisconnectExceptions() throws CommandException {
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("original exception");
+        thrown.expectMessage("exception during silent disconnect");
 
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
@@ -62,7 +62,7 @@ public class BoltStateHandlerTest {
         when(mockedDriver.session()).thenReturn(session);
         when(session.run("RETURN 1")).thenReturn(resultMock);
         when(resultMock.consume()).thenThrow(new RuntimeException("original exception"));
-        doThrow(new RuntimeException("INIT method message")).when(session).close();
+        doThrow(new RuntimeException("exception during silent disconnect")).when(session).close();
 
         boltStateHandler.connect();
     }
