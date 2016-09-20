@@ -154,8 +154,10 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             session.reset();
 
             // Clear current state
-            // Bolt has already rolled back the transaction so we should not close it ourselves
             if (isTransactionOpen()) {
+                // Bolt has already rolled back the transaction but it doesn't close it properly
+                tx.failure();
+                tx.close();
                 tx = null;
             }
         }
