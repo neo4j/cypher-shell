@@ -17,8 +17,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 public class Main {
-
-
+    static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
     private final InputStream in;
     private final PrintStream out;
 
@@ -104,7 +103,12 @@ public class Main {
         try {
             shell.connect(connectionConfig);
         } catch (ClientException e) {
-            if (e.getMessage() == null || !e.getMessage().contains("Missing username")) {
+            // Only prompt for username/password if they weren't used
+            if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
+                throw e;
+            }
+            // Errors except authentication related should be shown to user
+            if (e.code() == null || !e.code().equals(NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED)) {
                 throw e;
             }
             // else need to prompt for username and password

@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -27,6 +28,7 @@ public class MainTest {
     private CypherShell shell;
     private ConnectionConfig connectionConfig;
     private PrintStream out;
+    private ClientException authException;
 
     @Before
     public void setup() {
@@ -36,6 +38,9 @@ public class MainTest {
 
         doReturn("").when(connectionConfig).username();
         doReturn("").when(connectionConfig).password();
+
+        authException = mock(ClientException.class);
+        doReturn(Main.NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED).when(authException).code();
     }
 
     @Test
@@ -43,7 +48,7 @@ public class MainTest {
         String inputString = "no newline";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
-        doThrow(new ClientException("Missing username and password")).when(shell).connect(connectionConfig);
+        doThrow(authException).when(shell).connect(connectionConfig);
 
         thrown.expectMessage("No text could be read, exiting");
 
@@ -77,7 +82,7 @@ public class MainTest {
 
     @Test
     public void connectInteractivelyPromptsForBothIfNone() throws Exception {
-        doThrow(new ClientException("Missing username and password")).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "bob\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -98,7 +103,7 @@ public class MainTest {
 
     @Test
     public void connectInteractivelyPromptsForUserIfPassExists() throws Exception {
-        doThrow(new ClientException("Missing username and password")).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\n";
@@ -119,7 +124,7 @@ public class MainTest {
 
     @Test
     public void connectInteractivelyPromptsForPassIfUserExists() throws Exception {
-        doThrow(new ClientException("Missing username and password")).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
 
         String inputString = "secret\n";
@@ -136,5 +141,27 @@ public class MainTest {
         assertEquals(out, "password: ******\r\n");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
+    public void connectInteractivelyTriesOnlyOnceIfUserPassExists() throws Exception {
+        doThrow(authException).doThrow(new RuntimeException("second try")).when(shell).connect(connectionConfig);
+        doReturn("bob").when(connectionConfig).username();
+        doReturn("secret").when(connectionConfig).password();
+
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+
+        try {
+            main.connectInteractively(shell, connectionConfig);
+            fail("Expected an exception");
+        } catch (ClientException e) {
+            assertEquals(authException.code(), e.code());
+            verify(shell, times(1)).connect(connectionConfig);
+        }
     }
 }

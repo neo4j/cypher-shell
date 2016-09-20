@@ -55,4 +55,7 @@ clean: ## Clean build directories
 	rm -rf tmp
 	./gradlew clean
 
-launch: clean build run ## Cleans working directory to build and run the cypher-shell
+rmhosts:
+	rm -rf ~/.neo4j/known_hosts
+
+launch: rmhosts clean build run ## Removes known hosts file, cleans, builds, and runs the shell
