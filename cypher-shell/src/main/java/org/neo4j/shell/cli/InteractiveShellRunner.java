@@ -5,6 +5,7 @@ import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
+import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -154,7 +155,14 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             executer.reset();
         } else {
             // Print a literal newline here to get around us being in the middle of the prompt
-            logger.printError(AnsiFormattedText.s().colorRed().append("\nKeyboardInterrupt").formattedString());
+            logger.printError(
+                    AnsiFormattedText.s().colorRed()
+                            .append("\n" + "Interrupted (Note that Cypher queries must end with a ")
+                            .bold().append("semicolon. ").boldOff()
+                            .append("Type ")
+                            .bold().append(Exit.COMMAND_NAME).append(" ").boldOff()
+                            .append("to exit the shell.")
+                            .formattedString());
             // Clear any text which has been inputted
             resetPrompt();
         }

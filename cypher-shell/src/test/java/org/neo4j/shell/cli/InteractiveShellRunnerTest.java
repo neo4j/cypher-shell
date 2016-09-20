@@ -348,7 +348,10 @@ public class InteractiveShellRunnerTest {
 
         // then
         verifyNoMoreInteractions(cmdExecuter);
-        verify(logger).printError("@|RED \nKeyboardInterrupt|@");
+        verify(logger).printError("@|RED \nInterrupted (Note that Cypher queries must end with a |@" +
+                "@|RED,BOLD semicolon. |@" +
+                "@|RED Type |@@|RED,BOLD :exit|@@|RED,BOLD  |@" +
+                "@|RED to exit the shell.|@");
     }
 
     @Test

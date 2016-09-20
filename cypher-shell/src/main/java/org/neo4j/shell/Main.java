@@ -5,6 +5,7 @@ import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
+import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.commands.Help;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -60,7 +61,11 @@ public class Main {
         logger.printIfVerbose(welcomeMessage
                 .append(".\nType ")
                 .bold().append(Help.COMMAND_NAME).boldOff()
-                .append(" for a list of available commands.")
+                .append(" for a list of available commands or ")
+                .bold().append(Exit.COMMAND_NAME).boldOff()
+                .append(" to exit the shell.")
+                .append(" Note that Cypher queries must end with a ")
+                .bold().append("semicolon.").boldOff()
                 .formattedString());
     }
 
