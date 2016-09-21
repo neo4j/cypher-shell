@@ -157,11 +157,11 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             // Print a literal newline here to get around us being in the middle of the prompt
             logger.printError(
                     AnsiFormattedText.s().colorRed()
-                            .append("\n" + "Interrupted (Note that Cypher queries must end with a ")
+                            .append("\nInterrupted (Note that Cypher queries must end with a ")
                             .bold().append("semicolon. ").boldOff()
                             .append("Type ")
                             .bold().append(Exit.COMMAND_NAME).append(" ").boldOff()
-                            .append("to exit the shell.")
+                            .append("to exit the shell.)")
                             .formattedString());
             // Clear any text which has been inputted
             resetPrompt();

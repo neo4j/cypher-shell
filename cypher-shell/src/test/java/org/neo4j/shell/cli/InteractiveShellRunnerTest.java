@@ -351,7 +351,7 @@ public class InteractiveShellRunnerTest {
         verify(logger).printError("@|RED \nInterrupted (Note that Cypher queries must end with a |@" +
                 "@|RED,BOLD semicolon. |@" +
                 "@|RED Type |@@|RED,BOLD :exit|@@|RED,BOLD  |@" +
-                "@|RED to exit the shell.|@");
+                "@|RED to exit the shell.)|@");
     }
 
     @Test

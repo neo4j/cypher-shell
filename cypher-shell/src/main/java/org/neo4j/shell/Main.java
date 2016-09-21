@@ -64,7 +64,7 @@ public class Main {
                 .append(" for a list of available commands or ")
                 .bold().append(Exit.COMMAND_NAME).boldOff()
                 .append(" to exit the shell.")
-                .append(" Note that Cypher queries must end with a ")
+                .append("\nNote that Cypher queries must end with a ")
                 .bold().append("semicolon.").boldOff()
                 .formattedString());
     }
