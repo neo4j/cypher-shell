@@ -22,14 +22,13 @@ import java.util.regex.Pattern;
  * A possibly interactive shell for evaluating cypher statements.
  */
 public class CypherShell implements StatementExecuter, Connector, TransactionHandler, VariableHolder {
-    private final Logger logger;
-
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
+    protected final Map<String, Object> queryParams = new HashMap<>();
+    private final Logger logger;
     private final BoltStateHandler boltStateHandler;
     private final PrettyPrinter prettyPrinter;
     protected CommandHelper commandHelper;
-    protected final Map<String, Object> queryParams = new HashMap<>();
 
     public CypherShell(@Nonnull Logger logger) {
         this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat()));
@@ -42,6 +41,18 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         this.boltStateHandler = boltStateHandler;
         this.prettyPrinter = prettyPrinter;
         addRuntimeHookToResetShell();
+    }
+
+    /**
+     * @param text to trim
+     * @return text without trailing semicolons
+     */
+    static String stripTrailingSemicolons(@Nonnull String text) {
+        int end = text.length();
+        while (end > 0 && text.substring(0, end).endsWith(";")) {
+            end -= 1;
+        }
+        return text.substring(0, end);
     }
 
     @Override
@@ -95,7 +106,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             return Optional.empty();
         }
 
-        return Optional.of(() -> cmd.execute(args));
+        return Optional.of(() -> cmd.execute(stripTrailingSemicolons(args)));
     }
 
     protected void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
