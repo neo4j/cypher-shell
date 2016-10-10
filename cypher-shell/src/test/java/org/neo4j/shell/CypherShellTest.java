@@ -152,9 +152,32 @@ public class CypherShellTest {
     }
 
     @Test
+    public void shouldStripEndingSemicolonsFromCommand() throws Exception {
+        // Should not throw
+        offlineTestShell.getCommandExecutable(":help;;").get().execute();
+        verify(logger).printOut(contains("Available commands:"));
+    }
+
+    @Test
+    public void shouldStripEndingSemicolonsFromCommandArgs() throws Exception {
+        // Should not throw
+        offlineTestShell.getCommandExecutable(":help param;;").get().execute();
+        verify(logger).printOut(contains("usage: "));
+    }
+
+    @Test
+    public void testStripSemicolons() throws Exception {
+        assertEquals("", CypherShell.stripTrailingSemicolons(""));
+        assertEquals("nothing", CypherShell.stripTrailingSemicolons("nothing"));
+        assertEquals("", CypherShell.stripTrailingSemicolons(";;;;;"));
+        assertEquals("hej", CypherShell.stripTrailingSemicolons("hej;"));
+        assertEquals(";bob", CypherShell.stripTrailingSemicolons(";bob;;"));
+    }
+
+    @Test
     public void shouldParseCommandsAndArgs() {
         assertTrue(offlineTestShell.getCommandExecutable(":help").isPresent());
-        assertTrue(offlineTestShell.getCommandExecutable(":help :set").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(":help :param").isPresent());
         assertTrue(offlineTestShell.getCommandExecutable(":param \"A piece of string\"").isPresent());
     }
 
