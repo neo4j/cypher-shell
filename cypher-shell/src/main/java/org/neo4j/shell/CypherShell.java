@@ -123,6 +123,12 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         boltStateHandler.connect(connectionConfig);
     }
 
+    @Nonnull
+    @Override
+    public String getServerVersion() {
+        return boltStateHandler.getServerVersion();
+    }
+
     @Override
     public void beginTransaction() throws CommandException {
         boltStateHandler.beginTransaction();

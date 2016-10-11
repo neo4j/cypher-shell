@@ -115,6 +115,24 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     @Nonnull
+    @Override
+    public String getServerVersion() {
+        if (isConnected()) {
+            String version = session.server();
+            if (version == null) {
+                // On versions before 3.1.0-M09
+                version = "";
+            }
+            if (version.startsWith("Neo4j/")) {
+                // Want to return '3.1.0' and not 'Neo4j/3.1.0'
+                version = version.substring(6);
+            }
+            return version;
+        }
+        return "";
+    }
+
+    @Nonnull
     public Optional<BoltResult> runCypher(@Nonnull String cypher,
                                           @Nonnull Map<String, Object> queryParams) throws CommandException {
         StatementRunner statementRunner = getStatementRunner();
@@ -181,8 +199,8 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         Config config = Config.build()
-                .withLogging(new ConsoleLogging(Level.OFF))
-                .withEncryptionLevel(connectionConfig.encryption()).toConfig();
+                              .withLogging(new ConsoleLogging(Level.OFF))
+                              .withEncryptionLevel(connectionConfig.encryption()).toConfig();
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
     }
 }

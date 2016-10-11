@@ -48,8 +48,15 @@ public class Main {
     }
 
     private static void printWelcomeMessage(@Nonnull Logger logger,
-                                            @Nonnull ConnectionConfig connectionConfig) {
-        AnsiFormattedText welcomeMessage = AnsiFormattedText.from("Connected to Neo4j at ")
+                                            @Nonnull ConnectionConfig connectionConfig,
+                                            @Nonnull String serverVersion) {
+        String neo4j = "Neo4j";
+        if (!serverVersion.isEmpty()) {
+            neo4j += " " + serverVersion;
+        }
+        AnsiFormattedText welcomeMessage = AnsiFormattedText.from("Connected to ")
+                                                            .append(neo4j)
+                                                            .append(" at ")
                                                             .bold().append(connectionConfig.driverUrl()).boldOff();
 
         if (!connectionConfig.username().isEmpty()) {
@@ -90,7 +97,7 @@ public class Main {
 
             shell.setCommandHelper(commandHelper);
 
-            printWelcomeMessage(logger, connectionConfig);
+            printWelcomeMessage(logger, connectionConfig, shell.getServerVersion());
 
             int code = shellRunner.runUntilEnd();
             System.exit(code);

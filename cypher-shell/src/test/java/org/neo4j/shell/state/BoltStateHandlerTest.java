@@ -39,6 +39,64 @@ public class BoltStateHandlerTest {
     }
 
     @Test
+    public void versionIsEmptyBeforeConnect() throws CommandException {
+        assertFalse(boltStateHandler.isConnected());
+        assertEquals("", boltStateHandler.getServerVersion());
+    }
+
+    @Test
+    public void versionIsEmptyIfDriverReturnsNull() throws CommandException {
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                super.apply(uri, authToken, config);
+                return new FakeDriver() {
+                    @Override
+                    public Session session() {
+                        return new FakeSession() {
+                            @Override
+                            public String server() {
+                                return null;
+                            }
+                        };
+                    }
+                };
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider);
+        ConnectionConfig config = new ConnectionConfig("", -1, "", "", false);
+        handler.connect(config);
+
+        assertEquals("", handler.getServerVersion());
+    }
+
+    @Test
+    public void versionIsNotEmptyAfterConnect() throws CommandException {
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                super.apply(uri, authToken, config);
+                return new FakeDriver() {
+                    @Override
+                    public Session session() {
+                        return new FakeSession() {
+                            @Override
+                            public String server() {
+                                return "Neo4j/9.4.1-ALPHA";
+                            }
+                        };
+                    }
+                };
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider);
+        ConnectionConfig config = new ConnectionConfig("", -1, "", "", false);
+        handler.connect(config);
+
+        assertEquals("9.4.1-ALPHA", handler.getServerVersion());
+    }
+
+    @Test
     public void closeTransactionAfterRollback() throws CommandException {
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
