@@ -75,6 +75,22 @@ public class CypherShellTest {
     }
 
     @Test
+    public void verifyDelegationOfGetServerVersionMethod() throws CommandException {
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+
+        shell.getServerVersion();
+        verify(mockedBoltStateHandler).getServerVersion();
+    }
+
+    @Test
+    public void verifyDelegationOfIsTransactionOpenMethod() throws CommandException {
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+
+        shell.isTransactionOpen();
+        verify(mockedBoltStateHandler).isTransactionOpen();
+    }
+
+    @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
