@@ -47,9 +47,8 @@ public class Main {
         this.out = out;
     }
 
-    private static void printWelcomeMessage(@Nonnull Logger logger,
-                                            @Nonnull ConnectionConfig connectionConfig,
-                                            @Nonnull String serverVersion) {
+    static String getWelcomeMessage(@Nonnull ConnectionConfig connectionConfig,
+                                           @Nonnull String serverVersion) {
         String neo4j = "Neo4j";
         if (!serverVersion.isEmpty()) {
             neo4j += " " + serverVersion;
@@ -65,15 +64,14 @@ public class Main {
                     .bold().append(connectionConfig.username()).boldOff();
         }
 
-        logger.printIfVerbose(welcomeMessage
+        return welcomeMessage
                 .append(".\nType ")
                 .bold().append(Help.COMMAND_NAME).boldOff()
                 .append(" for a list of available commands or ")
                 .bold().append(Exit.COMMAND_NAME).boldOff()
                 .append(" to exit the shell.")
                 .append("\nNote that Cypher queries must end with a ")
-                .bold().append("semicolon.").boldOff()
-                .formattedString());
+                .bold().append("semicolon.").boldOff().formattedString();
     }
 
     void startShell(@Nonnull CliArgs cliArgs) {
@@ -97,9 +95,7 @@ public class Main {
 
             shell.setCommandHelper(commandHelper);
 
-            printWelcomeMessage(logger, connectionConfig, shell.getServerVersion());
-
-            int code = shellRunner.runUntilEnd();
+            int code = shellRunner.runUntilEnd(getWelcomeMessage(connectionConfig, shell.getServerVersion()));
             System.exit(code);
         } catch (Throwable e) {
             logger.printError(e);

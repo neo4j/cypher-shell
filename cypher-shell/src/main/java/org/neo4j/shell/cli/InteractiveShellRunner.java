@@ -70,9 +70,12 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     }
 
     @Override
-    public int runUntilEnd() {
+    public int runUntilEnd(@Nonnull String welcomeMessage) {
         int exitCode = 0;
         boolean running = true;
+
+        logger.printIfVerbose(welcomeMessage);
+
         while (running) {
             try {
                 for (String statement : readUntilStatement()) {
