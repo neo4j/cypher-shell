@@ -20,9 +20,11 @@ public interface ShellRunner {
     /**
      * Run and handle user input until end of file
      *
+     * @param welcomeMessage
+     *         a formatted welcome message which may be printed, if suitable
      * @return error code to exit with
      */
-    int runUntilEnd();
+    int runUntilEnd(@Nonnull String welcomeMessage);
 
     /**
      * @return an object which can provide the history of commands executed

@@ -76,7 +76,7 @@ public class InteractiveShellRunnerTest {
                 "good2;\n";
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()), historyFile);
-        runner.runUntilEnd();
+        runner.runUntilEnd("");
 
         verify(cmdExecuter).execute("good1;");
         verify(cmdExecuter).execute("\ngood2;");
@@ -93,7 +93,7 @@ public class InteractiveShellRunnerTest {
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()), historyFile);
 
-        int code = runner.runUntilEnd();
+        int code = runner.runUntilEnd("");
 
         assertEquals("Wrong exit code", 0, code);
 
@@ -120,7 +120,7 @@ public class InteractiveShellRunnerTest {
 
         doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit;"));
 
-        int code = runner.runUntilEnd();
+        int code = runner.runUntilEnd("");
 
         assertEquals("Wrong exit code", 1234, code);
 
@@ -145,7 +145,7 @@ public class InteractiveShellRunnerTest {
                 new ByteArrayInputStream(input.getBytes()), historyFile);
 
         // when
-        runner.runUntilEnd();
+        runner.runUntilEnd("");
 
         // then
         Historian historian = runner.getHistorian();
@@ -302,10 +302,25 @@ public class InteractiveShellRunnerTest {
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
 
         // when
-        runner.runUntilEnd();
+        runner.runUntilEnd("");
 
         // then
         verifyNoMoreInteractions(cmdExecuter);
+    }
+
+    @Test
+    public void printsWelcomeMessage() throws Exception {
+        // given
+        String inputString = "\nCREATE (n:Person) RETURN n\n;\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
+                new ShellStatementParser(), inputStream, historyFile);
+
+        // when
+        runner.runUntilEnd("Welcome to cypher-shell!");
+
+        // then
+        verify(logger).printIfVerbose("Welcome to cypher-shell!");
     }
 
     @Test
@@ -316,7 +331,7 @@ public class InteractiveShellRunnerTest {
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
 
         // when
-        runner.runUntilEnd();
+        runner.runUntilEnd("");
 
         // then
         verify(cmdExecuter).execute("CREATE (n:Person) RETURN n\n;");
@@ -330,7 +345,7 @@ public class InteractiveShellRunnerTest {
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
 
         // when
-        runner.runUntilEnd();
+        runner.runUntilEnd("");
 
         // then
         verify(cmdExecuter).execute("CREATE (n:Person) RETURN n;");
@@ -364,7 +379,7 @@ public class InteractiveShellRunnerTest {
                 new ShellStatementParser(), inputStream, historyFile);
 
         // during
-        Thread t = new Thread(runner::runUntilEnd);
+        Thread t = new Thread(() -> runner.runUntilEnd(""));
         t.start();
 
         // wait until execution has begun

@@ -19,6 +19,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.neo4j.shell.Main.getWelcomeMessage;
 
 public class MainTest {
 
@@ -163,5 +165,16 @@ public class MainTest {
             assertEquals(authException.code(), e.code());
             verify(shell, times(1)).connect(connectionConfig);
         }
+    }
+
+    @Test
+    public void welcomeMessageTest() {
+        when(connectionConfig.username()).thenReturn("bob");
+        when(connectionConfig.driverUrl()).thenReturn("bolt://some.place.com:99");
+
+        assertEquals("Connected to Neo4j 3.1.0-Beta99 at @|BOLD bolt://some.place.com:99|@ as user @|BOLD bob|@.\n" +
+                        "Type @|BOLD :help|@ for a list of available commands or @|BOLD :exit|@ to exit the shell.\n" +
+                        "Note that Cypher queries must end with a @|BOLD semicolon.|@",
+                getWelcomeMessage(connectionConfig, "3.1.0-Beta99"));
     }
 }

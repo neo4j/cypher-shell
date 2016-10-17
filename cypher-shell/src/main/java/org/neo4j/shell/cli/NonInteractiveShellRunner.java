@@ -40,7 +40,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd() {
+    public int runUntilEnd(@Nonnull String welcomeMessage) {
         List<String> statements;
         try {
             new BufferedReader(new InputStreamReader(inputStream))
