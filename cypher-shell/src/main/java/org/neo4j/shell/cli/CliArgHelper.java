@@ -84,6 +84,8 @@ public class CliArgHelper {
 
         cliArgs.setDebugMode(ns.getBoolean("debug"));
 
+        cliArgs.setNonInteractive(ns.getBoolean("force-non-interactive"));
+
         return cliArgs;
     }
 
@@ -145,6 +147,11 @@ public class CliArgHelper {
         parser.addArgument("--debug")
                 .help("print additional debug information")
                 .action(new StoreTrueArgumentAction());
+
+        parser.addArgument("--non-interactive")
+                .help("force non-interactive mode, only useful if auto-detection fails (like on Windows)")
+                .dest("force-non-interactive")
+              .action(new StoreTrueArgumentAction());
 
         parser.addArgument("cypher")
                 .nargs("?")

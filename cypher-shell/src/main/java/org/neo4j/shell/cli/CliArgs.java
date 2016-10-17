@@ -14,6 +14,7 @@ public class CliArgs {
     private Optional<String> cypher = Optional.empty();
     private boolean encryption;
     private boolean debugMode;
+    private boolean nonInteractive = false;
 
     /**
      * Set the host to the primary value, or if null, the fallback value.
@@ -72,6 +73,13 @@ public class CliArgs {
     }
 
     /**
+     * Force the shell to use non-interactive mode. Only useful on systems where auto-detection fails, such as Windows.
+     */
+    public void setNonInteractive(boolean nonInteractive) {
+        this.nonInteractive = nonInteractive;
+    }
+
+    /**
      * Enable/disable debug mode
      */
     void setDebugMode(boolean enabled) {
@@ -119,5 +127,9 @@ public class CliArgs {
 
     public boolean getDebugMode() {
         return debugMode;
+    }
+
+    public boolean getNonInteractive() {
+        return nonInteractive;
     }
 }
