@@ -15,6 +15,14 @@ allprojects {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test) {
+        systemProperty 'file.encoding', 'UTF-8'
+    }
+
     group = 'org.neo4j.shell'
     version = '1.0.0-SNAPSHOT'
 
