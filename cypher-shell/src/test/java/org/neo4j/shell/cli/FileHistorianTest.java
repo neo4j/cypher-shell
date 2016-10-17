@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import static java.lang.System.getProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,11 +47,11 @@ public class FileHistorianTest {
     @Test
     public void noHistoryFileGivesMemoryHistory() throws Exception {
         Historian historian = FileHistorian.setupHistory(reader, logger,
-                new File("/temp/aasbzs/asfaz/asdfasvzx/asfdasdf/asdfasd"));
+                Paths.get("temp", "aasbzs", "asfaz").toFile());
 
         assertNotNull(historian);
 
-        verify(logger).printError("Could not load history file. Falling back to session-based history.\n" +
-                "Failed to create directory for history: /temp/aasbzs/asfaz/asdfasvzx/asfdasdf");
+        verify(logger).printError(contains("Could not load history file. Falling back to session-based history.\n" +
+                "Failed to create directory for history"));
     }
 }
