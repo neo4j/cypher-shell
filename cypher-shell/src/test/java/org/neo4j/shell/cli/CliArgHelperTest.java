@@ -27,6 +27,18 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void testForceNonInteractiveIsNotDefault() {
+        assertFalse("Force non-interactive should not be the default mode",
+                CliArgHelper.parse(asArray()).getNonInteractive());
+    }
+
+    @Test
+    public void testForceNonInteractiveIsParsed() {
+        assertTrue("Force non-interactive should have been parsed to true",
+                CliArgHelper.parse(asArray("--non-interactive")).getNonInteractive());
+    }
+
+    @Test
     public void testDebugIsNotDefault() {
         assertFalse("Debug should not be the default mode",
                 CliArgHelper.parse(asArray()).getDebugMode());
