@@ -32,7 +32,7 @@ public class CypherShellIntegrationTest {
     private Logger logger = mock(Logger.class);
     private Command rollbackCommand;
     private Command commitCommand;
-    private Command beginCommand ;
+    private Command beginCommand;
     private CypherShell shell;
 
     @Before
@@ -49,7 +49,7 @@ public class CypherShellIntegrationTest {
 
     @After
     public void tearDown() throws Exception {
-        shell.execute("MATCH (n:TestPerson) DETACH DELETE (n)");
+        shell.execute("MATCH (n) DETACH DELETE (n)");
     }
 
     @Test
@@ -100,7 +100,43 @@ public class CypherShellIntegrationTest {
         rollbackCommand.execute("");
 
         //then
-        shell.execute("MATCH (n:TestPerson) RETURN n");
+        shell.execute("MATCH (n) RETURN n");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(3)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
+    }
+
+    @Test
+    public void resetOutOfTxScenario() throws CommandException {
+        //when
+        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.reset();
+
+        //then
+        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute("MATCH (n) RETURN n");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(3)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})" +
+                "\n(:TestPerson {name: \"Jane Smith\"})"));
+    }
+
+    @Test
+    public void resetInTxScenario() throws CommandException {
+        //when
+        beginCommand.execute("");
+        shell.execute("CREATE (:Random)");
+        shell.reset();
+
+        //then
+        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute("MATCH (n) RETURN n");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger, times(3)).printOut(captor.capture());
@@ -116,7 +152,7 @@ public class CypherShellIntegrationTest {
         commitCommand.execute("");
 
         //then
-        shell.execute("MATCH (n:TestPerson) RETURN n");
+        shell.execute("MATCH (n) RETURN n");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger, times(2)).printOut(captor.capture());
@@ -126,7 +162,7 @@ public class CypherShellIntegrationTest {
     }
 
     @Test
-    public void setUnsetVariables() throws CommandException {
+    public void setAndListVariables() throws CommandException {
         assertTrue(shell.getAll().isEmpty());
 
         long randomLong = System.currentTimeMillis();
