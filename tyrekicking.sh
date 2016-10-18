@@ -11,7 +11,7 @@ function prepare-bundle {
 }
 
 function testscript {
-  if cypher-shell/cypher-shell "RETURN 1;"; then
+  if cypher-shell/cypher-shell -u neo4j -p neo "RETURN 1;"; then
     echo "$1 Success!"
   else
     echo "$1 Failure!"
