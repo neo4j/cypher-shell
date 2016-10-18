@@ -55,7 +55,7 @@ clean: ## Clean build directories
 	rm -rf tmp
 	./gradlew clean
 
-rmhosts:
+rmhosts: ## Remove known hosts file
 	rm -rf ~/.neo4j/known_hosts
 
 launch: rmhosts clean build run ## Removes known hosts file, cleans, builds, and runs the shell
