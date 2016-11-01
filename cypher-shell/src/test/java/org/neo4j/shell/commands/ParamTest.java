@@ -51,9 +51,31 @@ public class ParamTest {
     }
 
     @Test
+    public void setValueWithSpecialCharacters() throws CommandException {
+        cmd.execute("bob#   9");
+
+        verify(mockShell).set("bob#", "9");
+    }
+
+    @Test
     public void shouldNotSplitOnSpace() throws CommandException {
         cmd.execute("bob 'one two'");
         verify(mockShell).set("bob", "'one two'");
+    }
+
+    @Test
+    public void shouldAcceptColonFormOfParams() throws CommandException {
+        cmd.execute("bob: one");
+        verify(mockShell).set("bob", "one");
+    }
+
+    @Test
+    public void shouldAcceptForTwoColonsFormOfParams() throws CommandException {
+        cmd.execute("bob:: one");
+        verify(mockShell).set("bob:", "one");
+
+        cmd.execute("t:om two");
+        verify(mockShell).set("t:om", "two");
     }
 
     @Test
