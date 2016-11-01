@@ -144,9 +144,6 @@ public class CypherShellTest {
         Optional result = offlineTestShell.set("bob", "99");
         assertEquals("99", result.get());
         assertEquals("99", offlineTestShell.getAll().get("bob"));
-
-        offlineTestShell.remove("bob");
-        assertTrue(offlineTestShell.getAll().isEmpty());
     }
 
     @Test
@@ -230,13 +227,6 @@ public class CypherShellTest {
         if (!(shellRunner instanceof StringShellRunner)) {
             fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
         }
-    }
-
-    @Test
-    public void unsetAlreadyClearedValue() throws CommandException {
-        // when
-        // then
-        assertFalse("Expected param to be unset", offlineTestShell.remove("unknown var").isPresent());
     }
 
     @Test

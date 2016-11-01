@@ -22,10 +22,4 @@ public interface VariableHolder {
      */
     @Nonnull
     Map<String, Object> getAll();
-
-    /**
-     *
-     * @param name of variable to delete
-     */
-    Optional remove(@Nonnull String name);
 }

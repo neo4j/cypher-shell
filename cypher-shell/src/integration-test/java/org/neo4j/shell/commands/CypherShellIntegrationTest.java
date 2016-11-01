@@ -178,8 +178,5 @@ public class CypherShellIntegrationTest {
         List<String> queryResult = captor.getAllValues();
         assertThat(queryResult.get(0), is("{ bob }\n" + randomLong));
         assertEquals(randomLong, shell.getAll().get("bob"));
-
-        shell.remove("bob");
-        assertTrue(shell.getAll().isEmpty());
     }
 }

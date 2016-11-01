@@ -173,12 +173,6 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return queryParams;
     }
 
-    @Override
-    @Nonnull
-    public Optional remove(@Nonnull String name) {
-        return Optional.ofNullable(queryParams.remove(name));
-    }
-
     public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
     }
