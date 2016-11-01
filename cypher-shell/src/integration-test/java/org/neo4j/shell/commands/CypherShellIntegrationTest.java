@@ -162,7 +162,7 @@ public class CypherShellIntegrationTest {
     }
 
     @Test
-    public void setAndListVariables() throws CommandException {
+    public void paramsAndListVariables() throws CommandException {
         assertTrue(shell.getAll().isEmpty());
 
         long randomLong = System.currentTimeMillis();

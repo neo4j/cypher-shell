@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class Param implements Command {
     // Match arguments such as "(key) (value with possible spaces)" where key and value are any strings
-    private static final Pattern argPattern = Pattern.compile("^\\s*(?<key>[^\\s]+)\\s+(?<value>.+)$");
+    private static final Pattern argPattern = Pattern.compile("^\\s*(?<key>.+?):?\\s+(?<value>.+)$");
     public static final String COMMAND_NAME = ":param";
     private final VariableHolder variableHolder;
 
