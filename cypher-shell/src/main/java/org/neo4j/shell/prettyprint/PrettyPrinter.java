@@ -14,22 +14,19 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
 /**
  * Print the result from neo4j in a intelligible fashion.
  */
 public class PrettyPrinter {
     private static final String COMMA_SEPARATOR = ", ";
-
     private static final String COLON_SEPARATOR = ": ";
     private static final String COLON = ":";
     private static final String SPACE = " ";
-    public static final String BACKTICK = "`";
-    private static final Pattern ALPHA_NUMERIC = Pattern.compile("^[\\p{L}_][\\p{L}0-9_]*");
-    private StatisticsCollector statisticsCollector;
+    private final StatisticsCollector statisticsCollector;
 
     public PrettyPrinter(@Nonnull Format format) {
         this.statisticsCollector = new StatisticsCollector(format);
@@ -121,14 +118,14 @@ public class PrettyPrinter {
         StringBuilder sb = new StringBuilder("{");
         sb.append(
                 map.entrySet().stream()
-                        .map(e -> escapeIfNeeded(e.getKey()) + COLON_SEPARATOR + e.getValue())
+                        .map(e -> escape(e.getKey()) + COLON_SEPARATOR + e.getValue())
                         .collect(Collectors.joining(COMMA_SEPARATOR)));
         return sb.append("}").toString();
     }
 
     private String relationshipAsString(Relationship relationship) {
         List<String> relationshipAsString = new ArrayList<>();
-        relationshipAsString.add(COLON + escapeIfNeeded(relationship.type()));
+        relationshipAsString.add(COLON + escape(relationship.type()));
         relationshipAsString.add(mapAsString(relationship.asMap(this::formatValue)));
 
         return "[" + joinWithSpace(relationshipAsString) + "]";
@@ -144,7 +141,7 @@ public class PrettyPrinter {
 
     private String collectNodeLabels(@Nonnull Node node) {
         StringBuilder sb = new StringBuilder();
-        node.labels().forEach(label -> sb.append(COLON).append(escapeIfNeeded(label)));
+        node.labels().forEach(label -> sb.append(COLON).append(escape(label)));
         return sb.toString();
     }
 
@@ -155,13 +152,4 @@ public class PrettyPrinter {
     private static boolean isNotBlank(String string) {
         return string != null && !string.trim().isEmpty();
     }
-
-    private String escapeIfNeeded(String string) {
-        Matcher matcher = ALPHA_NUMERIC.matcher(string);
-        if (!matcher.matches()) {
-            return BACKTICK + string + BACKTICK;
-        }
-        return string;
-    }
-
 }
