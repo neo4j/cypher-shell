@@ -25,6 +25,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class PrettyPrinterTest {
+
+    private final PrettyPrinter plainPrinter = new PrettyPrinter(Format.PLAIN);
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
+
     @Test
     public void returnStatisticsForEmptyRecords() throws Exception {
         // given
@@ -39,7 +43,7 @@ public class PrettyPrinterTest {
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = new PrettyPrinter(Format.VERBOSE).format(result);
+        String actual = verbosePrinter.format(result);
 
         // then
         assertThat(actual, is("Added 10 nodes, Added 1 labels"));
@@ -69,7 +73,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record1, record2));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]"));
@@ -100,7 +104,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("col1, col2\n" +
@@ -132,7 +136,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("rel\n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]"));
@@ -167,7 +171,7 @@ public class PrettyPrinterTest {
 
 
         when(nodeVal.asNode()).thenReturn(node);
-        when(node.labels()).thenReturn(asList("label 1", "label2"));
+        when(node.labels()).thenReturn(asList("label `1", "label2"));
         when(node.asMap(anyObject())).thenReturn(unmodifiableMap(nodeProp));
 
 
@@ -177,11 +181,11 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("rel, node\n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
-                "(:`label 1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
+                "(:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
     }
 
     @Test
@@ -238,7 +242,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("path\n" +
@@ -285,7 +289,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("path\n(:start)-[:RELATIONSHIP_TYPE]->(:end)"));
@@ -348,7 +352,7 @@ public class PrettyPrinterTest {
         when(result.getRecords()).thenReturn(asList(record));
 
         // when
-        String actual = new PrettyPrinter(Format.PLAIN).format(result);
+        String actual = plainPrinter.format(result);
 
         // then
         assertThat(actual, is("path\n" +
