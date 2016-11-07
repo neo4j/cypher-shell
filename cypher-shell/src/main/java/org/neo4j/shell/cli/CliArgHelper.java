@@ -86,6 +86,8 @@ public class CliArgHelper {
 
         cliArgs.setNonInteractive(ns.getBoolean("force-non-interactive"));
 
+        cliArgs.setVersion(ns.getBoolean("version"));
+
         return cliArgs;
     }
 
@@ -152,6 +154,10 @@ public class CliArgHelper {
                 .help("force non-interactive mode, only useful if auto-detection fails (like on Windows)")
                 .dest("force-non-interactive")
               .action(new StoreTrueArgumentAction());
+
+        parser.addArgument("-v", "--version")
+                .help("print version of cypher-shell and exit")
+                .action(new StoreTrueArgumentAction());
 
         parser.addArgument("cypher")
                 .nargs("?")
