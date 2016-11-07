@@ -153,9 +153,19 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         final BoltResult result = setParamsAndValidate(name, valueString);
-        final Object value = result.getRecords().get(0).get(name).asObject();
-        queryParams.put(name, value);
-        return Optional.ofNullable(value);
+        final Object value;
+        if (name.startsWith("`")) {
+            String substring = name.substring(1, name.length() - 1);
+            String updatedName = substring.replace("``", "`");
+            value = result.getRecords().get(0).get(updatedName).asObject();
+            queryParams.put(updatedName, value);
+            return Optional.ofNullable(value);
+
+        } else {
+            value = result.getRecords().get(0).get(name).asObject();
+            queryParams.put(name, value);
+            return Optional.ofNullable(value);
+        }
     }
 
     private BoltResult setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {

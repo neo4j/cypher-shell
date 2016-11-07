@@ -1,6 +1,5 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.Connector;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.TransactionHandler;
@@ -23,10 +22,10 @@ public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>();
 
     public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
-        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell);
+        registerAllCommands(logger, historian, cypherShell, cypherShell);
     }
 
-    private void registerAllCommands(Logger logger, Historian historian, Connector connector,
+    private void registerAllCommands(Logger logger, Historian historian,
                                      TransactionHandler transactionHandler, VariableHolder variableHolder) {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));

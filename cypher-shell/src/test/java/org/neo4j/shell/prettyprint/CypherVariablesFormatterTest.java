@@ -12,6 +12,7 @@ public class CypherVariablesFormatterTest {
     @Test
     public void formatNonAlphanumericStrings() throws Exception {
         assertThat(formatter.escape("abc12_A"), is("abc12_A"));
+        assertThat(formatter.escape("Åbc12_A"), is("Åbc12_A"));
         assertThat(formatter.escape("\0"), is("`\0`"));
         assertThat(formatter.escape("\n"), is("`\n`"));
         assertThat(formatter.escape("comma, separated"), is("`comma, separated`"));

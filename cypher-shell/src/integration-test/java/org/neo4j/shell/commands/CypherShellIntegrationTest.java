@@ -179,4 +179,23 @@ public class CypherShellIntegrationTest {
         assertThat(queryResult.get(0), is("{ bob }\n" + randomLong));
         assertEquals(randomLong, shell.getAll().get("bob"));
     }
+
+    @Test
+    public void paramsAndListVariablesWithSpecialCharacters() throws CommandException {
+        assertTrue(shell.getAll().isEmpty());
+
+        long randomLong = System.currentTimeMillis();
+        Optional result = shell.set("`bob`", String.valueOf(randomLong));
+        assertTrue(result.isPresent());
+        assertEquals(randomLong, result.get());
+
+        shell.execute("RETURN { `bob` }");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger).printOut(captor.capture());
+
+        List<String> queryResult = captor.getAllValues();
+        assertThat(queryResult.get(0), is("{ `bob` }\n" + randomLong));
+        assertEquals(randomLong, shell.getAll().get("bob"));
+    }
 }
