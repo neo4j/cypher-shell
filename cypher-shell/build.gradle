@@ -1,3 +1,18 @@
+version = gitVersion
+
+task generateBuildProperties {
+  def outputDir = file("${buildDir}/resources/main")
+  doFirst {
+    outputDir.exists() || outputDir.mkdirs()
+    def propFile = new File(outputDir, "build.properties")
+    def props = new Properties()
+    props.setProperty("version", gitVersion)
+    props.store(propFile.newWriter(), null)
+  }
+}
+
+processResources.dependsOn generateBuildProperties
+
 jar {
   manifest {
     attributes 'Main-Class': 'org.neo4j.shell.Main'

@@ -60,6 +60,9 @@ subprojects {
 }
 
 ext {
+    // Only match tags starting with a number to avoid neo4j-xxx changelog tags
+    gitVersion = 'git describe --tags --match [0-9]*'.execute([], project.rootDir).text.trim()
+
     argparse4jVersion = '0.7.0'
     junitVersion = '4.12'
     neo4jJavaVersion = '1.1.0-M05'
