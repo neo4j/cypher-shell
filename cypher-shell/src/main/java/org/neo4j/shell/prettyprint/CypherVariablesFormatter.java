@@ -17,4 +17,15 @@ public class CypherVariablesFormatter {
         }
         return string;
     }
+
+    @Nonnull
+    public static String unescapedCypherVariable(@Nonnull String string) {
+        Matcher alphaNumericMatcher = ALPHA_NUMERIC.matcher(string);
+        if (!alphaNumericMatcher.matches()) {
+            String substring = string.substring(1, string.length() - 1);
+            return substring.replace(BACKTICK + BACKTICK, BACKTICK);
+        } else {
+            return string;
+        }
+    }
 }

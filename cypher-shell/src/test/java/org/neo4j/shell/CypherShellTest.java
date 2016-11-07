@@ -129,7 +129,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParamShouldAddParamAndValue() throws CommandException {
+    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = mock(BoltResult.class);
@@ -147,14 +147,14 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws CommandException {
+    public void setParamShouldAddParam() throws CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = mock(BoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
         when(boltResult.getRecords()).thenReturn(Arrays.asList(recordMock));
-        when(recordMock.get("bo`b")).thenReturn(value);
+        when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
         assertTrue(offlineTestShell.getAll().isEmpty());

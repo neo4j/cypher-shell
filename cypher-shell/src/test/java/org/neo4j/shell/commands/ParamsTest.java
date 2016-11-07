@@ -105,7 +105,19 @@ public class ParamsTest {
         // when
         cmd.execute("`var`");
         // then
-        verify(logger).printOut("var: 9");
+        verify(logger).printOut("`var`: 9");
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
+    public void runCommandWithSpecialCharacters() throws CommandException {
+        // given
+        vars.put("var `", 9);
+        vars.put("param", 9999);
+        // when
+        cmd.execute("`var ```");
+        // then
+        verify(logger).printOut("`var ```: 9");
         verifyNoMoreInteractions(logger);
     }
 

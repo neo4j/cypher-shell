@@ -59,25 +59,20 @@ public class Param implements Command {
     @Override
     public void execute(@Nonnull final String argString) throws CommandException {
         Matcher alphanumericMatcher = argPattern.matcher(argString);
-
-        if (!alphanumericMatcher.matches()) {
-            if (argString.trim().startsWith("`")) {
-                Matcher matcher = backtickPattern.matcher(argString);
-                if (matcher.matches() && matcher.group("key").length() > 2) {
-                    variableHolder.set(matcher.group("key"), matcher.group("value"));
-                    return;
-                } else {
-                    throwError();
-                }
-            } else {
-                throwError();
-            }
+        if (alphanumericMatcher.matches()) {
+            variableHolder.set(alphanumericMatcher.group("key"), alphanumericMatcher.group("value"));
+        } else {
+            checkForBackticks(argString);
         }
-        variableHolder.set(alphanumericMatcher.group("key"), alphanumericMatcher.group("value"));
     }
 
-    private void throwError() throws CommandException {
-        throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
-                .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+    private void checkForBackticks(@Nonnull String argString) throws CommandException {
+        Matcher matcher = backtickPattern.matcher(argString);
+        if (argString.trim().startsWith("`") && matcher.matches() && matcher.group("key").length() > 2) {
+            variableHolder.set(matcher.group("key"), matcher.group("value"));
+        } else {
+            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
+                    .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+        }
     }
 }

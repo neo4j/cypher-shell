@@ -7,6 +7,7 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.prettyprint.CypherVariablesFormatter;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
@@ -153,19 +154,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Nonnull
     public Optional set(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         final BoltResult result = setParamsAndValidate(name, valueString);
-        final Object value;
-        if (name.startsWith("`")) {
-            String substring = name.substring(1, name.length() - 1);
-            String updatedName = substring.replace("``", "`");
-            value = result.getRecords().get(0).get(updatedName).asObject();
-            queryParams.put(updatedName, value);
-            return Optional.ofNullable(value);
-
-        } else {
-            value = result.getRecords().get(0).get(name).asObject();
-            queryParams.put(name, value);
-            return Optional.ofNullable(value);
-        }
+        String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
+        final Object value = result.getRecords().get(0).get(parameterName).asObject();
+        queryParams.put(parameterName, value);
+        return Optional.ofNullable(value);
     }
 
     private BoltResult setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
