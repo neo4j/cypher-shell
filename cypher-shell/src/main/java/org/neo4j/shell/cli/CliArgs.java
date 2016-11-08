@@ -15,6 +15,7 @@ public class CliArgs {
     private boolean encryption;
     private boolean debugMode;
     private boolean nonInteractive = false;
+    private boolean version = false;
 
     /**
      * Set the host to the primary value, or if null, the fallback value.
@@ -131,5 +132,13 @@ public class CliArgs {
 
     public boolean getNonInteractive() {
         return nonInteractive;
+    }
+
+    public boolean getVersion() {
+        return version;
+    }
+
+    public void setVersion(boolean version) {
+        this.version = version;
     }
 }

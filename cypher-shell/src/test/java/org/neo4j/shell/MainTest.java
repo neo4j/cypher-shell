@@ -4,7 +4,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.cli.CliArgs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,6 +15,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -165,6 +168,22 @@ public class MainTest {
             assertEquals(authException.code(), e.code());
             verify(shell, times(1)).connect(connectionConfig);
         }
+    }
+
+    @Test
+    public void printsVersionAndExits() throws Exception {
+        CliArgs args = new CliArgs();
+        args.setVersion(true);
+
+        PrintStream printStream = mock(PrintStream.class);
+
+        Main main = new Main(System.in, printStream);
+        main.startShell(args);
+
+        ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+
+        verify(printStream).println(argument.capture());
+        assertTrue(argument.getValue().matches("Cypher-Shell \\d+\\.\\d+\\.\\d+.*"));
     }
 
     @Test

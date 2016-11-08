@@ -2,6 +2,7 @@ package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
@@ -75,6 +76,11 @@ public class Main {
     }
 
     void startShell(@Nonnull CliArgs cliArgs) {
+        if (cliArgs.getVersion()) {
+            out.println("Cypher-Shell " + Build.version());
+            return;
+        }
+
         ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
