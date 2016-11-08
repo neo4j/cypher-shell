@@ -86,6 +86,42 @@ public class ParamsTest {
     }
 
     @Test
+    public void runCommandWithArgWithExtraSpace() throws CommandException {
+        // given
+        vars.put("var", 9);
+        vars.put("param", 9999);
+        // when
+        cmd.execute(" var");
+        // then
+        verify(logger).printOut("var: 9");
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
+    public void runCommandWithArgWithBackticks() throws CommandException {
+        // given
+        vars.put("var", 9);
+        vars.put("param", 9999);
+        // when
+        cmd.execute("`var`");
+        // then
+        verify(logger).printOut("`var`: 9");
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
+    public void runCommandWithSpecialCharacters() throws CommandException {
+        // given
+        vars.put("var `", 9);
+        vars.put("param", 9999);
+        // when
+        cmd.execute("`var ```");
+        // then
+        verify(logger).printOut("`var ```: 9");
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
     public void runCommandWithUnknownArg() throws CommandException {
         // then
         thrown.expect(CommandException.class);

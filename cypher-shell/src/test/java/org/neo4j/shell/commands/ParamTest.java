@@ -51,16 +51,76 @@ public class ParamTest {
     }
 
     @Test
+    public void setSpecialCharacterParameter() throws CommandException {
+        cmd.execute("bØb   9");
+
+        verify(mockShell).set("bØb", "9");
+    }
+
+    @Test
     public void setValueWithSpecialCharacters() throws CommandException {
+        cmd.execute("`bob#`   9");
+
+        verify(mockShell).set("`bob#`", "9");
+    }
+
+    @Test
+    public void setValueWithOddNoOfBackTicks() throws CommandException {
+        cmd.execute(" `bo `` sömething ```   9");
+
+        verify(mockShell).set("`bo `` sömething ```", "9");
+    }
+
+    @Test
+    public void shouldFailForVariablesWithoutEscaping() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
         cmd.execute("bob#   9");
 
-        verify(mockShell).set("bob#", "9");
+        fail("Expected error");
+    }
+
+    @Test
+    public void shouldFailForEmptyVariables() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        cmd.execute("``   9");
+
+        fail("Expected error");
+    }
+
+    @Test
+    public void shouldFailForInvalidVariables() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        cmd.execute("`   9");
+
+        fail("Expected error");
+    }
+
+    @Test
+    public void shouldFailForVariablesWithoutText() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect number of arguments"));
+
+        cmd.execute("```   9");
+
+        fail("Expected error");
     }
 
     @Test
     public void shouldNotSplitOnSpace() throws CommandException {
         cmd.execute("bob 'one two'");
         verify(mockShell).set("bob", "'one two'");
+    }
+
+    @Test
+    public void shouldAcceptUnicodeAlphaNumeric() throws CommandException {
+        cmd.execute("böb 'one two'");
+        verify(mockShell).set("böb", "'one two'");
     }
 
     @Test
@@ -71,11 +131,11 @@ public class ParamTest {
 
     @Test
     public void shouldAcceptForTwoColonsFormOfParams() throws CommandException {
-        cmd.execute("bob:: one");
-        verify(mockShell).set("bob:", "one");
+        cmd.execute("`bob:`: one");
+        verify(mockShell).set("`bob:`", "one");
 
-        cmd.execute("t:om two");
-        verify(mockShell).set("t:om", "two");
+        cmd.execute("`t:om` two");
+        verify(mockShell).set("`t:om`", "two");
     }
 
     @Test

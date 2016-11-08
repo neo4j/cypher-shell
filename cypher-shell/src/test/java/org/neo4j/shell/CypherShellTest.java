@@ -129,7 +129,25 @@ public class CypherShellTest {
     }
 
     @Test
-    public void verifyVariableMethods() throws CommandException {
+    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws CommandException {
+        Value value = mock(Value.class);
+        Record recordMock = mock(Record.class);
+        BoltResult boltResult = mock(BoltResult.class);
+
+        when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
+        when(boltResult.getRecords()).thenReturn(Arrays.asList(recordMock));
+        when(recordMock.get("bo`b")).thenReturn(value);
+        when(value.asObject()).thenReturn("99");
+
+        assertTrue(offlineTestShell.getAll().isEmpty());
+
+        Optional result = offlineTestShell.set("`bo``b`", "99");
+        assertEquals("99", result.get());
+        assertEquals("99", offlineTestShell.getAll().get("bo`b"));
+    }
+
+    @Test
+    public void setParamShouldAddParam() throws CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = mock(BoltResult.class);
@@ -141,7 +159,7 @@ public class CypherShellTest {
 
         assertTrue(offlineTestShell.getAll().isEmpty());
 
-        Optional result = offlineTestShell.set("bob", "99");
+        Optional result = offlineTestShell.set("`bob`", "99");
         assertEquals("99", result.get());
         assertEquals("99", offlineTestShell.getAll().get("bob"));
     }
