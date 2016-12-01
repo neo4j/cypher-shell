@@ -46,6 +46,8 @@ public class CypherShellTest {
 
     @Before
     public void setup() {
+        when(mockedBoltStateHandler.getServerVersion()).thenReturn("");
+
         doReturn(System.out).when(logger).getOutputStream();
         offlineTestShell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
