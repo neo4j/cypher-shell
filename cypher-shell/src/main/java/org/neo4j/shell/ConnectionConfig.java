@@ -5,14 +5,16 @@ import org.neo4j.driver.v1.Config;
 import javax.annotation.Nonnull;
 
 public class ConnectionConfig {
+    private final String scheme;
     private final String host;
     private final int port;
     private final Config.EncryptionLevel encryption;
     private String username;
     private String password;
 
-    public ConnectionConfig(@Nonnull String host, int port, @Nonnull String username, @Nonnull String password,
-                            boolean encryption) {
+    public ConnectionConfig(@Nonnull String scheme, @Nonnull String host, int port, @Nonnull String username,
+                            @Nonnull String password, boolean encryption) {
+        this.scheme = scheme;
         this.host = host;
         this.port = port;
         this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
@@ -30,6 +32,11 @@ public class ConnectionConfig {
             result = preferredValue;
         }
         return result;
+    }
+
+    @Nonnull
+    public String scheme() {
+        return scheme;
     }
 
     @Nonnull
@@ -53,7 +60,7 @@ public class ConnectionConfig {
 
     @Nonnull
     public String driverUrl() {
-        return String.format("bolt://%s:%d", host(), port());
+        return String.format("%s%s:%d", scheme(), host(), port());
     }
 
     @Nonnull

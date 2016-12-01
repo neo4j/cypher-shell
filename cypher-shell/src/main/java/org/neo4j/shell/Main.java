@@ -81,7 +81,9 @@ public class Main {
             return;
         }
 
-        ConnectionConfig connectionConfig = new ConnectionConfig(cliArgs.getHost(),
+        ConnectionConfig connectionConfig = new ConnectionConfig(
+                cliArgs.getScheme(),
+                cliArgs.getHost(),
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
                 cliArgs.getPassword(),

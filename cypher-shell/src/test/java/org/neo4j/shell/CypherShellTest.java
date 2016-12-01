@@ -58,7 +58,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig("", 1, "", "", false);
+        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false);
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.connect(cc);

@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 public class CliArgs {
+    private String scheme = "bolt://";
     private String host = "localhost";
     private int port = 7687;
     private String username = "";
@@ -16,6 +17,13 @@ public class CliArgs {
     private boolean debugMode;
     private boolean nonInteractive = false;
     private boolean version = false;
+
+    /**
+     * Set the scheme to the primary value, or if null, the fallback value.
+     */
+    void setScheme(@Nullable String primary, @Nonnull String fallback) {
+        scheme = primary == null ? fallback : primary;
+    }
 
     /**
      * Set the host to the primary value, or if null, the fallback value.
@@ -85,6 +93,11 @@ public class CliArgs {
      */
     void setDebugMode(boolean enabled) {
         this.debugMode = enabled;
+    }
+
+    @Nonnull
+    public String getScheme() {
+        return scheme;
     }
 
     @Nonnull

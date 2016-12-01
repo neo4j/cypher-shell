@@ -103,7 +103,7 @@ public class CliArgHelperTest {
 
     @Test
     public void parseFullAddress() throws Exception {
-        CliArgs cliArgs = CliArgHelper.parse("--address", "alice:foo@bar:69");
+        CliArgs cliArgs = CliArgHelper.parse("--address", "bolt+routing://alice:foo@bar:69");
         assertNotNull(cliArgs);
         assertEquals("alice", cliArgs.getUsername());
         assertEquals("foo", cliArgs.getPassword());

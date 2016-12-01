@@ -26,7 +26,7 @@ import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
 public class CliArgHelper {
 
     static final Pattern ADDRESS_ARG_PATTERN =
-            Pattern.compile("\\s*(?<protocol>[a-zA-Z]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[a-zA-Z\\d\\-\\.]+)?(:(?<port>\\d+))?\\s*");
+            Pattern.compile("\\s*(?<scheme>[a-zA-Z0-9+\\-.]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[a-zA-Z\\d\\-.]+)?(:(?<port>\\d+))?\\s*");
 
     /**
      * @param args to parse
@@ -53,6 +53,7 @@ public class CliArgHelper {
 
         CliArgs cliArgs = new CliArgs();
 
+        cliArgs.setScheme(addressMatcher.group("scheme"), "bolt://");
         cliArgs.setHost(addressMatcher.group("host"), "localhost");
         // Safe, regex only matches integers
         String portString = addressMatcher.group("port");
@@ -99,7 +100,7 @@ public class CliArgHelper {
             PrintWriter printWriter = new PrintWriter(System.err);
             parser.printUsage(printWriter);
             printWriter.println("cypher-shell: error: Failed to parse address: '" + address + "'");
-            printWriter.println("\n  Address should be of the form: [username:password@][host][:port]");
+            printWriter.println("\n  Address should be of the form: [scheme://][username:password@][host][:port]");
             printWriter.flush();
             return null;
         }
@@ -114,7 +115,7 @@ public class CliArgHelper {
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
                 .help("address and port to connect to")
-                .setDefault("localhost:7687");
+                .setDefault("bolt://localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
                 .help("username to connect as. Can also be specified using environment variable NEO4J_USERNAME");
