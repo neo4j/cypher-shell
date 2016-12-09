@@ -127,10 +127,10 @@ public class Main {
             }
             // else need to prompt for username and password
             if (connectionConfig.username().isEmpty()) {
-                connectionConfig.setUsername(promptForText("username: ", null));
+                connectionConfig.setUsername(promptForNonEmptyText("username", null));
             }
             if (connectionConfig.password().isEmpty()) {
-                connectionConfig.setPassword(promptForText("password: ", '*'));
+                connectionConfig.setPassword(promptForText("password", '*'));
             }
             // try again
             shell.connect(connectionConfig);
@@ -147,10 +147,30 @@ public class Main {
      *         in case of errors
      */
     @Nonnull
+    private String promptForNonEmptyText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
+        String text = promptForText(prompt, mask);
+        if (!text.isEmpty()) {
+            return text;
+        }
+        out.println(prompt + " cannot be empty");
+        out.println();
+        return promptForNonEmptyText(prompt, mask);
+    }
+
+    /**
+     * @param prompt
+     *         to display to the user
+     * @param mask
+     *         single character to display instead of what the user is typing, use null if text is not secret
+     * @return the text which was entered
+     * @throws Exception
+     *         in case of errors
+     */
+    @Nonnull
     private String promptForText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
         String line;
         ConsoleReader consoleReader = new ConsoleReader(in, out);
-        line = consoleReader.readLine(prompt, mask);
+        line = consoleReader.readLine(prompt + ": ", mask);
         consoleReader.close();
 
         if (line == null) {

@@ -171,6 +171,28 @@ public class MainTest {
     }
 
     @Test
+    public void connectInteractivelyRepromptsIfUserIsNotProvided() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "\nbob\nsecret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectInteractively(shell, connectionConfig);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(out, "username: \r\nusername cannot be empty" + System.lineSeparator() + System.lineSeparator() +
+                "username: bob\r\npassword: ******\r\n");
+        verify(connectionConfig).setUsername("bob");
+        verify(connectionConfig).setPassword("secret");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
     public void printsVersionAndExits() throws Exception {
         CliArgs args = new CliArgs();
         args.setVersion(true);
