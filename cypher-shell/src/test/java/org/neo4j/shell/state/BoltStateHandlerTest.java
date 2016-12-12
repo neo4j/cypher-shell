@@ -64,7 +64,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig( "bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig( logger, "bolt://", "", -1, "", "", false);
         handler.connect(config);
 
         assertEquals("", handler.getServerVersion());
@@ -90,7 +90,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", false);
         handler.connect(config);
 
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
@@ -270,7 +270,7 @@ public class BoltStateHandlerTest {
     public void turnOffEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", false);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.NONE, provider.config.encryptionLevel());
     }
@@ -279,7 +279,7 @@ public class BoltStateHandlerTest {
     public void turnOnEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true);
+        ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", true);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
     }
@@ -297,7 +297,7 @@ public class BoltStateHandlerTest {
         }
 
         public void connect() throws CommandException {
-            connect(new ConnectionConfig("bolt://", "", 1, "", "", false));
+            connect(new ConnectionConfig(mock(Logger.class), "bolt://", "", 1, "", "", false));
         }
     }
 

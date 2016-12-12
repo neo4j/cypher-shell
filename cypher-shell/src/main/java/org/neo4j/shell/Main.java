@@ -49,7 +49,7 @@ public class Main {
     }
 
     static String getWelcomeMessage(@Nonnull ConnectionConfig connectionConfig,
-                                           @Nonnull String serverVersion) {
+                                    @Nonnull String serverVersion) {
         String neo4j = "Neo4j";
         if (!serverVersion.isEmpty()) {
             neo4j += " " + serverVersion;
@@ -80,8 +80,11 @@ public class Main {
             out.println("Cypher-Shell " + Build.version());
             return;
         }
+        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
+        logger.setFormat(cliArgs.getFormat());
 
         ConnectionConfig connectionConfig = new ConnectionConfig(
+                logger,
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
                 cliArgs.getPort(),
@@ -89,10 +92,7 @@ public class Main {
                 cliArgs.getPassword(),
                 cliArgs.getEncryption());
 
-        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
         try {
-            logger.setFormat(cliArgs.getFormat());
-
             CypherShell shell = new CypherShell(logger);
             connectInteractively(shell, connectionConfig);
 
