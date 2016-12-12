@@ -16,23 +16,23 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class AddressArgPatternTest {
 
-    private final String protocol;
+    private final String scheme;
     private final String host;
     private final String port;
     private final String username;
     private final String password;
     private final String connString;
 
-    public AddressArgPatternTest(String protocol, String host, String port,
+    public AddressArgPatternTest(String scheme, String host, String port,
                                  String username, String password) {
 
-        this.protocol = protocol;
+        this.scheme = scheme;
         this.host = host;
         this.port = port;
         this.username = username;
         this.password = password;
 
-        StringBuilder connString = new StringBuilder().append(protocol);
+        StringBuilder connString = new StringBuilder().append(scheme);
         // Only expect username/pass in case host is present
         if (!host.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
             connString.append(username).append(":").append(password).append("@");
@@ -49,12 +49,12 @@ public class AddressArgPatternTest {
     @Parameterized.Parameters
     public static Collection<Object[]> parameters() {
         Collection<Object[]> data = new ArrayList<>();
-        for (final String protocol : getProtocols()) {
+        for (final String scheme : getSchemes()) {
             for (final String username : getUsernames()) {
                 for (final String password : getPasswords()) {
                     for (final String host : getHosts()) {
                         for (final String port : getPorts()) {
-                            data.add(new String[]{protocol, host, port, username, password});
+                            data.add(new String[]{scheme, host, port, username, password});
                         }
                     }
                 }
@@ -79,12 +79,12 @@ public class AddressArgPatternTest {
         return new String[]{"", "bob1"};
     }
 
-    private static String[] getProtocols() {
-        return new String[]{"", "bolt://"};
+    private static String[] getSchemes() {
+        return new String[]{"", "bolt://", "bolt+routing://", "w31rd.-+://"};
     }
 
     @Test
-    public void testUserPassProtocolHostPort() {
+    public void testUserPassschemeHostPort() {
         Matcher m = CliArgHelper.ADDRESS_ARG_PATTERN.matcher("   " + connString + "  ");
         assertTrue("Expected a match: " + connString, m.matches());
         if (host.isEmpty()) {
@@ -104,10 +104,10 @@ public class AddressArgPatternTest {
             assertEquals("Mismatched username", username, m.group("username"));
             assertEquals("Mismatched password", password, m.group("password"));
         }
-        if (protocol.isEmpty()) {
-            assertNull("Protocol should have been null", m.group("protocol"));
+        if (scheme.isEmpty()) {
+            assertNull("scheme should have been null", m.group("scheme"));
         } else {
-            assertEquals("Mismatched protocol", protocol, m.group("protocol"));
+            assertEquals("Mismatched scheme", scheme, m.group("scheme"));
         }
     }
 }

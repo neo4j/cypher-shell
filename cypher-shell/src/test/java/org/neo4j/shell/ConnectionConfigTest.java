@@ -2,11 +2,21 @@ package org.neo4j.shell;
 
 import org.junit.Test;
 import org.neo4j.driver.v1.Config;
+import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class ConnectionConfigTest {
-    ConnectionConfig config = new ConnectionConfig("localhost", 1, "bob", "pass", false);
+    private Logger logger = mock(Logger.class);
+    private ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "localhost", 1, "bob",
+            "pass", false);
+
+    @Test
+    public void scheme() throws Exception {
+        assertEquals("bolt://", config.scheme());
+    }
 
     @Test
     public void host() throws Exception {
@@ -29,13 +39,23 @@ public class ConnectionConfigTest {
     }
 
     @Test
-    public void driverUrl() throws Exception {
+    public void driverUrlDefaultScheme() throws Exception {
+        assertEquals("bolt://localhost:1", config.driverUrl());
+    }
+
+    @Test
+    public void driverUrlRoutingScheme() throws Exception {
+        ConnectionConfig config = new ConnectionConfig(logger, "bolt+routing://", "localhost", 1, "bob",
+                "pass", false);
+        verify(logger).printError("@|RED Routing is not supported by cypher-shell. Falling back to direct connection.|@");
         assertEquals("bolt://localhost:1", config.driverUrl());
     }
 
     @Test
     public void encryption() {
-        assertEquals(Config.EncryptionLevel.REQUIRED, new ConnectionConfig("", -1, "", "", true).encryption());
-        assertEquals(Config.EncryptionLevel.NONE, new ConnectionConfig("", -1, "", "", false).encryption());
+        assertEquals(Config.EncryptionLevel.REQUIRED,
+                new ConnectionConfig(logger, "bolt://", "", -1, "", "", true).encryption());
+        assertEquals(Config.EncryptionLevel.NONE,
+                new ConnectionConfig(logger, "bolt://", "", -1, "", "", false).encryption());
     }
 }

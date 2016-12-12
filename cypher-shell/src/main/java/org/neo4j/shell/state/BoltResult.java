@@ -19,10 +19,12 @@ public class BoltResult {
         this.summary = summary;
     }
 
+    @Nonnull
     public List<Record> getRecords() {
         return records;
     }
 
+    @Nonnull
     public ResultSummary getSummary() {
         return summary;
     }

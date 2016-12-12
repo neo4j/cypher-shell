@@ -71,6 +71,7 @@ public class PrettyPrinterTest {
         when(record2.values()).thenReturn(asList(value2));
 
         when(result.getRecords()).thenReturn(asList(record1, record2));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -102,6 +103,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(value));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -134,6 +136,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(value));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -179,6 +182,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -240,6 +244,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(value));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -287,6 +292,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(value));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
@@ -350,6 +356,7 @@ public class PrettyPrinterTest {
         when(record.values()).thenReturn(asList(value));
 
         when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);

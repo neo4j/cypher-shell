@@ -46,6 +46,8 @@ public class CypherShellTest {
 
     @Before
     public void setup() {
+        when(mockedBoltStateHandler.getServerVersion()).thenReturn("");
+
         doReturn(System.out).when(logger).getOutputStream();
         offlineTestShell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
@@ -56,7 +58,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig("", 1, "", "", false);
+        ConnectionConfig cc = new ConnectionConfig(logger, "bolt://", "", 1, "", "", false);
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.connect(cc);
