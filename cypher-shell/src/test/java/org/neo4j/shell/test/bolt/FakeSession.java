@@ -41,11 +41,6 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public String server() {
-        return null;
-    }
-
-    @Override
     public StatementResult run(String statementTemplate, Value parameters) {
         return FakeStatementResult.parseStatement(statementTemplate);
     }
