@@ -30,6 +30,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     protected Driver driver;
     protected Session session;
     protected Transaction tx = null;
+    private String version;
 
     public BoltStateHandler() {
         this(GraphDatabase::driver);
@@ -103,7 +104,9 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             driver = getDriver(connectionConfig, authToken);
             session = driver.session();
             // Bug in Java driver forces us to run a statement to make it actually connect
-            session.run("RETURN 1").consume();
+            StatementResult run = session.run( "RETURN 1" );
+            this.version = run.summary().server().version();
+            run.consume();
         } catch (Throwable t) {
             try {
                 silentDisconnect();
@@ -118,7 +121,6 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     @Override
     public String getServerVersion() {
         if (isConnected()) {
-            String version = session.server();
             if (version == null) {
                 // On versions before 3.1.0-M09
                 version = "";

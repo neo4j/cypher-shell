@@ -10,6 +10,8 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.summary.ServerInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
@@ -53,38 +55,7 @@ public class BoltStateHandlerTest {
                 return new FakeDriver() {
                     @Override
                     public Session session() {
-                        return new FakeSession() {
-                            @Override
-                            public String server() {
-                                return null;
-                            }
-                        };
-                    }
-                };
-            }
-        };
-        BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig( logger, "bolt://", "", -1, "", "", false);
-        handler.connect(config);
-
-        assertEquals("", handler.getServerVersion());
-    }
-
-    @Test
-    public void versionIsNotEmptyAfterConnect() throws CommandException {
-        RecordingDriverProvider provider = new RecordingDriverProvider() {
-            @Override
-            public Driver apply(String uri, AuthToken authToken, Config config) {
-                super.apply(uri, authToken, config);
-                return new FakeDriver() {
-                    @Override
-                    public Session session() {
-                        return new FakeSession() {
-                            @Override
-                            public String server() {
-                                return "Neo4j/9.4.1-ALPHA";
-                            }
-                        };
+                        return new FakeSession();
                     }
                 };
             }
@@ -93,7 +64,35 @@ public class BoltStateHandlerTest {
         ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", false);
         handler.connect(config);
 
+        assertEquals("", handler.getServerVersion());
+    }
+
+    @Test
+    public void versionIsNotEmptyAfterConnect() throws CommandException {
+        Session sessionMock = mock(Session.class);
+        StatementResult resultMock = mock(StatementResult.class);
+        Driver driverMock = mock(Driver.class);
+
+        stubVersion(resultMock, "Neo4j/9.4.1-ALPHA");
+        when(driverMock.session()).thenReturn(sessionMock);
+        when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
+
+        when(sessionMock.isOpen()).thenReturn(true);
+
+        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
+        ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", false);
+        handler.connect(config);
+
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
+    }
+
+    private void stubVersion(StatementResult resultMock, String value) {
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ServerInfo serverInfo = mock(ServerInfo.class);
+
+        when(resultSummary.server()).thenReturn(serverInfo);
+        when(serverInfo.version()).thenReturn(value);
+        when(resultMock.summary()).thenReturn(resultSummary);
     }
 
     @Test
@@ -117,13 +116,16 @@ public class BoltStateHandlerTest {
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
         StatementResult resultMock = mock(StatementResult.class);
+
         RuntimeException originalException = new RuntimeException("original exception");
         RuntimeException thrownFromSilentDisconnect = new RuntimeException("exception from silent disconnect");
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
+        stubVersion(resultMock, "neo4j-version");
         when(mockedDriver.session()).thenReturn(session);
         when(session.run("RETURN 1")).thenReturn(resultMock);
+
         when(resultMock.consume()).thenThrow(originalException);
         doThrow(thrownFromSilentDisconnect).when(session).close();
 
@@ -229,6 +231,7 @@ public class BoltStateHandlerTest {
         Driver driverMock = mock(Driver.class);
         Transaction transactionMock = mock(Transaction.class);
 
+        stubVersion(resultMock, "neo4j-version");
         when(driverMock.session()).thenReturn(sessionMock);
         when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
         when(sessionMock.isOpen()).thenReturn(true);
@@ -288,6 +291,7 @@ public class BoltStateHandlerTest {
      * Bolt state with faked bolt interactions
      */
     private static class OfflineBoltStateHandler extends BoltStateHandler {
+
         public OfflineBoltStateHandler(Driver driver) {
             super((uri, authToken, config) -> driver);
         }

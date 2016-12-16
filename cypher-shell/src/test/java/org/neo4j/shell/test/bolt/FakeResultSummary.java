@@ -61,4 +61,23 @@ class FakeResultSummary implements ResultSummary {
     public long resultConsumedAfter(TimeUnit unit) {
         return 0;
     }
+
+    @Override
+    public ServerInfo server()
+    {
+        return new ServerInfo()
+        {
+            @Override
+            public String address()
+            {
+                throw new Util.NotImplementedYetException("Not implemented yet");
+            }
+
+            @Override
+            public String version()
+            {
+                return null;
+            }
+        };
+    }
 }
