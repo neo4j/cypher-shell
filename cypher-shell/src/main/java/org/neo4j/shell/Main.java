@@ -172,6 +172,10 @@ public class Main {
     private String promptForText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
         String line;
         ConsoleReader consoleReader = new ConsoleReader(in, out);
+        // Disable expansion of bangs: !
+        consoleReader.setExpandEvents(false);
+        // Ensure Reader does not handle user input for ctrl+C behaviour
+        consoleReader.setHandleUserInterrupt(false);
         line = consoleReader.readLine(prompt + ": ", mask);
         consoleReader.close();
 

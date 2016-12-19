@@ -149,6 +149,27 @@ public class MainTest {
     }
 
     @Test
+    public void connectInteractivelyPromptsHandlesBang() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "bo!b\nsec!ret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectInteractively(shell, connectionConfig);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(out, "username: bo!b\r\npassword: *******\r\n");
+        verify(connectionConfig).setUsername("bo!b");
+        verify(connectionConfig).setPassword("sec!ret");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
     public void connectInteractivelyTriesOnlyOnceIfUserPassExists() throws Exception {
         doThrow(authException).doThrow(new RuntimeException("second try")).when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
