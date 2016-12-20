@@ -24,8 +24,8 @@ public class AnsiLogger implements Logger {
     private final boolean debug;
     private Format format;
 
-    public AnsiLogger(final boolean debug) {
-        this(debug, Format.VERBOSE, System.out, System.err);
+    public AnsiLogger(final boolean debug, Format format) {
+        this(debug, format, System.out, System.err);
     }
 
     public AnsiLogger(final boolean debug, @Nonnull Format format,

@@ -31,7 +31,7 @@ public class AnsiLoggerTest {
 
     @Test
     public void defaultStreams() throws Exception {
-        Logger logger = new AnsiLogger(false);
+        Logger logger = new AnsiLogger(false, Format.VERBOSE);
 
         assertEquals(System.out, logger.getOutputStream());
         assertEquals(System.err, logger.getErrorStream());

@@ -57,7 +57,7 @@ public class Exit implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        logger.printOut("Exiting. Bye bye.");
+        logger.printIfVerbose("Exiting. Bye bye.");
 
         throw new ExitException(0);
     }
