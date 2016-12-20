@@ -5,7 +5,6 @@ import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.commands.Help;
@@ -81,7 +80,7 @@ public class Main {
             out.println("Cypher-Shell " + Build.version());
             return;
         }
-        Logger logger = new AnsiLogger(cliArgs.getDebugMode(), cliArgs.getFormat());
+        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
         logger.setFormat(cliArgs.getFormat());
 
         ConnectionConfig connectionConfig = new ConnectionConfig(
@@ -173,6 +172,10 @@ public class Main {
     private String promptForText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
         String line;
         ConsoleReader consoleReader = new ConsoleReader(in, out);
+        // Disable expansion of bangs: !
+        consoleReader.setExpandEvents(false);
+        // Ensure Reader does not handle user input for ctrl+C behaviour
+        consoleReader.setHandleUserInterrupt(false);
         line = consoleReader.readLine(prompt + ": ", mask);
         consoleReader.close();
 

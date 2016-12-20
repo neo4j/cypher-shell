@@ -6,7 +6,6 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.cli.InteractiveShellRunner;
 import org.neo4j.shell.cli.NonInteractiveShellRunner;
 import org.neo4j.shell.cli.StringShellRunner;
-import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 
@@ -53,8 +52,8 @@ public interface ShellRunner {
             return new InteractiveShellRunner(cypherShell, cypherShell, logger, new ShellStatementParser(),
                     System.in, FileHistorian.getDefaultHistoryFile());
         } else {
-            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell,
-                    new AnsiLogger(cliArgs.getDebugMode(), Format.PLAIN),
+            logger.setFormat(Format.PLAIN);
+            return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell, logger,
                     new ShellStatementParser(), System.in);
         }
     }
