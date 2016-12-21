@@ -8,6 +8,7 @@ import org.neo4j.shell.cli.InteractiveShellRunner;
 import org.neo4j.shell.cli.NonInteractiveShellRunner;
 import org.neo4j.shell.log.Logger;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -18,6 +19,7 @@ import static org.neo4j.shell.ShellRunner.isInputInteractive;
 public class ShellRunnerTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
+    private final ConnectionConfig connectionConfig = mock(ConnectionConfig.class);
 
     @Test
     public void isInputInteractiveThrowsOnWindows() throws Exception {
@@ -36,7 +38,7 @@ public class ShellRunnerTest {
     @Test
     public void inputIsInteractiveByDefaultOnWindows() throws Exception {
         assumeTrue(System.getProperty("os.name", "").toLowerCase().contains("windows"));
-        ShellRunner runner = getShellRunner(new CliArgs(), mock(CypherShell.class), mock(Logger.class));
+        ShellRunner runner = getShellRunner(new CliArgs(), mock(CypherShell.class), mock(Logger.class), connectionConfig);
         assertTrue("Should be interactive shell runner by default on windows",
                 runner instanceof InteractiveShellRunner);
     }
@@ -45,7 +47,7 @@ public class ShellRunnerTest {
     public void inputIsNonInteractiveIfForced() throws Exception {
         CliArgs args = new CliArgs();
         args.setNonInteractive(true);
-        ShellRunner runner = getShellRunner(args, mock(CypherShell.class), mock(Logger.class));
+        ShellRunner runner = getShellRunner(args, mock(CypherShell.class), mock(Logger.class), connectionConfig);
         assertTrue("Should be non-interactive shell runner when forced",
                 runner instanceof NonInteractiveShellRunner);
     }

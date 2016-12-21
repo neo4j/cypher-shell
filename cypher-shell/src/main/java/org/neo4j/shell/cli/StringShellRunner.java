@@ -30,7 +30,7 @@ public class StringShellRunner implements ShellRunner {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull String welcomeMessage) {
+    public int runUntilEnd() {
         int exitCode = 0;
         try {
             executer.execute(cypher.trim());

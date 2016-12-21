@@ -39,7 +39,7 @@ public class StringShellRunnerTest {
         String cypherString = "nonsense string";
         StringShellRunner runner = new StringShellRunner(CliArgHelper.parse(cypherString), statementExecuter, logger);
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 0, code);
         verify(statementExecuter).execute("nonsense string");
@@ -53,7 +53,7 @@ public class StringShellRunnerTest {
 
         StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 1, code);
         verify(logger).printError(kaboom);

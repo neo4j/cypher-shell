@@ -242,7 +242,9 @@ public class CypherShellTest {
     public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
         CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
 
-        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, offlineTestShell, logger);
+        ConnectionConfig connectionConfig = mock(ConnectionConfig.class);
+
+        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, offlineTestShell, logger, connectionConfig);
 
         if (!(shellRunner instanceof StringShellRunner)) {
             fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());

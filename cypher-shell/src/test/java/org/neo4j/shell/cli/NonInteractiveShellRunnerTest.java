@@ -51,7 +51,7 @@ public class NonInteractiveShellRunnerTest {
                 cmdExecuter,
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 0, code);
         verify(logger, times(0)).printError(anyString());
@@ -69,7 +69,7 @@ public class NonInteractiveShellRunnerTest {
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
         verify(logger).printError(badLineError);
@@ -87,7 +87,7 @@ public class NonInteractiveShellRunnerTest {
                 logger, statementParser,
                 new ByteArrayInputStream(input.getBytes()));
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Exit code incorrect", 1, code);
         verify(logger, times(2)).printError(badLineError);
@@ -111,7 +111,7 @@ public class NonInteractiveShellRunnerTest {
                 new ByteArrayInputStream(input.getBytes()));
 
         // when
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         // then
         assertEquals(1, code);
@@ -134,7 +134,7 @@ public class NonInteractiveShellRunnerTest {
         // when
         doThrow(new ExitException(99)).when(cmdExecuter).execute(anyString());
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         // then
         assertEquals(99, code);

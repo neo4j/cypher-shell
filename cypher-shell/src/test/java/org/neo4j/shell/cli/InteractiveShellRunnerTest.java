@@ -10,6 +10,7 @@ import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
+import org.neo4j.shell.UserMessagesHandler;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
@@ -57,6 +58,7 @@ public class InteractiveShellRunnerTest {
     private StatementParser statementParser;
     private TransactionHandler txHandler;
     private ClientException badLineError;
+    private UserMessagesHandler userMessagesHandler;
 
     @Before
     public void setup() throws Exception {
@@ -66,6 +68,10 @@ public class InteractiveShellRunnerTest {
         txHandler = mock(TransactionHandler.class);
         historyFile = temp.newFile();
         badLineError = new ClientException("Found a bad line");
+        userMessagesHandler = mock(UserMessagesHandler.class);
+        when(userMessagesHandler.getWelcomeMessage()).thenReturn("Welcome to cypher-shell!");
+        when(userMessagesHandler.getExitMessage()).thenReturn("Exit message");
+
         doThrow(badLineError).when(cmdExecuter).execute(contains("bad"));
         doReturn(System.out).when(logger).getOutputStream();
     }
@@ -75,8 +81,8 @@ public class InteractiveShellRunnerTest {
         String input = "good1;\n" +
                 "good2;\n";
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile);
-        runner.runUntilEnd("");
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
+        runner.runUntilEnd();
 
         verify(cmdExecuter).execute("good1;");
         verify(cmdExecuter).execute("\ngood2;");
@@ -91,9 +97,9 @@ public class InteractiveShellRunnerTest {
                 "bad2;\n" +
                 "good3;\n";
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile);
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 0, code);
 
@@ -116,11 +122,11 @@ public class InteractiveShellRunnerTest {
                 "bad2;\n" +
                 "good3;\n";
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile);
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
 
         doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit;"));
 
-        int code = runner.runUntilEnd("");
+        int code = runner.runUntilEnd();
 
         assertEquals("Wrong exit code", 1234, code);
 
@@ -142,10 +148,10 @@ public class InteractiveShellRunnerTest {
         String input = cmd1 + "\n" + cmd2 + "\n";
 
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile);
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
 
         // when
-        runner.runUntilEnd("");
+        runner.runUntilEnd();
 
         // then
         Historian historian = runner.getHistorian();
@@ -171,7 +177,7 @@ public class InteractiveShellRunnerTest {
 
         // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
         InputStream inputStream = new ByteArrayInputStream(":set var \"String with !bang\"\n".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -187,7 +193,7 @@ public class InteractiveShellRunnerTest {
 
         // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
         InputStream inputStream = new ByteArrayInputStream(":set var \"String with \\!bang\"\n".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -203,7 +209,7 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
         runner.readUntilStatement();
@@ -217,7 +223,7 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
         runner.readUntilStatement();
@@ -228,7 +234,7 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "     \nCREATE (n:Person) RETURN n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -242,7 +248,7 @@ public class InteractiveShellRunnerTest {
     public void testPrompt() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(false);
@@ -270,7 +276,7 @@ public class InteractiveShellRunnerTest {
     public void testPromptInTx() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(true);
@@ -299,28 +305,29 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "  \\   \nCREATE (n:Person) RETURN n\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
-        runner.runUntilEnd("");
+        runner.runUntilEnd();
 
         // then
         verifyNoMoreInteractions(cmdExecuter);
     }
 
     @Test
-    public void printsWelcomeMessage() throws Exception {
+    public void printsWelcomeAndExitMessage() throws Exception {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n\n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
-                new ShellStatementParser(), inputStream, historyFile);
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
-        runner.runUntilEnd("Welcome to cypher-shell!");
+        runner.runUntilEnd();
 
         // then
         verify(logger).printIfVerbose("Welcome to cypher-shell!");
+        verify(logger).printIfVerbose("Exit message");
     }
 
     @Test
@@ -328,10 +335,10 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n\n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
-        runner.runUntilEnd("");
+        runner.runUntilEnd();
 
         // then
         verify(cmdExecuter).execute("CREATE (n:Person) RETURN n\n;");
@@ -342,10 +349,10 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
-        runner.runUntilEnd("");
+        runner.runUntilEnd();
 
         // then
         verify(cmdExecuter).execute("CREATE (n:Person) RETURN n;");
@@ -356,7 +363,7 @@ public class InteractiveShellRunnerTest {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
-                new ShellStatementParser(), inputStream, historyFile);
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
@@ -376,10 +383,10 @@ public class InteractiveShellRunnerTest {
         FakeInterruptableShell fakeShell = spy(new FakeInterruptableShell(logger, boltStateHandler));
         InputStream inputStream = new ByteArrayInputStream("RETURN 1;\n".getBytes());
         InteractiveShellRunner runner = new InteractiveShellRunner(fakeShell, fakeShell, logger,
-                new ShellStatementParser(), inputStream, historyFile);
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // during
-        Thread t = new Thread(() -> runner.runUntilEnd(""));
+        Thread t = new Thread(runner::runUntilEnd);
         t.start();
 
         // wait until execution has begun

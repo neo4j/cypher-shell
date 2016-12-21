@@ -41,7 +41,5 @@ public class ExitTest {
         thrown.expect(ExitException.class);
 
         cmd.execute("");
-
-        verify(logger).printOut("Exiting. Bye bye.");
     }
 }

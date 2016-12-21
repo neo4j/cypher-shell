@@ -5,6 +5,7 @@ import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
+import org.neo4j.shell.UserMessagesHandler;
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
@@ -40,13 +41,16 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final StatementParser statementParser;
     private final TransactionHandler txHandler;
     private final StatementExecuter executer;
+    private final UserMessagesHandler userMessagesHandler;
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
                                   @Nonnull TransactionHandler txHandler,
                                   @Nonnull Logger logger,
                                   @Nonnull StatementParser statementParser,
                                   @Nonnull InputStream inputStream,
-                                  @Nonnull File historyFile) throws IOException {
+                                  @Nonnull File historyFile,
+                                  @Nonnull UserMessagesHandler userMessagesHandler) throws IOException {
+        this.userMessagesHandler = userMessagesHandler;
         this.currentyExecuting = new AtomicBoolean(false);
         this.executer = executer;
         this.txHandler = txHandler;
@@ -70,11 +74,11 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     }
 
     @Override
-    public int runUntilEnd(@Nonnull String welcomeMessage) {
+    public int runUntilEnd() {
         int exitCode = 0;
         boolean running = true;
 
-        logger.printIfVerbose(welcomeMessage);
+        logger.printIfVerbose(userMessagesHandler.getWelcomeMessage());
 
         while (running) {
             try {
@@ -95,6 +99,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                 currentyExecuting.set(false);
             }
         }
+        logger.printIfVerbose(userMessagesHandler.getExitMessage());
         return exitCode;
     }
 
