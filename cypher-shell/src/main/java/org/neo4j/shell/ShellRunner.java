@@ -17,14 +17,13 @@ import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
 
 public interface ShellRunner {
+
     /**
      * Run and handle user input until end of file
      *
-     * @param welcomeMessage
-     *         a formatted welcome message which may be printed, if suitable
      * @return error code to exit with
      */
-    int runUntilEnd(@Nonnull String welcomeMessage);
+    int runUntilEnd();
 
     /**
      * @return an object which can provide the history of commands executed
@@ -38,18 +37,22 @@ public interface ShellRunner {
      * @param cliArgs
      * @param cypherShell
      * @param logger
+     * @param connectionConfig
      * @return a ShellRunner
      * @throws IOException
      */
     @Nonnull
     static ShellRunner getShellRunner(@Nonnull CliArgs cliArgs,
                                       @Nonnull CypherShell cypherShell,
-                                      @Nonnull Logger logger) throws IOException {
+                                      @Nonnull Logger logger,
+                                      @Nonnull ConnectionConfig connectionConfig) throws IOException {
         if (cliArgs.getCypher().isPresent()) {
             return new StringShellRunner(cliArgs, cypherShell, logger);
         } else if (shouldBeInteractive(cliArgs)) {
+            UserMessagesHandler userMessagesHandler =
+                    new UserMessagesHandler(connectionConfig, cypherShell.getServerVersion());
             return new InteractiveShellRunner(cypherShell, cypherShell, logger, new ShellStatementParser(),
-                    System.in, FileHistorian.getDefaultHistoryFile());
+                    System.in, FileHistorian.getDefaultHistoryFile(), userMessagesHandler);
         } else {
             return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell, logger,
                     new ShellStatementParser(), System.in);

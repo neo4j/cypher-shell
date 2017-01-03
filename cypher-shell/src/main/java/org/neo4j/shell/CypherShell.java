@@ -5,7 +5,6 @@ import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
-import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.CypherVariablesFormatter;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
@@ -188,9 +187,9 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                logger.printIfVerbose(AnsiFormattedText.s().append("\nBye!").formattedString());
                 reset();
             }
         });
     }
+
 }

@@ -6,10 +6,7 @@ import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
-import org.neo4j.shell.commands.Exit;
-import org.neo4j.shell.commands.Help;
 import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 
@@ -48,33 +45,6 @@ public class Main {
         this.out = out;
     }
 
-    static String getWelcomeMessage(@Nonnull ConnectionConfig connectionConfig,
-                                    @Nonnull String serverVersion) {
-        String neo4j = "Neo4j";
-        if (!serverVersion.isEmpty()) {
-            neo4j += " " + serverVersion;
-        }
-        AnsiFormattedText welcomeMessage = AnsiFormattedText.from("Connected to ")
-                                                            .append(neo4j)
-                                                            .append(" at ")
-                                                            .bold().append(connectionConfig.driverUrl()).boldOff();
-
-        if (!connectionConfig.username().isEmpty()) {
-            welcomeMessage = welcomeMessage
-                    .append(" as user ")
-                    .bold().append(connectionConfig.username()).boldOff();
-        }
-
-        return welcomeMessage
-                .append(".\nType ")
-                .bold().append(Help.COMMAND_NAME).boldOff()
-                .append(" for a list of available commands or ")
-                .bold().append(Exit.COMMAND_NAME).boldOff()
-                .append(" to exit the shell.")
-                .append("\nNote that Cypher queries must end with a ")
-                .bold().append("semicolon.").boldOff().formattedString();
-    }
-
     void startShell(@Nonnull CliArgs cliArgs) {
         if (cliArgs.getVersion()) {
             out.println("Cypher-Shell " + Build.version());
@@ -97,13 +67,13 @@ public class Main {
             connectInteractively(shell, connectionConfig);
 
             // Construct shellrunner after connecting, due to interrupt handling
-            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger);
+            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
 
             CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
 
             shell.setCommandHelper(commandHelper);
 
-            int code = shellRunner.runUntilEnd(getWelcomeMessage(connectionConfig, shell.getServerVersion()));
+            int code = shellRunner.runUntilEnd();
             System.exit(code);
         } catch (Throwable e) {
             logger.printError(e);
