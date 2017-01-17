@@ -86,15 +86,6 @@ public class BoltStateHandlerTest {
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
     }
 
-    private void stubVersion(StatementResult resultMock, String value) {
-        ResultSummary resultSummary = mock(ResultSummary.class);
-        ServerInfo serverInfo = mock(ServerInfo.class);
-
-        when(resultSummary.server()).thenReturn(serverInfo);
-        when(serverInfo.version()).thenReturn(value);
-        when(resultMock.summary()).thenReturn(resultSummary);
-    }
-
     @Test
     public void closeTransactionAfterRollback() throws CommandException {
         boltStateHandler.connect();
@@ -290,6 +281,15 @@ public class BoltStateHandlerTest {
     /**
      * Bolt state with faked bolt interactions
      */
+    private void stubVersion(StatementResult resultMock, String value) {
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ServerInfo serverInfo = mock(ServerInfo.class);
+
+        when(resultSummary.server()).thenReturn(serverInfo);
+        when(serverInfo.version()).thenReturn(value);
+        when(resultMock.summary()).thenReturn(resultSummary);
+    }
+
     private static class OfflineBoltStateHandler extends BoltStateHandler {
 
         public OfflineBoltStateHandler(Driver driver) {
