@@ -93,12 +93,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             throw new CommandException("Already connected");
         }
 
-        final AuthToken authToken;
-        if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
-            authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
-        } else {
-            authToken = null;
-        }
+        final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
 
         try {
             driver = getDriver(connectionConfig, authToken);
