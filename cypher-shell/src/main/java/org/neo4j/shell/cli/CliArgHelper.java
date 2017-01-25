@@ -11,12 +11,13 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import static java.lang.String.format;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_AT_END;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
 
@@ -107,10 +108,15 @@ public class CliArgHelper {
         return matcher;
     }
 
-    private static ArgumentParser setupParser() {
-        ArgumentParser parser = ArgumentParsers.newArgumentParser("cypher-shell")
-                .defaultHelp(true)
-                .description("A command line shell where you can execute Cypher against an instance of Neo4j");
+    private static ArgumentParser setupParser()
+    {
+        ArgumentParser parser = ArgumentParsers.newArgumentParser( "cypher-shell" ).defaultHelp( true ).description(
+                format( "A command line shell where you can execute Cypher against an instance of Neo4j. " +
+                        "By default the shell is interactive but you can use it for scripting by passing cypher " +
+                        "directly on the command line or by piping a file with cypher statements (requires Powershell on Windows)." +
+                        "%n%n" +
+                        "example of piping a file:%n" +
+                        "  cat some-cypher.txt | cypher-shell" ) );
 
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
