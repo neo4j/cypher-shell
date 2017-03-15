@@ -9,12 +9,11 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Optional;
 
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
+import static org.neo4j.shell.system.Utils.isWindows;
 
 public interface ShellRunner {
 
@@ -68,27 +67,28 @@ public interface ShellRunner {
             return false;
         }
 
-        return isInputInteractive(System.getProperty("os.name")).orElse(true);
+        return isInputInteractive();
     }
 
     /**
      * Checks if STDIN is a TTY. In case TTY checking is not possible (lack of libc), then the check falls back to
      * the built in Java {@link System#console()} which checks if EITHER STDIN or STDOUT has been redirected.
      *
-     * @return true if the shell reading from a TTY, false otherwise (e.g., we are reading from a file). If on windows,
-     * no result is returned.
+     * @return true if the shell reading from an interactive terminal, false otherwise (e.g., we are reading from a
+     * file).
      */
-    static Optional<Boolean> isInputInteractive(@Nullable final String osName) {
-        if (osName != null && osName.toLowerCase().contains("windows")) {
-            // System.console is always null on windows
-            return Optional.empty();
+    static boolean isInputInteractive() {
+        if (isWindows()) {
+            // Input will never be a TTY on windows and it isatty seems to be able to block forever on Windows so avoid
+            // calling it.
+            return System.console() != null;
         }
         try {
-            return Optional.of(1 == isatty(STDIN_FILENO));
-        } catch (NoClassDefFoundError e) {
+            return 1 == isatty(STDIN_FILENO);
+        } catch (Throwable ignored) {
             // system is not using libc (like Alpine Linux)
             // Fallback to checking stdin OR stdout
-            return Optional.of(System.console() != null);
+            return System.console() != null;
         }
     }
 }

@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import static org.neo4j.shell.ShellRunner.isInputInteractive;
+
 public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
     private final InputStream in;
@@ -64,7 +66,8 @@ public class Main {
 
         try {
             CypherShell shell = new CypherShell(logger);
-            connectInteractively(shell, connectionConfig);
+            // Can only prompt for password if input has not been redirected
+            connectMaybeInteractively(shell, connectionConfig, isInputInteractive());
 
             // Construct shellrunner after connecting, due to interrupt handling
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
@@ -84,7 +87,8 @@ public class Main {
     /**
      * Connect the shell to the server, and try to handle missing passwords and such
      */
-    void connectInteractively(@Nonnull CypherShell shell, @Nonnull ConnectionConfig connectionConfig)
+    void connectMaybeInteractively(@Nonnull CypherShell shell, @Nonnull ConnectionConfig connectionConfig,
+                                   boolean interactively)
             throws Exception {
         try {
             shell.connect(connectionConfig);
@@ -98,14 +102,19 @@ public class Main {
                 throw e;
             }
             // else need to prompt for username and password
-            if (connectionConfig.username().isEmpty()) {
-                connectionConfig.setUsername(promptForNonEmptyText("username", null));
+            if (interactively) {
+                if (connectionConfig.username().isEmpty()) {
+                    connectionConfig.setUsername(promptForNonEmptyText("username", null));
+                }
+                if (connectionConfig.password().isEmpty()) {
+                    connectionConfig.setPassword(promptForText("password", '*'));
+                }
+                // try again
+                shell.connect(connectionConfig);
+            } else {
+                // Can't prompt because input has been redirected
+                throw e;
             }
-            if (connectionConfig.password().isEmpty()) {
-                connectionConfig.setPassword(promptForText("password", '*'));
-            }
-            // try again
-            shell.connect(connectionConfig);
         }
     }
 
