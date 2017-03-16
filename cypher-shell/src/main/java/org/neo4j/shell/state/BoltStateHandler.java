@@ -7,9 +7,8 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.StatementRunner;
-import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -18,9 +17,14 @@ import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
 
 /**
  * Handles interactions with the driver
@@ -29,8 +33,8 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
     protected Session session;
-    protected Transaction tx = null;
     private String version;
+    private List<Statement> transactionStatements;
 
     public BoltStateHandler() {
         this(GraphDatabase::driver);
@@ -48,20 +52,19 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (isTransactionOpen()) {
             throw new CommandException("There is already an open transaction");
         }
-        tx = session.beginTransaction();
+        transactionStatements = new ArrayList<>();
     }
 
     @Override
-    public void commitTransaction() throws CommandException {
+    public Optional<List<BoltResult>> commitTransaction() throws CommandException {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
         if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to commit");
         }
-        tx.success();
-        tx.close();
-        tx = null;
+        return captureResults(transactionStatements);
+
     }
 
     @Override
@@ -72,14 +75,12 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         if (!isTransactionOpen()) {
             throw new CommandException("There is no open transaction to rollback");
         }
-        tx.failure();
-        tx.close();
-        tx = null;
+        clearTransactionStatements();
     }
 
     @Override
     public boolean isTransactionOpen() {
-        return tx != null;
+        return transactionStatements != null;
     }
 
     @Override
@@ -132,15 +133,17 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     @Nonnull
     public Optional<BoltResult> runCypher(@Nonnull String cypher,
                                           @Nonnull Map<String, Object> queryParams) throws CommandException {
-        StatementRunner statementRunner = getStatementRunner();
-        StatementResult statementResult = statementRunner.run(cypher, queryParams);
-
-        if (statementResult == null) {
-            return Optional.empty();
+        if (!isConnected()) {
+            throw new CommandException("Not connected to Neo4j");
         }
-
-        // calling list()/consume() is what actually executes cypher on the server
-        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
+        if (this.transactionStatements != null) {
+            transactionStatements.add(new Statement(cypher, queryParams));
+            return Optional.empty();
+        } else {
+            List<Statement> transactionStatements = asList(new Statement(cypher, queryParams));
+            BoltResult boltResult = captureResults(transactionStatements).get().get(0);
+            return Optional.of(boltResult);
+        }
     }
 
     /**
@@ -171,27 +174,9 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             // Clear current state
             if (isTransactionOpen()) {
                 // Bolt has already rolled back the transaction but it doesn't close it properly
-                tx.failure();
-                tx.close();
-                tx = null;
+                clearTransactionStatements();
             }
         }
-    }
-
-    /**
-     * Returns an appropriate runner, depending on the current transaction state.
-     *
-     * @return a statementrunner to execute cypher, or throws an exception if not connected
-     */
-    @Nonnull
-    private StatementRunner getStatementRunner() throws CommandException {
-        if (!isConnected()) {
-            throw new CommandException("Not connected to Neo4j");
-        }
-        if (isTransactionOpen()) {
-            return tx;
-        }
-        return session;
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
@@ -199,5 +184,32 @@ public class BoltStateHandler implements TransactionHandler, Connector {
                               .withLogging(new ConsoleLogging(Level.OFF))
                               .withEncryptionLevel(connectionConfig.encryption()).toConfig();
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
+    }
+
+    private List<StatementResult> executeWithRetry(List<Statement> transactionStatements) {
+        return session.writeTransaction(tx -> transactionStatements.stream().map(tx::run).collect(Collectors.toList()));
+    }
+
+    List<Statement> getTransactionStatements() {
+        return transactionStatements;
+    }
+
+    private void clearTransactionStatements() {
+        this.transactionStatements = null;
+    }
+
+    private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
+        List<StatementResult> statementResults = executeWithRetry(transactionStatements);
+        clearTransactionStatements();
+
+        if (statementResults == null || statementResults.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // calling list()/consume() is what actually executes cypher on the server
+        List<BoltResult> returnVal = statementResults.stream()
+                .map(sr -> new BoltResult(sr.list(), sr.consume()))
+                .collect(Collectors.toList());
+        return Optional.of(returnVal);
     }
 }

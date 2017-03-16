@@ -13,6 +13,7 @@ import org.neo4j.shell.state.BoltStateHandler;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -80,9 +81,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
-        if (result.isPresent()) {
-            logger.printOut(prettyPrinter.format(result.get()));
-        }
+        result.ifPresent(boltResult -> logger.printOut(prettyPrinter.format(boltResult)));
     }
 
     @Override
@@ -135,8 +134,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Override
-    public void commitTransaction() throws CommandException {
-        boltStateHandler.commitTransaction();
+    public Optional<List<BoltResult>> commitTransaction() throws CommandException {
+        Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
+        results.ifPresent(boltResult -> boltResult.forEach(result -> logger.printOut(prettyPrinter.format(result))));
+        return results;
     }
 
     @Override

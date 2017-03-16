@@ -1,10 +1,7 @@
 package org.neo4j.shell.commands;
 
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
@@ -103,10 +100,10 @@ public class CypherShellIntegrationTest {
         shell.execute("MATCH (n) RETURN n");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(3)).printOut(captor.capture());
+        verify(logger, times(2)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
+        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
     }
 
     @Test
@@ -139,26 +136,28 @@ public class CypherShellIntegrationTest {
         shell.execute("MATCH (n) RETURN n");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(3)).printOut(captor.capture());
+        verify(logger, times(2)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
+        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
     }
 
     @Test
     public void commitScenario() throws CommandException {
         beginCommand.execute("");
         shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
+        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute("MATCH (n:TestPerson) RETURN n");
         commitCommand.execute("");
 
         //then
-        shell.execute("MATCH (n) RETURN n");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(2)).printOut(captor.capture());
+        verify(logger, times(3)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Joe Smith\"})"));
+        assertThat(result.get(2),
+                is("n\n(:TestPerson {name: \"Jane Smith\"})" + "\n(:TestPerson {name: \"Joe Smith\"})"));
     }
 
     @Test

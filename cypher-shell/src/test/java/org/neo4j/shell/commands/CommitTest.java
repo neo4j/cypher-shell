@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.Logger;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;

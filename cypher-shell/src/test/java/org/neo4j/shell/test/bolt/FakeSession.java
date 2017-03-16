@@ -13,11 +13,23 @@ public class FakeSession implements Session {
 
     @Override
     public Transaction beginTransaction() {
-        return new FakeTransaction();
+        return null;
     }
 
     @Override
     public Transaction beginTransaction(String bookmark) {
+        return null;
+    }
+
+    @Override
+    public <T> T readTransaction( TransactionWork<T> work )
+    {
+        return null;
+    }
+
+    @Override
+    public <T> T writeTransaction( TransactionWork<T> work )
+    {
         return null;
     }
 
