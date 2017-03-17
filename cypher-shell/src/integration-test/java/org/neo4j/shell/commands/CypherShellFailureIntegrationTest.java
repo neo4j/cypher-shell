@@ -5,6 +5,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.cli.Format;
@@ -30,6 +32,7 @@ public class CypherShellFailureIntegrationTest {
 
     @Test
     public void cypherWithNoPasswordShouldReturnValidError() throws CommandException {
+        thrown.expect( AuthenticationException.class );
         thrown.expectMessage("The client is unauthorized due to authentication failure.");
 
         shell.connect(new ConnectionConfig(logger, "bolt://", "localhost", 7687, "neo4j", "", true));
