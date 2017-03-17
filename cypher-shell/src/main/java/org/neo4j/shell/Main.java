@@ -1,7 +1,8 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
-import org.neo4j.driver.v1.exceptions.ClientException;
+
+import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
@@ -92,13 +93,9 @@ public class Main {
             throws Exception {
         try {
             shell.connect(connectionConfig);
-        } catch (ClientException e) {
+        } catch (AuthenticationException e) {
             // Only prompt for username/password if they weren't used
             if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
-                throw e;
-            }
-            // Errors except authentication related should be shown to user
-            if (e.code() == null || !e.code().equals(NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED)) {
                 throw e;
             }
             // else need to prompt for username and password
