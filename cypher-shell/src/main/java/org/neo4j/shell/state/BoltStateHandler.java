@@ -9,6 +9,7 @@ import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -179,6 +181,14 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
     }
 
+    List<Statement> getTransactionStatements() {
+        return this.transactionStatements;
+    }
+
+    private void clearTransactionStatements() {
+        this.transactionStatements = null;
+    }
+
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         Config config = Config.build()
                               .withLogging(new ConsoleLogging(Level.OFF))
@@ -186,30 +196,25 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
     }
 
-    private List<StatementResult> executeWithRetry(List<Statement> transactionStatements) {
-        return session.writeTransaction(tx -> transactionStatements.stream().map(tx::run).collect(Collectors.toList()));
-    }
-
-    List<Statement> getTransactionStatements() {
-        return transactionStatements;
-    }
-
-    private void clearTransactionStatements() {
-        this.transactionStatements = null;
-    }
-
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
-        List<StatementResult> statementResults = executeWithRetry(transactionStatements);
-        clearTransactionStatements();
+        List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
+            // calling list()/consume() is what actually executes cypher on the server
+            StatementResult sr = transaction.run(statement);
+            return new BoltResult(sr.list(), sr.consume());
+        });
 
-        if (statementResults == null || statementResults.isEmpty()) {
+        clearTransactionStatements();
+        if (results == null || results.isEmpty()) {
             return Optional.empty();
         }
+        return Optional.of(results);
+    }
 
-        // calling list()/consume() is what actually executes cypher on the server
-        List<BoltResult> returnVal = statementResults.stream()
-                .map(sr -> new BoltResult(sr.list(), sr.consume()))
-                .collect(Collectors.toList());
-        return Optional.of(returnVal);
+    private List<BoltResult> executeWithRetry(List<Statement> transactionStatements, BiFunction<Statement, Transaction, BoltResult> biFunction) {
+        return session.writeTransaction(tx ->
+                transactionStatements.stream()
+                        .map(transactionStatement -> biFunction.apply(transactionStatement, tx))
+                        .collect(Collectors.toList()));
+
     }
 }

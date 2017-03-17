@@ -173,8 +173,9 @@ public class BoltStateHandlerTest {
         Session sessionMock = mock(Session.class);
         Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
 
-        StatementResult resultMock1 = mock(StatementResult.class);
-        StatementResult resultMock2 = mock(StatementResult.class);
+        BoltResult boltResultMock1 = mock(BoltResult.class);
+        BoltResult boltResultMock2 = mock(BoltResult.class);
+
         Record record1 = mock(Record.class);
         Record record2 = mock(Record.class);
         Record record3 = mock(Record.class);
@@ -183,8 +184,8 @@ public class BoltStateHandlerTest {
         Value str1Val = mock(Value.class);
         Value str2Val = mock(Value.class);
 
-        when(resultMock1.list()).thenReturn(asList(record1, record2));
-        when(resultMock2.list()).thenReturn(asList(record3));
+        when(boltResultMock1.getRecords()).thenReturn(asList(record1, record2));
+        when(boltResultMock2.getRecords()).thenReturn(asList(record3));
 
         when(str1Val.toString()).thenReturn("str1");
         when(str2Val.toString()).thenReturn("str2");
@@ -196,7 +197,7 @@ public class BoltStateHandlerTest {
 
         when(record3.get(0)).thenReturn(str1Val);
         when(record3.get(1)).thenReturn(str2Val);
-        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(resultMock1, resultMock2));
+        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(boltResultMock1, boltResultMock2));
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
         boltStateHandler.connect();
@@ -205,12 +206,14 @@ public class BoltStateHandlerTest {
         boltStateHandler.runCypher("RETURN \"str1\", \"str2\"", Collections.emptyMap());
 
         Optional<List<BoltResult>> boltResultOptional = boltStateHandler.commitTransaction();
-        Record actualRecord1 = boltResultOptional.get().get(0).getRecords().get(0);
-        Record actualRecord2 = boltResultOptional.get().get(0).getRecords().get(1);
+        List<BoltResult> boltResults = boltResultOptional.get();
+        Record actualRecord1 = boltResults.get(0).getRecords().get(0);
+        Record actualRecord2 = boltResults.get(0).getRecords().get(1);
 
-        Record actualRecord3 = boltResultOptional.get().get(1).getRecords().get(0);
+        Record actualRecord3 = boltResults.get(1).getRecords().get(0);
 
         assertNull(boltStateHandler.getTransactionStatements());
+
         assertEquals("1", actualRecord1.get(0).toString());
         assertEquals("2", actualRecord2.get(0).toString());
 
@@ -248,13 +251,13 @@ public class BoltStateHandlerTest {
     public void shouldRunCypherQuery() throws CommandException {
         Session sessionMock = mock(Session.class);
         StatementResult versionMock = mock(StatementResult.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        BoltResult resultMock = mock(BoltResult.class);
         Record recordMock = mock(Record.class);
         Value valueMock = mock(Value.class);
 
         Driver driverMock = stubVersionInAnOpenSession(versionMock, sessionMock, "neo4j-version");
 
-        when(resultMock.list()).thenReturn(asList(recordMock));
+        when(resultMock.getRecords()).thenReturn(asList(recordMock));
 
         when(valueMock.toString()).thenReturn("999");
         when(recordMock.get(0)).thenReturn(valueMock);
@@ -264,8 +267,11 @@ public class BoltStateHandlerTest {
 
         boltStateHandler.connect();
 
-        assertEquals("999", boltStateHandler.runCypher("RETURN 999",
-                new HashMap<>()).get().getRecords().get(0).get(0).toString());
+        BoltResult boltResult = boltStateHandler.runCypher("RETURN 999",
+                new HashMap<>()).get();
+        verify(sessionMock).writeTransaction(anyObject());
+
+        assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
     }
 
     @Test

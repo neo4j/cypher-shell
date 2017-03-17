@@ -1,7 +1,10 @@
 package org.neo4j.shell.commands;
 
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
@@ -97,7 +100,7 @@ public class CypherShellIntegrationTest {
         rollbackCommand.execute("");
 
         //then
-        shell.execute("MATCH (n) RETURN n");
+        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger, times(2)).printOut(captor.capture());
@@ -114,7 +117,7 @@ public class CypherShellIntegrationTest {
 
         //then
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n) RETURN n");
+        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger, times(3)).printOut(captor.capture());
@@ -133,7 +136,7 @@ public class CypherShellIntegrationTest {
 
         //then
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n) RETURN n");
+        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger, times(2)).printOut(captor.capture());
@@ -147,7 +150,7 @@ public class CypherShellIntegrationTest {
         beginCommand.execute("");
         shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n:TestPerson) RETURN n");
+        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
         commitCommand.execute("");
 
         //then
