@@ -22,6 +22,18 @@ public class FakeDriver implements Driver {
     }
 
     @Override
+    public Session session( String bookmark )
+    {
+        return null;
+    }
+
+    @Override
+    public Session session( AccessMode mode, String bookmark )
+    {
+        return null;
+    }
+
+    @Override
     public void close() throws Neo4jException {
     }
 }

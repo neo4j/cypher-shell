@@ -7,9 +7,10 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.ServerInfo;
 import org.neo4j.shell.ConnectionConfig;
@@ -18,13 +19,27 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
-import org.neo4j.shell.test.bolt.FakeTransaction;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.anyObject;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class BoltStateHandlerTest {
     @Rule
@@ -69,15 +84,7 @@ public class BoltStateHandlerTest {
 
     @Test
     public void versionIsNotEmptyAfterConnect() throws CommandException {
-        Session sessionMock = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
-        Driver driverMock = mock(Driver.class);
-
-        stubVersion(resultMock, "Neo4j/9.4.1-ALPHA");
-        when(driverMock.session()).thenReturn(sessionMock);
-        when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
-
-        when(sessionMock.isOpen()).thenReturn(true);
+        Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
         ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "", -1, "", "", false);
@@ -91,31 +98,24 @@ public class BoltStateHandlerTest {
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
 
-        assertNotNull("Expected an open transaction", boltStateHandler.getCurrentTransaction());
-
-        FakeTransaction tx = (FakeTransaction) boltStateHandler.getCurrentTransaction();
+        assertNotNull(boltStateHandler.getTransactionStatements());
 
         boltStateHandler.rollbackTransaction();
 
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertFalse("Transaction should not be successful", tx.isSuccess());
-        assertNull("Expected tx to be gone", boltStateHandler.getCurrentTransaction());
+        assertNull(boltStateHandler.getTransactionStatements());
     }
 
     @Test
     public void exceptionsFromSilentDisconnectAreSuppressedToReportOriginalErrors() throws CommandException {
-        Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
         StatementResult resultMock = mock(StatementResult.class);
 
         RuntimeException originalException = new RuntimeException("original exception");
         RuntimeException thrownFromSilentDisconnect = new RuntimeException("exception from silent disconnect");
 
-        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
-        stubVersion(resultMock, "neo4j-version");
-        when(mockedDriver.session()).thenReturn(session);
-        when(session.run("RETURN 1")).thenReturn(resultMock);
+        Driver mockedDriver = stubVersionInAnOpenSession(resultMock, session, "neo4j-version");
+        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
         when(resultMock.consume()).thenThrow(originalException);
         doThrow(thrownFromSilentDisconnect).when(session).close();
@@ -133,15 +133,11 @@ public class BoltStateHandlerTest {
     public void closeTransactionAfterCommit() throws CommandException {
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
-        FakeTransaction tx = (FakeTransaction) boltStateHandler.getCurrentTransaction();
-
-        assertNotNull("Expected an open transaction", tx);
+        assertNotNull(boltStateHandler.getTransactionStatements());
 
         boltStateHandler.commitTransaction();
 
-        assertFalse("Transaction should not still be open", tx.isOpen());
-        assertTrue("Transaction should be successful", tx.isSuccess());
-        assertNull("Expected tx to be gone", boltStateHandler.getCurrentTransaction());
+        assertNull(boltStateHandler.getTransactionStatements());
     }
 
     @Test
@@ -165,6 +161,67 @@ public class BoltStateHandlerTest {
     }
 
     @Test
+    public void beginNeedsToInitialiseTransactionStatements() throws CommandException {
+        boltStateHandler.connect();
+
+        boltStateHandler.beginTransaction();
+        assertNotNull(boltStateHandler.getTransactionStatements());
+    }
+
+    @Test
+    public void commitPurgesTheTransactionStatementsAndCollectsResults() throws CommandException {
+        Session sessionMock = mock(Session.class);
+        Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
+
+        BoltResult boltResultMock1 = mock(BoltResult.class);
+        BoltResult boltResultMock2 = mock(BoltResult.class);
+
+        Record record1 = mock(Record.class);
+        Record record2 = mock(Record.class);
+        Record record3 = mock(Record.class);
+        Value val1 = mock(Value.class);
+        Value val2 = mock(Value.class);
+        Value str1Val = mock(Value.class);
+        Value str2Val = mock(Value.class);
+
+        when(boltResultMock1.getRecords()).thenReturn(asList(record1, record2));
+        when(boltResultMock2.getRecords()).thenReturn(asList(record3));
+
+        when(str1Val.toString()).thenReturn("str1");
+        when(str2Val.toString()).thenReturn("str2");
+        when(val1.toString()).thenReturn("1");
+        when(val2.toString()).thenReturn("2");
+
+        when(record1.get(0)).thenReturn(val1);
+        when(record2.get(0)).thenReturn(val2);
+
+        when(record3.get(0)).thenReturn(str1Val);
+        when(record3.get(1)).thenReturn(str2Val);
+        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(boltResultMock1, boltResultMock2));
+
+        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
+        boltStateHandler.connect();
+        boltStateHandler.beginTransaction();
+        boltStateHandler.runCypher("UNWIND [1,2] as num RETURN *", Collections.emptyMap());
+        boltStateHandler.runCypher("RETURN \"str1\", \"str2\"", Collections.emptyMap());
+
+        Optional<List<BoltResult>> boltResultOptional = boltStateHandler.commitTransaction();
+        List<BoltResult> boltResults = boltResultOptional.get();
+        Record actualRecord1 = boltResults.get(0).getRecords().get(0);
+        Record actualRecord2 = boltResults.get(0).getRecords().get(1);
+
+        Record actualRecord3 = boltResults.get(1).getRecords().get(0);
+
+        assertNull(boltStateHandler.getTransactionStatements());
+
+        assertEquals("1", actualRecord1.get(0).toString());
+        assertEquals("2", actualRecord2.get(0).toString());
+
+        assertEquals("str1", actualRecord3.get(0).toString());
+        assertEquals("str2", actualRecord3.get(1).toString());
+    }
+
+    @Test
     public void rollbackNeedsToBeConnected() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Not connected to Neo4j");
@@ -175,29 +232,53 @@ public class BoltStateHandlerTest {
     }
 
     @Test
+    public void executeNeedsToBeConnected() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage("Not connected to Neo4j");
+
+        boltStateHandler.runCypher("", Collections.emptyMap());
+    }
+
+    @Test
     public void shouldExecuteInTransactionIfOpen() throws CommandException {
         boltStateHandler.connect();
         boltStateHandler.beginTransaction();
 
-        Transaction tx = boltStateHandler.getCurrentTransaction();
-        assertNotNull("Expected a transaction", tx);
+        assertNotNull("Expected a transaction", boltStateHandler.getTransactionStatements());
     }
 
     @Test
     public void shouldRunCypherQuery() throws CommandException {
+        Session sessionMock = mock(Session.class);
+        StatementResult versionMock = mock(StatementResult.class);
+        BoltResult resultMock = mock(BoltResult.class);
+        Record recordMock = mock(Record.class);
+        Value valueMock = mock(Value.class);
+
+        Driver driverMock = stubVersionInAnOpenSession(versionMock, sessionMock, "neo4j-version");
+
+        when(resultMock.getRecords()).thenReturn(asList(recordMock));
+
+        when(valueMock.toString()).thenReturn("999");
+        when(recordMock.get(0)).thenReturn(valueMock);
+        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(resultMock));
+
+        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
+
         boltStateHandler.connect();
 
-        assertEquals("999", boltStateHandler.runCypher("RETURN 999",
-                new HashMap<>()).get().getRecords().get(0).get(0).toString());
+        BoltResult boltResult = boltStateHandler.runCypher("RETURN 999",
+                new HashMap<>()).get();
+        verify(sessionMock).writeTransaction(anyObject());
+
+        assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
     }
 
     @Test
     public void shouldExecuteInSessionByDefault() throws CommandException {
         boltStateHandler.connect();
 
-        Transaction tx = boltStateHandler.getCurrentTransaction();
-
-        assertNull("Did not expect a transaction", tx);
+        assertNull("Did not expect a transaction", boltStateHandler.getTransactionStatements());
     }
 
     @Test
@@ -218,15 +299,7 @@ public class BoltStateHandlerTest {
     public void resetSessionOnReset() throws Exception {
         // given
         Session sessionMock = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
-        Driver driverMock = mock(Driver.class);
-        Transaction transactionMock = mock(Transaction.class);
-
-        stubVersion(resultMock, "neo4j-version");
-        when(driverMock.session()).thenReturn(sessionMock);
-        when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
-        when(sessionMock.isOpen()).thenReturn(true);
-        when(sessionMock.beginTransaction()).thenReturn(transactionMock);
+        Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
 
@@ -238,8 +311,7 @@ public class BoltStateHandlerTest {
 
         // then
         verify(sessionMock).reset();
-        verify(transactionMock).failure();
-        verify(transactionMock).close();
+        assertNull(boltStateHandler.getTransactionStatements());
     }
 
     @Test
@@ -278,26 +350,29 @@ public class BoltStateHandlerTest {
         assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
     }
 
-    /**
-     * Bolt state with faked bolt interactions
-     */
-    private void stubVersion(StatementResult resultMock, String value) {
+    private Driver stubVersionInAnOpenSession(StatementResult versionMock, Session sessionMock, String value) {
+        Driver driverMock = mock(Driver.class);
         ResultSummary resultSummary = mock(ResultSummary.class);
         ServerInfo serverInfo = mock(ServerInfo.class);
 
         when(resultSummary.server()).thenReturn(serverInfo);
         when(serverInfo.version()).thenReturn(value);
-        when(resultMock.summary()).thenReturn(resultSummary);
+        when(versionMock.summary()).thenReturn(resultSummary);
+
+        when(sessionMock.isOpen()).thenReturn(true);
+        when(sessionMock.run("RETURN 1")).thenReturn(versionMock);
+        when(driverMock.session()).thenReturn(sessionMock);
+
+        return driverMock;
     }
 
+    /**
+     * Bolt state with faked bolt interactions
+     */
     private static class OfflineBoltStateHandler extends BoltStateHandler {
 
         public OfflineBoltStateHandler(Driver driver) {
             super((uri, authToken, config) -> driver);
-        }
-
-        public Transaction getCurrentTransaction() {
-            return tx;
         }
 
         public void connect() throws CommandException {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -95,6 +96,7 @@ public class CypherShellTest {
     @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        when(mockedBoltStateHandler.commitTransaction()).thenReturn(Optional.empty());
 
         shell.beginTransaction();
         verify(mockedBoltStateHandler).beginTransaction();
@@ -137,7 +139,7 @@ public class CypherShellTest {
         BoltResult boltResult = mock(BoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
-        when(boltResult.getRecords()).thenReturn(Arrays.asList(recordMock));
+        when(boltResult.getRecords()).thenReturn(asList(recordMock));
         when(recordMock.get("bo`b")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
@@ -155,7 +157,7 @@ public class CypherShellTest {
         BoltResult boltResult = mock(BoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
-        when(boltResult.getRecords()).thenReturn(Arrays.asList(recordMock));
+        when(boltResult.getRecords()).thenReturn(asList(recordMock));
         when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
@@ -181,6 +183,21 @@ public class CypherShellTest {
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
         shell.execute("RETURN 999");
+        verify(logger).printOut(contains("999"));
+    }
+
+    @Test
+    public void commitShouldPrintResult() throws CommandException {
+        BoltResult result = mock(BoltResult.class);
+
+        BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
+
+        when(mockedPrettyPrinter.format(result)).thenReturn("999");
+        when(boltStateHandler.commitTransaction()).thenReturn(Optional.of(asList(result)));
+
+        OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
+
+        shell.commitTransaction();
         verify(logger).printOut(contains("999"));
     }
 
