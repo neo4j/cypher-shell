@@ -42,14 +42,14 @@ public class CliArgs {
     /**
      * Set the username to the primary value, or if null, the fallback value.
      */
-    void setUsername(@Nullable String primary, @Nonnull String fallback) {
+    public void setUsername(@Nullable String primary, @Nonnull String fallback) {
         username = primary == null ? fallback : primary;
     }
 
     /**
      * Set the password to the primary value, or if null, the fallback value.
      */
-    void setPassword(@Nullable String primary, @Nonnull String fallback) {
+    public void setPassword(@Nullable String primary, @Nonnull String fallback) {
         password = primary == null ? fallback : primary;
     }
 
