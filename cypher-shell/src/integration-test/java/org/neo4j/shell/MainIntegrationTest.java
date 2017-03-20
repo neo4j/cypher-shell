@@ -1,15 +1,14 @@
 package org.neo4j.shell;
 
+import org.junit.Test;
+import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.log.AnsiLogger;
+import org.neo4j.shell.log.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
-
-import org.junit.Test;
-
-import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.log.AnsiLogger;
-import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -50,7 +49,7 @@ public class MainIntegrationTest {
         assertEquals("", connectionConfig.username());
         assertEquals("", connectionConfig.password());
 
-        main.connectInteractively(shell, connectionConfig);
+        main.connectMaybeInteractively(shell, connectionConfig, true);
 
         // then
         // should be connected
