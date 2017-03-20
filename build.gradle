@@ -9,10 +9,6 @@ buildscript {
     }
 }
 
-task wrapper(type: Wrapper) {
-  gradleVersion = '3.4'
-}
-
 allprojects {
     apply plugin: 'java'
 
