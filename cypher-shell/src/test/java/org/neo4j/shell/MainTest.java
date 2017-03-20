@@ -5,7 +5,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
+import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.v1.exceptions.Neo4jException;
 import org.neo4j.shell.cli.CliArgs;
 
 import java.io.ByteArrayInputStream;
@@ -31,7 +33,7 @@ public class MainTest {
     private CypherShell shell;
     private ConnectionConfig connectionConfig;
     private PrintStream out;
-    private ClientException authException;
+    private AuthenticationException authException;
 
     @Before
     public void setup() {
@@ -42,7 +44,7 @@ public class MainTest {
         doReturn("").when(connectionConfig).username();
         doReturn("").when(connectionConfig).password();
 
-        authException = mock(ClientException.class);
+        authException = mock(AuthenticationException.class);
         doReturn(Main.NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED).when(authException).code();
     }
 
@@ -204,7 +206,7 @@ public class MainTest {
         try {
             main.connectMaybeInteractively(shell, connectionConfig, true);
             fail("Expected an exception");
-        } catch (ClientException e) {
+        } catch (Neo4jException e) {
             assertEquals(authException.code(), e.code());
             verify(shell, times(1)).connect(connectionConfig);
         }
