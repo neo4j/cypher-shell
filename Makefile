@@ -6,9 +6,9 @@ help: ## Print this help text
 run: cypher-shell/build/install/cypher-shell/cypher-shell ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
 
-zip: out/cypher-shell.zip ## Build and run all tests on zip distribution file in 'out/'
+zip: out/cypher-shell.zip test integration-test tyrekicking-test ## Build and run all tests on zip distribution file in 'out/'
 
-untested-zip: tmp/cypher-shell.zip ## Build (but don't test) zip distribution file in 'tmp/'
+untested-zip: out/cypher-shell.zip ## Build (but don't test) zip distribution file in 'out/'
 
 build: cypher-shell/build/install/cypher-shell/cypher-shell ## Build cypher-shell
 
@@ -46,7 +46,7 @@ tmp/temp/cypher-shell/cypher-shell: cypher-shell/build/install/cypher-shell/cyph
 	mkdir -p tmp/temp
 	cp -r cypher-shell/build/install/cypher-shell tmp/temp/cypher-shell
 
-out/cypher-shell.zip: tmp/cypher-shell.zip test integration-test tyrekicking-test
+out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 

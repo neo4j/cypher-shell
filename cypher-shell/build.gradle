@@ -32,11 +32,12 @@ distributions {
 dependencies {
     compile "net.sourceforge.argparse4j:argparse4j:$argparse4jVersion"
     compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
-    compile "com.google.code.findbugs:annotations:$findbugsVersion"
+    compileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
     compile "org.fusesource.jansi:jansi:$jansiVersion"
     compile("jline:jline:$jlineVersion") {
         exclude(group: 'junit', module: 'junit')
     }
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testCompileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
 }

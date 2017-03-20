@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 
 import static java.lang.System.getProperty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
@@ -46,8 +47,10 @@ public class FileHistorianTest {
 
     @Test
     public void noHistoryFileGivesMemoryHistory() throws Exception {
-        Historian historian = FileHistorian.setupHistory(reader, logger,
-                Paths.get("temp", "aasbzs", "asfaz").toFile());
+        File historyFile = Paths.get(temp.newFolder().getAbsolutePath(), "asfasd", "zxvses", "fanjtaacf").toFile();
+        assertFalse(historyFile.getParentFile().isDirectory());
+        assertFalse(historyFile.getParentFile().getParentFile().isDirectory());
+        Historian historian = FileHistorian.setupHistory(reader, logger, historyFile);
 
         assertNotNull(historian);
 
