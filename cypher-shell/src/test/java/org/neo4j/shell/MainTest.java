@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.neo4j.driver.v1.exceptions.AuthenticationException;
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
 import org.neo4j.shell.cli.CliArgs;
 
@@ -44,8 +43,8 @@ public class MainTest {
         doReturn("").when(connectionConfig).username();
         doReturn("").when(connectionConfig).password();
 
-        authException = mock(AuthenticationException.class);
-        doReturn(Main.NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED).when(authException).code();
+        // Don't mock because of gradle bug: https://github.com/gradle/gradle/issues/1618
+        authException = new AuthenticationException(Main.NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED, "BOOM");
     }
 
     @Test
@@ -58,17 +57,6 @@ public class MainTest {
         thrown.expectMessage("No text could be read, exiting");
 
         Main main = new Main(inputStream, out);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
-        verify(shell, times(1)).connect(connectionConfig);
-    }
-
-    @Test
-    public void connectMaybeInteractivelyNullMessageDoesNotPrompt() throws Exception {
-        doThrow(new ClientException(null)).when(shell).connect(connectionConfig);
-
-        thrown.expect(ClientException.class);
-
-        Main main = new Main(mock(InputStream.class), out);
         main.connectMaybeInteractively(shell, connectionConfig, true);
         verify(shell, times(1)).connect(connectionConfig);
     }
@@ -121,8 +109,7 @@ public class MainTest {
         try {
             main.connectMaybeInteractively(shell, connectionConfig, false);
             fail("Expected auth exception");
-        } catch (ClientException e) {
-            assertEquals(authException.code(), e.code());
+        } catch (AuthenticationException e) {
             verify(shell, times(1)).connect(connectionConfig);
         }
     }
