@@ -1,8 +1,10 @@
-.PHONY: build
+.PHONY: all
 
-build:
-	bash -c "mkdir -p tmp/{BUILD,RPMS,SOURCES,BUILDROOT,SPECS,SRPMS}/"
-	cp cypher-shell.spec tmp/SPECS/
-	#wget https://github.com/neo4j/cypher-shell/archive/1.0.1.tar.gz -O tmp/SOURCES/1.0.1.tar.gz
+#current_dir = $(shell pwd)
+
+all:
+	bash -c "mkdir -p $(CURDIR)/tmp/{BUILD,RPMS,SOURCES,BUILDROOT,SPECS,SRPMS}/"
+	VERSION=$(version) envsubst '${VERSION}' < cypher-shell.spec > $(CURDIR)/tmp/SPECS/cypher-shell.spec
+	#wget https://github.com/neo4j/cypher-shell/archive/${version}.tar.gz -O tmp/SOURCES/${version}.tar.gz
 	#wget https://github.com/spacecowboy/cypher-shell/archive/packaging.zip -O tmp/SOURCES/1.0.1.tar.gz
-	cd tmp && rpmbuild --define "_topdir /home/jonas/workspace/cypher-shell/rpm/tmp" -ba SPECS/cypher-shell.spec
+	cd tmp && rpmbuild --define "_topdir $(CURDIR)/tmp" -ba --clean SPECS/cypher-shell.spec

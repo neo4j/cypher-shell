@@ -1,6 +1,6 @@
 Name: cypher-shell
 Provides: cypher-shell
-Version: 1.0.1
+Version: ${VERSION}
 Release: 1%{?dist}
 Summary: Command line shell for Neo4j
 
@@ -18,6 +18,7 @@ of Neo4j.
 
 %prep
 # This macro will unpack the tarball into the appropriate build directory
+# Expects tarball to unpack into a directory called {name}-{version}
 %setup -q
 
 %build
