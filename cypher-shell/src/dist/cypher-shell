@@ -67,11 +67,25 @@ _show_java_help() {
 
 build_classpath() {
   APP_HOME="$(cd "$(dirname "$0")" && pwd)"
+  # First try in sub directory
   JARPATH="$(find "$APP_HOME" -name "cypher-shell-*-all.jar" )"
+
+  # Then try installation directory (prefix/bin and prefix/shared/cypher-shell/lib)
+  if [[ -z "${JARPATH}" ]]; then
+    if [[ "$(dirname "$0")" == "bin" ]]; then
+      APP_HOME="$(cd "$(dirname "$0")/../shared" && pwd)"
+      JARPATH="$(find "$APP_HOME" -name "cypher-shell-*-all.jar" )"
+    fi
+  fi
 }
 
 check_java
 build_classpath
+
+if [ -z "${JARPATH}" ]; then
+  echo "Unable to locate cypher-shell library files" >&2
+  exit 1
+fi
 
 exec "$JAVA_CMD" ${JAVA_OPTS:-} \
   -jar "$JARPATH" \
