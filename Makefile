@@ -1,17 +1,24 @@
 .DEFAULT: help
 .PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install
 
+version = $(shell git describe --tags --match [0-9]*)
+jarfile = cypher-shell-$(version)-all.jar
+
+outputs = cypher-shell cypher-shell.bat $(jarfile)
+artifacts=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
+rpm_artifacts=$(patsubst %,out/rpm/BUILD/%,${artifacts})
+
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-run: cypher-shell/build/install/cypher-shell/cypher-shell ## Build and run cypher-shell with no arguments
+run: $(artifacts) ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
 
 zip: out/cypher-shell.zip test integration-test tyrekicking-test ## Build and run all tests on zip distribution file in 'out/'
 
 untested-zip: out/cypher-shell.zip ## Build (but don't test) zip distribution file in 'out/'
 
-build: cypher-shell/build/install/cypher-shell/cypher-shell ## Build cypher-shell
+build: $(artifacts) ## Build cypher-shell
 
 test: cypher-shell/build/test-results/binary/test/results.bin ## Run all unit tests
 
@@ -32,11 +39,11 @@ rmhosts: ## Remove known hosts file
 launch: rmhosts clean build run ## Removes known hosts file, cleans, builds, and runs the shell
 
 prefix ?= /usr/local
-install: cypher-shell/build/install/cypher-shell/cypher-shell ## Install cypher-shell
+install: build ## Install cypher-shell
 	mkdir -p $(DESTDIR)/$(prefix)/bin
 	mkdir -p $(DESTDIR)/$(prefix)/share/cypher-shell/lib
 	cp cypher-shell/build/install/cypher-shell/cypher-shell $(DESTDIR)/$(prefix)/bin
-	cp cypher-shell/build/install/cypher-shell/*.jar $(DESTDIR)/$(prefix)/share/cypher-shell/lib
+	cp cypher-shell/build/install/cypher-shell/$(jarfile) $(DESTDIR)/$(prefix)/share/cypher-shell/lib
 
 %/integrationTest/results.bin:
 	./gradlew integrationTest
@@ -44,7 +51,7 @@ install: cypher-shell/build/install/cypher-shell/cypher-shell ## Install cypher-
 %/test/results.bin:
 	./gradlew check
 
-%/install/cypher-shell/cypher-shell:
+$(artifacts):
 	./gradlew installDist
 
 %/reports/pitest/index.html:
@@ -59,7 +66,7 @@ tmp/cypher-shell.zip: tmp/temp/cypher-shell/cypher-shell
 	cd tmp/temp && zip -r cypher-shell.zip cypher-shell
 	mv tmp/temp/cypher-shell.zip tmp/cypher-shell.zip
 
-tmp/temp/cypher-shell/cypher-shell: cypher-shell/build/install/cypher-shell/cypher-shell
+tmp/temp/cypher-shell/cypher-shell: $(artifacts)
 	rm -rf tmp
 	mkdir -p tmp/temp
 	cp -r cypher-shell/build/install/cypher-shell tmp/temp/cypher-shell
@@ -67,3 +74,25 @@ tmp/temp/cypher-shell/cypher-shell: cypher-shell/build/install/cypher-shell/cyph
 out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
+
+jonas:
+	echo $(version)
+	echo $(jarfile)
+	echo $(artifacts)
+
+out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
+	bash -c "mkdir -p out/rpm/{BUILD,RPMS,SOURCES,BUILDROOT,SPECS,SRPMS}/"
+	VERSION=1.0.2 envsubst '$${VERSION}' < $< > $@
+
+out/rpm/BUILD/%: %
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/%.rpm: out/rpm/RPMS/noarch/%
+	cp $< $@
+
+out/rpm/RPMS/noarch/cypher-shell-$(version)-1.noarch.rpm: out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile
+	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
+
+.PHONY: rpm
+rpm: out/rpm/RPMS/noarch/cypher-shell-$(version)-1.noarch.rpm ## Build the RPM package
