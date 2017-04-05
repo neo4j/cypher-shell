@@ -1,7 +1,7 @@
 Name: cypher-shell
 Provides: cypher-shell
 Version: ${VERSION}
-Release: 1%{?dist}
+Release: ${RELEASE}%{?dist}
 Summary: Command line shell for Neo4j
 
 License: GPLv3

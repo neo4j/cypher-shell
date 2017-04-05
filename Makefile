@@ -1,8 +1,19 @@
 .DEFAULT: help
 .PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install
 
-version = $(shell git describe --tags --match [0-9]*)
-jarfile = cypher-shell-$(version)-all.jar
+gitdescribe = $(shell git describe --tags --match [0-9]*)
+lasttag = $(shell git describe --tags --match [0-9]* --abbrev=0)
+version ?= $(lasttag)
+commitcount = $(shell git rev-list $(lasttag)..HEAD --count)
+
+ifeq ($(commitcount),0)
+	release ?= 1
+else
+	release ?= 0.$(commitcount).1
+endif
+
+jarfile = cypher-shell-$(gitdescribe)-all.jar
+rpmfile = cypher-shell-$(version)-$(release).noarch.rpm
 
 outputs = cypher-shell cypher-shell.bat $(jarfile)
 artifacts=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
@@ -75,24 +86,19 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
-jonas:
-	echo $(version)
-	echo $(jarfile)
-	echo $(artifacts)
-
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
 	bash -c "mkdir -p out/rpm/{BUILD,RPMS,SOURCES,BUILDROOT,SPECS,SRPMS}/"
-	VERSION=1.0.2 envsubst '$${VERSION}' < $< > $@
+	VERSION=$(version) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
 out/rpm/BUILD/%: %
 	mkdir -p $(dir $@)
 	cp $< $@
 
-out/%.rpm: out/rpm/RPMS/noarch/%
+out/%.rpm: out/rpm/RPMS/noarch/%.rpm
 	cp $< $@
 
-out/rpm/RPMS/noarch/cypher-shell-$(version)-1.noarch.rpm: out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile
+out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
 
 .PHONY: rpm
-rpm: out/rpm/RPMS/noarch/cypher-shell-$(version)-1.noarch.rpm ## Build the RPM package
+rpm: out/$(rpmfile) ## Build the RPM package
