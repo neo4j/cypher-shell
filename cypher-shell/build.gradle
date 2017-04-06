@@ -1,4 +1,4 @@
-version = gitVersion
+version = buildVersion
 
 task generateBuildProperties {
   def outputDir = file("${buildDir}/resources/main")
@@ -6,7 +6,7 @@ task generateBuildProperties {
     outputDir.exists() || outputDir.mkdirs()
     def propFile = new File(outputDir, "build.properties")
     def props = new Properties()
-    props.setProperty("version", gitVersion)
+    props.setProperty("version", buildVersion)
     props.store(propFile.newWriter(), null)
   }
 }
@@ -17,6 +17,11 @@ jar {
   manifest {
     attributes 'Main-Class': 'org.neo4j.shell.Main'
   }
+}
+
+shadowJar {
+  // Insure no version number is included in jar name
+  //  version = null
 }
 
 distributions {
