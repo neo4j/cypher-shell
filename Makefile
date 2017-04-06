@@ -8,20 +8,28 @@ commitcount = $(shell git rev-list $(lasttag)..HEAD --count)
 
 ifeq ($(commitcount),0)
 	release ?= 1
+	distribution ?= stable
 	buildversion = $(version)
 else
 	release ?= 0.$(commitcount).1
+	distribution ?= unstable
 	buildversion = $(gitdescribe)
 endif
+
+debversion ?= $(version)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile = cypher-shell-all.jar
 rpmfile = cypher-shell-$(version)-$(release).noarch.rpm
+debfile = cypher-shell_$(debversion)_all.deb
 
 outputs = cypher-shell cypher-shell.bat $(jarfile)
 artifacts=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
 rpm_artifacts=$(patsubst %,out/rpm/BUILD/%,${artifacts})
+deb_artifacts=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
+deb_files=$(shell find packaging/debian/ -type f)
+deb_targets=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -106,3 +114,24 @@ out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts)
 
 .PHONY: rpm
 rpm: out/$(rpmfile) ## Build the RPM package
+
+out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
+	mkdir -p $(dir $@)
+	VERSION=$(debversion) DISTRIBUTION=$(distribution) DATE="$(shell date -R)" envsubst '$${VERSION} $${DISTRIBUTION} $${DATE}' < $< > $@
+
+out/debian/cypher-shell-$(debversion)/debian/%: packaging/debian/%
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/debian/cypher-shell-$(debversion)/%: %
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/debian/$(debfile): $(deb_artifacts) $(deb_targets)
+	(cd out/debian/cypher-shell-$(debversion) && debuild -A -uc -us)
+
+out/%.deb: out/debian/%.deb
+	cp $< $@
+
+.PHONY: debian
+debian: out/$(debfile) ## Build the Debian package

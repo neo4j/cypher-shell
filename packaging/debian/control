@@ -1,0 +1,13 @@
+Source: cypher-shell
+Section: database
+Priority: extra
+Maintainer: Neo Technology <debian@neotechnology.com>
+Build-Depends: debhelper (>=9), pandoc
+Standards-Version: 3.9.4
+Homepage: http://neo4j.org/
+
+Package: cypher-shell
+Architecture: all
+Depends: ${misc:Depends}, openjdk-8-jre | java8-runtime
+Description: command line shell for neo4j
+ Cypher-shell is a command line shell for Neo4j.
