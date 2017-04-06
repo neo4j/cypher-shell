@@ -8,11 +8,15 @@ commitcount = $(shell git rev-list $(lasttag)..HEAD --count)
 
 ifeq ($(commitcount),0)
 	release ?= 1
+	buildversion = $(version)
 else
 	release ?= 0.$(commitcount).1
+	buildversion = $(gitdescribe)
 endif
 
-jarfile = cypher-shell-$(gitdescribe)-all.jar
+GRADLE = ./gradlew -PbuildVersion=$(buildversion)
+
+jarfile = cypher-shell-all.jar
 rpmfile = cypher-shell-$(version)-$(release).noarch.rpm
 
 outputs = cypher-shell cypher-shell.bat $(jarfile)
@@ -42,7 +46,7 @@ mutation-test: cypher-shell/build/reports/pitest/index.html ## Generate a mutati
 clean: ## Clean build directories
 	rm -rf out
 	rm -rf tmp
-	./gradlew clean
+	$(GRADLE) clean
 
 rmhosts: ## Remove known hosts file
 	rm -rf ~/.neo4j/known_hosts
@@ -57,16 +61,16 @@ install: build ## Install cypher-shell
 	cp cypher-shell/build/install/cypher-shell/$(jarfile) $(DESTDIR)/$(prefix)/share/cypher-shell/lib
 
 %/integrationTest/results.bin:
-	./gradlew integrationTest
+	$(GRADLE) integrationTest
 
 %/test/results.bin:
-	./gradlew check
+	$(GRADLE) check
 
 $(artifacts):
-	./gradlew installDist
+	$(GRADLE) installDist
 
 %/reports/pitest/index.html:
-	./gradlew pitest
+	$(GRADLE) pitest
 
 tmp/.tests-pass: tmp/cypher-shell.zip tyrekicking.sh
 	cp tyrekicking.sh tmp/
