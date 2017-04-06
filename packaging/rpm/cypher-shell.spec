@@ -35,3 +35,4 @@ rm -rf ${RPM_BUILD_ROOT}
 %defattr(-,root,root)
 %{_bindir}/cypher-shell
 %{_datadir}/cypher-shell
+%doc %{_mandir}/man1/cypher-shell.1.gz

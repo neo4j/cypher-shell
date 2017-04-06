@@ -28,7 +28,7 @@ outputs = cypher-shell cypher-shell.bat $(jarfile)
 artifacts=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
 rpm_artifacts=$(patsubst %,out/rpm/BUILD/%,${artifacts})
 deb_artifacts=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
-deb_files=$(shell find packaging/debian/ -type f)
+deb_files=$(wildcard packaging/debian/*)
 deb_targets=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
 help: ## Print this help text
@@ -62,11 +62,16 @@ rmhosts: ## Remove known hosts file
 launch: rmhosts clean build run ## Removes known hosts file, cleans, builds, and runs the shell
 
 prefix ?= /usr/local
-install: build ## Install cypher-shell
+install: build cypher-shell.1 ## Install cypher-shell (requires pandoc for manual)
 	mkdir -p $(DESTDIR)/$(prefix)/bin
 	mkdir -p $(DESTDIR)/$(prefix)/share/cypher-shell/lib
+	mkdir -p $(DESTDIR)/$(prefix)/share/man/man1
 	cp cypher-shell/build/install/cypher-shell/cypher-shell $(DESTDIR)/$(prefix)/bin
 	cp cypher-shell/build/install/cypher-shell/$(jarfile) $(DESTDIR)/$(prefix)/share/cypher-shell/lib
+	cp cypher-shell.1 $(DESTDIR)/$(prefix)/share/man/man1
+
+%.1: %.1.md
+	pandoc -s -o $@ $<
 
 %/integrationTest/results.bin:
 	$(GRADLE) integrationTest
@@ -109,7 +114,7 @@ out/rpm/BUILD/%: %
 out/%.rpm: out/rpm/RPMS/noarch/%.rpm
 	cp $< $@
 
-out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile
+out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
 
 .PHONY: rpm
