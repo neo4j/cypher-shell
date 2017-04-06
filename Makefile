@@ -127,7 +127,7 @@ out/debian/cypher-shell-$(debversion)/%: %
 	mkdir -p $(dir $@)
 	cp $< $@
 
-out/debian/$(debfile): $(deb_artifacts) $(deb_targets)
+out/debian/$(debfile): $(deb_artifacts) $(deb_targets) out/debian/cypher-shell-$(debversion)/cypher-shell.1.md
 	(cd out/debian/cypher-shell-$(debversion) && debuild -A -uc -us)
 
 out/%.deb: out/debian/%.deb

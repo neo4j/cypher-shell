@@ -10,4 +10,4 @@
 	dh $@
 
 override_dh_auto_build:
-	pandoc -s -o debian/cypher-shell.1 debian/cypher-shell.1.md
+	pandoc -s -o cypher-shell.1 cypher-shell.1.md
