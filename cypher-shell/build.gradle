@@ -21,7 +21,7 @@ jar {
 
 shadowJar {
   // Insure no version number is included in jar name
-  //  version = null
+  version = null
 }
 
 distributions {
