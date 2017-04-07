@@ -1,35 +1,35 @@
 .DEFAULT: help
 .PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install
 
-gitdescribe = $(shell git describe --tags --match [0-9]*)
-lasttag = $(shell git describe --tags --match [0-9]* --abbrev=0)
+gitdescribe := $(shell git describe --tags --match [0-9]*)
+lasttag := $(shell git describe --tags --match [0-9]* --abbrev=0)
 version ?= $(lasttag)
-commitcount = $(shell git rev-list $(lasttag)..HEAD --count)
+commitcount := $(shell git rev-list $(lasttag)..HEAD --count)
 
 ifeq ($(commitcount),0)
 	release ?= 1
 	distribution ?= stable
-	buildversion = $(version)
+	buildversion := $(version)
 else
 	release ?= 0.$(commitcount).1
 	distribution ?= unstable
-	buildversion = $(gitdescribe)
+	buildversion := $(gitdescribe)
 endif
 
 debversion ?= $(version)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
-jarfile = cypher-shell-all.jar
-rpmfile = cypher-shell-$(version)-$(release).noarch.rpm
-debfile = cypher-shell_$(debversion)_all.deb
+jarfile := cypher-shell-all.jar
+rpmfile := cypher-shell-$(version)-$(release).noarch.rpm
+debfile := cypher-shell_$(debversion)_all.deb
 
-outputs = cypher-shell cypher-shell.bat $(jarfile)
-artifacts=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
-rpm_artifacts=$(patsubst %,out/rpm/BUILD/%,${artifacts})
-deb_artifacts=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
-deb_files=$(wildcard packaging/debian/*)
-deb_targets=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
+outputs := cypher-shell cypher-shell.bat $(jarfile)
+artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
+rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
+deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
+deb_files:=$(wildcard packaging/debian/*)
+deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -112,13 +112,26 @@ out/rpm/BUILD/%: %
 	cp $< $@
 
 out/%.rpm: out/rpm/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
 	cp $< $@
+
+tmp/rpm-test/%.rpm: out/rpm/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/rpm-test/Dockerfile: packaging/test/rpm/Dockerfile
+	RPMFILE=$(rpmfile) envsubst '$${RPMFILE}' < $< > $@
 
 out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
 
 .PHONY: rpm
 rpm: out/$(rpmfile) ## Build the RPM package
+
+DOCKERUUIDRPM := $(shell uuidgen)
+.PHONY: rpm-test ## Test the RPM package (requires Docker)
+rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run -it $(DOCKERUUIDRPM) --version
 
 out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
 	mkdir -p $(dir $@)
@@ -138,5 +151,17 @@ out/debian/$(debfile): $(deb_artifacts) $(deb_targets) out/debian/cypher-shell-$
 out/%.deb: out/debian/%.deb
 	cp $< $@
 
+tmp/debian-test/%.deb: out/debian/%.deb
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/debian-test/Dockerfile: packaging/test/debian/Dockerfile
+	DEBFILE=$(debfile) envsubst '$${DEBFILE}' < $< > $@
+
 .PHONY: debian
 debian: out/$(debfile) ## Build the Debian package
+
+DOCKERUUIDDEB := $(shell uuidgen)
+.PHONY: debian-test ## Test the Debian package (requires Docker)
+debian-test: tmp/debian-test/$(debfile) tmp/debian-test/Dockerfile
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run -it $(DOCKERUUIDRPM) --version
