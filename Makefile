@@ -104,7 +104,7 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	cp $< $@
 
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
-	bash -c "mkdir -p out/rpm/{BUILD,RPMS,SOURCES,BUILDROOT,SPECS,SRPMS}/"
+	mkdir -p $(dir $@)
 	VERSION=$(version) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
 out/rpm/BUILD/%: %
@@ -133,7 +133,7 @@ out/debian/cypher-shell-$(debversion)/%: %
 	cp $< $@
 
 out/debian/$(debfile): $(deb_artifacts) $(deb_targets) out/debian/cypher-shell-$(debversion)/cypher-shell.1.md
-	(cd out/debian/cypher-shell-$(debversion) && debuild -A -uc -us)
+	cd out/debian/cypher-shell-$(debversion) && debuild -A -uc -us
 
 out/%.deb: out/debian/%.deb
 	cp $< $@
