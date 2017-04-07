@@ -8,7 +8,7 @@ License: GPLv3
 URL: https://github.com/neo4j/cypher-shell
 Source0: https://github.com/neo4j/cypher-shell/archive/%{version}.tar.gz
 
-Requires: java-1.8.0-headless
+Requires: which, java-1.8.0-headless
 BuildArch: noarch
 Prefix: /usr
 
