@@ -16,6 +16,7 @@ import org.neo4j.shell.log.Logger;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -75,8 +76,9 @@ public class CypherShellIntegrationTest {
         verify(logger, times(1)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(0), is("jane\n(:TestPerson {name: \"Jane Smith\"})\n" +
-                "Added 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat(result.get(0), containsString("| jane "));
+        assertThat(result.get(0), containsString("| (:TestPerson {name: \"Jane Smith\"}) |" ));
+        assertThat(result.get(0), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test
@@ -106,7 +108,8 @@ public class CypherShellIntegrationTest {
         verify(logger, times(2)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
+        assertThat(result.get(1), containsString("| n "));
+        assertThat(result.get(1), containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
     }
 
     @Test
@@ -123,8 +126,8 @@ public class CypherShellIntegrationTest {
         verify(logger, times(3)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(2), is("n\n(:TestPerson {name: \"Jane Smith\"})" +
-                "\n(:TestPerson {name: \"Jane Smith\"})"));
+        assertThat(result.get(2), containsString("| (:TestPerson {name: \"Jane Smith\"}) |" +
+                "\n| (:TestPerson {name: \"Jane Smith\"}) |"));
     }
 
     @Test
@@ -142,7 +145,7 @@ public class CypherShellIntegrationTest {
         verify(logger, times(2)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(1), is("n\n(:TestPerson {name: \"Jane Smith\"})"));
+        assertThat(result.get(1), containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
     }
 
     @Test
@@ -160,7 +163,7 @@ public class CypherShellIntegrationTest {
 
         List<String> result = captor.getAllValues();
         assertThat(result.get(2),
-                is("n\n(:TestPerson {name: \"Jane Smith\"})" + "\n(:TestPerson {name: \"Joe Smith\"})"));
+                containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
     }
 
     @Test
@@ -178,7 +181,8 @@ public class CypherShellIntegrationTest {
         verify(logger).printOut(captor.capture());
 
         List<String> queryResult = captor.getAllValues();
-        assertThat(queryResult.get(0), is("{ bob }\n" + randomLong));
+        assertThat(queryResult.get(0), containsString("| { bob }"));
+        assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
         assertEquals(randomLong, shell.getAll().get("bob"));
     }
 
@@ -197,7 +201,8 @@ public class CypherShellIntegrationTest {
         verify(logger).printOut(captor.capture());
 
         List<String> queryResult = captor.getAllValues();
-        assertThat(queryResult.get(0), is("{ `bob` }\n" + randomLong));
+        assertThat(queryResult.get(0), containsString("| { `bob` }"));
+        assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
         assertEquals(randomLong, shell.getAll().get("bob"));
     }
 }
