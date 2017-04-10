@@ -1,27 +1,32 @@
 .DEFAULT: help
-.PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install
+.PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install info
 
 gitdescribe := $(shell git describe --tags --match [0-9]*)
 lasttag := $(shell git describe --tags --match [0-9]* --abbrev=0)
-version ?= $(lasttag)
-commitcount := $(shell git rev-list $(lasttag)..HEAD --count)
 
-ifeq ($(commitcount),0)
-	release ?= 1
+version ?= $(lasttag)
+versionlabel = $(shell echo ${version} | awk '{ sub("^[0-9]+\.[0-9]+\.[0-9]+-?", "", $$1); print }')
+versionnumber = $(shell echo ${version} | awk '{ sub("-.*$$", "", $$1); print }')
+
+pkgversion ?= 1
+# If no label it is assumed to be a stable release
+ifeq ($(versionlabel),)
+	release := $(pkgversion)
 	distribution ?= stable
 	buildversion := $(version)
 else
-	release ?= 0.$(commitcount).1
+	release := 0.$(versionlabel).$(pkgversion)
 	distribution ?= unstable
 	buildversion := $(gitdescribe)
 endif
 
-debversion ?= $(version)-$(release)
+debversion := $(versionnumber)-$(release)
+rpmversion := $(versionnumber)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile := cypher-shell-all.jar
-rpmfile := cypher-shell-$(version)-$(release).noarch.rpm
+rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
@@ -33,6 +38,19 @@ deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+info: ## Print variables used in the build (some of which can be overridden)
+	@echo "--- Overridable ---"
+	@echo "version:       ${version}"
+	@echo "pkgversion:    ${pkgversion}"
+	@echo "--- Calculated  ---"
+	@echo "versionnumber: ${versionnumber}"
+	@echo "versionlabel:  ${versionlabel}"
+	@echo "distribution:  ${distribution}"
+	@echo "buildversion:  ${buildversion}"
+	@echo "release:       ${release}"
+	@echo "debversion:    ${debversion}"
+	@echo "rpmversion:    ${rpmversion}"
 
 run: $(artifacts) ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
@@ -105,7 +123,7 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
 	mkdir -p $(dir $@)
-	VERSION=$(version) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
+	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
 out/rpm/BUILD/%: %
 	mkdir -p $(dir $@)
@@ -120,6 +138,7 @@ tmp/rpm-test/%.rpm: out/rpm/RPMS/noarch/%.rpm
 	cp $< $@
 
 tmp/rpm-test/Dockerfile: packaging/test/rpm/Dockerfile
+	mkdir -p $(dir $@)
 	RPMFILE=$(rpmfile) envsubst '$${RPMFILE}' < $< > $@
 
 out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
@@ -131,7 +150,7 @@ rpm: out/$(rpmfile) ## Build the RPM package
 DOCKERUUIDRPM := $(shell uuidgen)
 .PHONY: rpm-test
 rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm -it $(DOCKERUUIDRPM) --version
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
 
 out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
 	mkdir -p $(dir $@)
@@ -156,6 +175,7 @@ tmp/debian-test/%.deb: out/debian/%.deb
 	cp $< $@
 
 tmp/debian-test/Dockerfile: packaging/test/debian/Dockerfile
+	mkdir -p $(dir $@)
 	DEBFILE=$(debfile) envsubst '$${DEBFILE}' < $< > $@
 
 .PHONY: debian
@@ -164,4 +184,4 @@ debian: out/$(debfile) ## Build the Debian package
 DOCKERUUIDDEB := $(shell uuidgen)
 .PHONY: debian-test
 debian-test: tmp/debian-test/$(debfile) tmp/debian-test/Dockerfile ## Test the Debian package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm -it $(DOCKERUUIDRPM) --version
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version

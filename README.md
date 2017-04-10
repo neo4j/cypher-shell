@@ -26,6 +26,32 @@ docker run --detach -p 7687:7687 -e NEO4J_AUTH=none neo4j:3.0
 make run
 ```
 
+## How to build packages
+
+Packages require you to have `pandoc` available. It should be
+available in your local package manager.
+
+Then just do
+
+```
+make debian rpm
+```
+
+To test the packages you need to have Docker installed:
+
+```
+make debian-test rpm-test
+```
+
+To get the versions correct when building packages you can override
+some variables, for example with:
+
+```
+make debian pkgversion=2
+```
+
+See `make info` for a list of variables and what the results will be.
+
 ## Development
 
 ### Integration tests
