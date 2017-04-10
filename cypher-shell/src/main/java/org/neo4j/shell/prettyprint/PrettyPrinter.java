@@ -5,6 +5,8 @@ import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
 
+import static java.util.Arrays.asList;
+
 /**
  * Print the result from neo4j in a intelligible fashion.
  */
@@ -18,15 +20,11 @@ public class PrettyPrinter {
     }
 
     public String format(@Nonnull final BoltResult result) {
-        String resultOutput = outputFormatter.format(result);
-        StringBuilder sb = new StringBuilder(resultOutput);
+        String infoOutput = outputFormatter.formatInfo(result.getSummary());
+        String planOutput = outputFormatter.formatPlan(result.getSummary());
         String statistics = statisticsCollector.collect(result.getSummary());
-        if (!statistics.isEmpty()) {
-            if (sb.length() > 0) {
-                sb.append("\n");
-            }
-            sb.append(statistics);
-        }
-        return sb.toString();
+        String resultOutput = outputFormatter.format(result);
+        String footer = outputFormatter.formatFooter(result);
+        return OutputFormatter.joinNonBlanks(OutputFormatter.NEWLINE, asList(infoOutput, planOutput, resultOutput, footer, statistics));
     }
 }

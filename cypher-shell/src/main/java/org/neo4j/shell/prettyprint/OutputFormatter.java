@@ -2,6 +2,7 @@ package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
@@ -115,25 +116,47 @@ public interface OutputFormatter {
     @Nonnull static String joinWithSpace(@Nonnull List<String> strings) {
         return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(SPACE));
     }
+    static  String joinNonBlanks(String delim, List<String> strings) {
+        return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(delim));
+    }
 
     static boolean isNotBlank(String string) {
         return string != null && !string.trim().isEmpty();
     }
 
-    @Nonnull static String repeat(char c, int width) {
-        char[] chars = new char[width];
+    @Nonnull static String repeat(char c, int times) {
+        char[] chars = new char[times];
         Arrays.fill(chars, c);
         return String.valueOf(chars);
     }
 
-    @Nonnull static String rightPad(@Nonnull String str, int wantedSize) {
+    @Nonnull static String repeat(@Nonnull String c, int times) {
+        StringBuilder sb = new StringBuilder(times*c.length());
+        for (int i=0;i<times;i++) sb.append(c);
+        return sb.toString();
+    }
+
+    @Nonnull static String rightPad(@Nonnull String str, int width) {
+        return rightPad(str,width,' ');
+    }
+    @Nonnull static String rightPad(@Nonnull String str, int width, char c) {
         int actualSize = str.length();
-        if (actualSize > wantedSize) {
-            return str.substring(0, wantedSize);
-        } else if (actualSize < wantedSize) {
-            return str + repeat(' ', wantedSize - actualSize);
+        if (actualSize > width) {
+            return str.substring(0, width);
+        } else if (actualSize < width) {
+            return str + repeat( c, width - actualSize);
         } else {
             return str;
         }
+    }
+
+    @Nonnull default String formatPlan(@Nonnull ResultSummary summary) {
+        return "";
+    }
+    @Nonnull default String formatInfo(@Nonnull ResultSummary summary) {
+        return "";
+    }
+    @Nonnull default String formatFooter(@Nonnull BoltResult result) {
+        return "";
     }
 }

@@ -63,7 +63,7 @@ public class CypherShellIntegrationTest {
         verify(logger, times(1)).printOut(captor.capture());
 
         List<String> result = captor.getAllValues();
-        assertThat(result.get(0), is("Added 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat(result.get(0), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test

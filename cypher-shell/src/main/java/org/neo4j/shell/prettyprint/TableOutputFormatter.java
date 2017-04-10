@@ -1,21 +1,34 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.internal.InternalRecord;
+import org.neo4j.driver.internal.util.Iterables;
+import org.neo4j.driver.internal.value.MapValue;
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class TableOutputFormatter implements OutputFormatter {
 
     @Override
     @Nonnull
     public String format(@Nonnull final BoltResult result) {
-        List<Record> data = result.getRecords();
+        List<Value> data = result.getRecords().stream().map(r -> new MapValue(r.<Value>asMap(v -> v))).collect(Collectors.toList());
+        return formatValues(data);
+    }
+
+    @Nonnull
+    String formatValues(@Nonnull List<Value> data) {
         if (data.isEmpty()) return "";
-        List<String> columns = data.get(0).keys();
+        List<String> columns = Iterables.asList(data.get(0).keys());
         if (columns.isEmpty()) return "";
 
         StringBuilder sb = new StringBuilder();
@@ -24,22 +37,26 @@ public class TableOutputFormatter implements OutputFormatter {
         int lineWidth = headerLine.length() - 2;
         String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
 
-        String row = (data.size() > 1) ? "rows" : "row";
-        String footer = String.format("%d %s", data.size(), row);
-
         sb.append(dashes).append(NEWLINE);
         sb.append(headerLine).append(NEWLINE);
         sb.append(dashes).append(NEWLINE);
 
-        for (Record record : data) {
+        for (Value record : data) {
             sb.append(createString(columns, columnSizes, record)).append(NEWLINE);
         }
         sb.append(dashes).append(NEWLINE);
-        sb.append(footer).append(NEWLINE);
         return sb.toString();
     }
 
-    @Nonnull private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes, @Nonnull Record m) {
+    @Nonnull
+    public String formatFooter(@Nonnull BoltResult result) {
+        int rows = result.getRecords().size();
+        ResultSummary summary = result.getSummary();
+        return String.format("%d row%s available after %d ms, consumed after another %d ms", rows, rows != 1 ? "s" : "", summary.resultAvailableAfter(MILLISECONDS), summary.resultConsumedAfter(MILLISECONDS));
+    }
+
+    @Nonnull
+    private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes, @Nonnull Value m) {
         StringBuilder sb = new StringBuilder("|");
         for (String column : columns) {
             sb.append(" ");
@@ -52,7 +69,8 @@ public class TableOutputFormatter implements OutputFormatter {
         return sb.toString();
     }
 
-    @Nonnull private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes) {
+    @Nonnull
+    private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes) {
         StringBuilder sb = new StringBuilder("|");
         for (String column : columns) {
             sb.append(" ");
@@ -62,12 +80,13 @@ public class TableOutputFormatter implements OutputFormatter {
         return sb.toString();
     }
 
-    @Nonnull private Map<String, Integer> calculateColumnSizes(@Nonnull List<String> columns, @Nonnull List<Record> data) {
+    @Nonnull
+    private Map<String, Integer> calculateColumnSizes(@Nonnull List<String> columns, @Nonnull List<Value> data) {
         Map<String, Integer> columnSizes = new LinkedHashMap<>();
         for (String column : columns) {
             columnSizes.put(column, column.length());
         }
-        for (Record record : data) {
+        for (Value record : data) {
             for (String column : columns) {
                 int len = formatValue(record.get(column)).length();
                 int existing = columnSizes.get(column);
@@ -77,5 +96,21 @@ public class TableOutputFormatter implements OutputFormatter {
             }
         }
         return columnSizes;
+    }
+
+    @Override
+    @Nonnull
+    public String formatInfo(@Nullable ResultSummary summary) {
+        TablePlanFormatter tablePlanFormatter = new TablePlanFormatter();
+
+        Map<String, Value> info = tablePlanFormatter.info(summary);
+        return formatValues(Collections.singletonList(new MapValue(info)));
+    }
+
+    @Override
+    @Nonnull
+    public String formatPlan(@Nullable ResultSummary summary) {
+        if (summary == null || !summary.hasPlan()) return "";
+        return new TablePlanFormatter().formatPlan(summary.plan());
     }
 }
