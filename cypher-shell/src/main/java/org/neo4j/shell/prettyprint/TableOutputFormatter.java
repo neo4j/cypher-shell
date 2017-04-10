@@ -3,16 +3,15 @@ package org.neo4j.shell.prettyprint;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.shell.state.BoltResult;
 
-import java.util.Arrays;
+import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
-public class TableOutputFormatter extends OutputFormatter {
+public class TableOutputFormatter implements OutputFormatter {
 
     @Override
+    @Nonnull
     public String format(@Nonnull final BoltResult result) {
         List<Record> data = result.getRecords();
         if (data.isEmpty()) return "";
@@ -23,7 +22,7 @@ public class TableOutputFormatter extends OutputFormatter {
         Map<String, Integer> columnSizes = calculateColumnSizes(columns, data);
         String headerLine = createString(columns, columnSizes);
         int lineWidth = headerLine.length() - 2;
-        String dashes = "+" + repeat('-', lineWidth) + "+";
+        String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
 
         String row = (data.size() > 1) ? "rows" : "row";
         String footer = String.format("%d %s", data.size(), row);
@@ -40,36 +39,30 @@ public class TableOutputFormatter extends OutputFormatter {
         return sb.toString();
     }
 
-    private String repeat(char c, int width) {
-        char[] chars = new char[width];
-        Arrays.fill(chars, c);
-        return String.valueOf(chars);
-    }
-
-    private String createString(List<String> columns, Map<String, Integer> columnSizes, Record m) {
+    @Nonnull private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes, @Nonnull Record m) {
         StringBuilder sb = new StringBuilder("|");
         for (String column : columns) {
             sb.append(" ");
             Integer length = columnSizes.get(column);
             String txt = formatValue(m.get(column));
-            String value = makeSize(txt, length);
+            String value = OutputFormatter.rightPad(txt, length);
             sb.append(value);
             sb.append(" |");
         }
         return sb.toString();
     }
 
-    private String createString(List<String> columns, Map<String, Integer> columnSizes) {
+    @Nonnull private String createString(@Nonnull List<String> columns, @Nonnull Map<String, Integer> columnSizes) {
         StringBuilder sb = new StringBuilder("|");
         for (String column : columns) {
             sb.append(" ");
-            sb.append(makeSize(column, columnSizes.get(column)));
+            sb.append(OutputFormatter.rightPad(column, columnSizes.get(column)));
             sb.append(" |");
         }
         return sb.toString();
     }
 
-    private Map<String, Integer> calculateColumnSizes(List<String> columns, List<Record> data) {
+    @Nonnull private Map<String, Integer> calculateColumnSizes(@Nonnull List<String> columns, @Nonnull List<Record> data) {
         Map<String, Integer> columnSizes = new LinkedHashMap<>();
         for (String column : columns) {
             columnSizes.put(column, column.length());
@@ -84,16 +77,5 @@ public class TableOutputFormatter extends OutputFormatter {
             }
         }
         return columnSizes;
-    }
-
-    private String makeSize(String txt, int wantedSize) {
-        int actualSize = txt.length();
-        if (actualSize > wantedSize) {
-            return txt.substring(0, wantedSize);
-        } else if (actualSize < wantedSize) {
-            return txt + repeat(' ', wantedSize - actualSize);
-        } else {
-            return txt;
-        }
     }
 }

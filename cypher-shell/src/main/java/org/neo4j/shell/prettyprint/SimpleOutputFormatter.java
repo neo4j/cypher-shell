@@ -8,9 +8,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-public class SimpleOutputFormatter extends OutputFormatter {
+public class SimpleOutputFormatter implements OutputFormatter {
 
     @Override
+    @Nonnull
     public String format(@Nonnull final BoltResult result) {
         StringBuilder sb = new StringBuilder();
         List<Record> records = result.getRecords();
@@ -22,8 +23,8 @@ public class SimpleOutputFormatter extends OutputFormatter {
         return sb.toString();
     }
 
+    @Nonnull
     private String formatRecord(@Nonnull final Record record) {
         return record.values().stream().map(this::formatValue).collect(Collectors.joining(COMMA_SEPARATOR));
     }
-
 }

@@ -7,10 +7,7 @@ import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -20,19 +17,17 @@ import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
  * @author mh
  * @since 09.04.17
  */
-public abstract class OutputFormatter {
+public interface OutputFormatter {
 
-    protected static final String COMMA_SEPARATOR = ", ";
-    protected static final String COLON_SEPARATOR = ": ";
-    protected static final String COLON = ":";
-    protected static final String SPACE = " ";
-    protected static final String NEWLINE =  System.getProperty("line.separator");
+    String COMMA_SEPARATOR = ", ";
+    String COLON_SEPARATOR = ": ";
+    String COLON = ":";
+    String SPACE = " ";
+    String NEWLINE =  System.getProperty("line.separator");
 
-    public abstract String format(@Nonnull BoltResult result);
+    @Nonnull String format(@Nonnull BoltResult result);
 
-    @Nonnull
-    String formatValue(@Nonnull final Value value) {
-        if (value==null) return "null";
+    @Nonnull default String formatValue(@Nonnull final Value value) {
         TypeRepresentation type = (TypeRepresentation) value.type();
         switch (type.constructor()) {
             case LIST_TyCon:
@@ -57,44 +52,32 @@ public abstract class OutputFormatter {
         }
     }
 
-    private String pathAsString(Path path) {
-        List<String> list = new LinkedList<>();
+    @Nonnull
+    default String pathAsString(@Nonnull Path path) {
+        List<String> list = new ArrayList<>(path.length());
         Node lastTraversed = path.start();
         if (lastTraversed != null) {
             list.add(nodeAsString(lastTraversed));
-        }
 
-        for (Path.Segment segment : path) {
-            Relationship relationship = segment.relationship();
-            if (relationship.startNodeId() == lastTraversed.id()) {
-                //-[:r]->
-                list.add("-" + relationshipAsString(relationship) + "->");
-                list.add(nodeAsString(segment.end()));
-                lastTraversed = segment.start();
-            } else {
-                list.add("<-" + relationshipAsString(relationship) + "-");
-                list.add(nodeAsString(segment.end()));
-                lastTraversed = segment.end();
+            for (Path.Segment segment : path) {
+                Relationship relationship = segment.relationship();
+                if (relationship.startNodeId() == lastTraversed.id()) {
+                    //-[:r]->
+                    list.add("-" + relationshipAsString(relationship) + "->");
+                    list.add(nodeAsString(segment.end()));
+                    lastTraversed = segment.start();
+                } else {
+                    list.add("<-" + relationshipAsString(relationship) + "-");
+                    list.add(nodeAsString(segment.end()));
+                    lastTraversed = segment.end();
+                }
             }
         }
 
         return list.stream().collect(Collectors.joining());
     }
 
-    private String listAsString(List<String> list) {
-        return list.stream().collect(Collectors.joining(COMMA_SEPARATOR,"[","]"));
-    }
-
-    private String mapAsString(Map<String, Object> map) {
-        if (map.isEmpty()) {
-            return "";
-        }
-        return map.entrySet().stream()
-                        .map(e -> escape(e.getKey()) + COLON_SEPARATOR + e.getValue())
-                        .collect(Collectors.joining(COMMA_SEPARATOR,"{","}"));
-    }
-
-    private String relationshipAsString(Relationship relationship) {
+    @Nonnull default String relationshipAsString(@Nonnull Relationship relationship) {
         List<String> relationshipAsString = new ArrayList<>();
         relationshipAsString.add(COLON + escape(relationship.type()));
         relationshipAsString.add(mapAsString(relationship.asMap(this::formatValue)));
@@ -102,7 +85,7 @@ public abstract class OutputFormatter {
         return "[" + joinWithSpace(relationshipAsString) + "]";
     }
 
-    private String nodeAsString(@Nonnull final Node node) {
+    @Nonnull default String nodeAsString(@Nonnull final Node node) {
         List<String> nodeAsString = new ArrayList<>();
         nodeAsString.add(collectNodeLabels(node));
         nodeAsString.add(mapAsString(node.asMap(this::formatValue)));
@@ -110,17 +93,47 @@ public abstract class OutputFormatter {
         return "(" + joinWithSpace(nodeAsString) + ")";
     }
 
-    private String collectNodeLabels(@Nonnull Node node) {
+    @Nonnull static String collectNodeLabels(@Nonnull Node node) {
         StringBuilder sb = new StringBuilder();
         node.labels().forEach(label -> sb.append(COLON).append(escape(label)));
         return sb.toString();
     }
 
-    private String joinWithSpace(List<String> strings) {
+    @Nonnull static String listAsString(@Nonnull List<String> list) {
+        return list.stream().collect(Collectors.joining(COMMA_SEPARATOR,"[","]"));
+    }
+
+    @Nonnull static String mapAsString(@Nonnull Map<String, Object> map) {
+        if (map.isEmpty()) {
+            return "";
+        }
+        return map.entrySet().stream()
+                .map(e -> escape(e.getKey()) + COLON_SEPARATOR + e.getValue())
+                .collect(Collectors.joining(COMMA_SEPARATOR,"{","}"));
+    }
+
+    @Nonnull static String joinWithSpace(@Nonnull List<String> strings) {
         return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(SPACE));
     }
 
-    private static boolean isNotBlank(String string) {
+    static boolean isNotBlank(String string) {
         return string != null && !string.trim().isEmpty();
+    }
+
+    @Nonnull static String repeat(char c, int width) {
+        char[] chars = new char[width];
+        Arrays.fill(chars, c);
+        return String.valueOf(chars);
+    }
+
+    @Nonnull static String rightPad(@Nonnull String str, int wantedSize) {
+        int actualSize = str.length();
+        if (actualSize > wantedSize) {
+            return str.substring(0, wantedSize);
+        } else if (actualSize < wantedSize) {
+            return str + repeat(' ', wantedSize - actualSize);
+        } else {
+            return str;
+        }
     }
 }
