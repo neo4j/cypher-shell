@@ -18,6 +18,7 @@ import java.util.HashMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
@@ -46,7 +47,7 @@ public class PrettyPrinterTest {
         String actual = verbosePrinter.format(result);
 
         // then
-        assertThat(actual, is("Added 10 nodes, Added 1 labels"));
+        assertThat(actual, containsString("Added 10 nodes, Added 1 labels"));
     }
 
     @Test
