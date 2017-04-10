@@ -131,7 +131,7 @@ rpm: out/$(rpmfile) ## Build the RPM package
 DOCKERUUIDRPM := $(shell uuidgen)
 .PHONY: rpm-test
 rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run -it $(DOCKERUUIDRPM) --version
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm -it $(DOCKERUUIDRPM) --version
 
 out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
 	mkdir -p $(dir $@)
@@ -164,4 +164,4 @@ debian: out/$(debfile) ## Build the Debian package
 DOCKERUUIDDEB := $(shell uuidgen)
 .PHONY: debian-test
 debian-test: tmp/debian-test/$(debfile) tmp/debian-test/Dockerfile ## Test the Debian package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run -it $(DOCKERUUIDRPM) --version
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm -it $(DOCKERUUIDRPM) --version
