@@ -1,27 +1,32 @@
 .DEFAULT: help
-.PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install
+.PHONY: help build clean zip run untested-zip test integration-test tyrekicking-test mutation-test install info
 
 gitdescribe := $(shell git describe --tags --match [0-9]*)
 lasttag := $(shell git describe --tags --match [0-9]* --abbrev=0)
-version ?= $(lasttag)
-commitcount := $(shell git rev-list $(lasttag)..HEAD --count)
 
-ifeq ($(commitcount),0)
-	release ?= 1
+version ?= $(lasttag)
+versionlabel = $(shell echo ${version} | awk '{ sub("^[0-9]+\.[0-9]+\.[0-9]+-?", "", $$1); print }')
+versionnumber = $(shell echo ${version} | awk '{ sub("-.*$$", "", $$1); print }')
+
+pkgversion ?= 1
+# If no label it is assumed to be a stable release
+ifeq ($(versionlabel),)
+	release := $(pkgversion)
 	distribution ?= stable
 	buildversion := $(version)
 else
-	release ?= 0.$(commitcount).1
+	release := 0.$(versionlabel).$(pkgversion)
 	distribution ?= unstable
 	buildversion := $(gitdescribe)
 endif
 
-debversion ?= $(version)-$(release)
+debversion := $(versionnumber)-$(release)
+rpmversion := $(versionnumber)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile := cypher-shell-all.jar
-rpmfile := cypher-shell-$(version)-$(release).noarch.rpm
+rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
@@ -33,6 +38,19 @@ deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+info: ## Print variables used in the build (some of which can be overridden)
+	@echo "--- Overridable ---"
+	@echo "version:       ${version}"
+	@echo "pkgversion:    ${pkgversion}"
+	@echo "--- Calculated  ---"
+	@echo "versionnumber: ${versionnumber}"
+	@echo "versionlabel:  ${versionlabel}"
+	@echo "distribution:  ${distribution}"
+	@echo "buildversion:  ${buildversion}"
+	@echo "release:       ${release}"
+	@echo "debversion:    ${debversion}"
+	@echo "rpmversion:    ${rpmversion}"
 
 run: $(artifacts) ## Build and run cypher-shell with no arguments
 	cypher-shell/build/install/cypher-shell/cypher-shell
@@ -105,7 +123,7 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
 	mkdir -p $(dir $@)
-	VERSION=$(version) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
+	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
 out/rpm/BUILD/%: %
 	mkdir -p $(dir $@)
