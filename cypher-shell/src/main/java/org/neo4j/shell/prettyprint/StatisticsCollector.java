@@ -27,6 +27,7 @@ public class StatisticsCollector {
     private String collectStatistics(@Nonnull ResultSummary summary) {
         List<String> statistics = new ArrayList<>();
         SummaryCounters counters = summary.counters();
+        if (counters == null) return "";
         if (counters.nodesCreated() != 0) {
             statistics.add(String.format("Added %d nodes", counters.nodesCreated()));
         }
