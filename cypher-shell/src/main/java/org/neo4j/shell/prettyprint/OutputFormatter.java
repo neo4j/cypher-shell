@@ -165,7 +165,7 @@ public interface OutputFormatter {
     }
 
 
-    List<String> INFO = asList("Version", "Planner", "Runtime", "Time", "Rows", "DbHits");
+    List<String> INFO = asList("Version", "Planner", "Runtime");
 
     @Nonnull
     static Map<String, Value> info(@Nonnull ResultSummary summary) {
