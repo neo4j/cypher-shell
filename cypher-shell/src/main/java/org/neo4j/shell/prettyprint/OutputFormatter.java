@@ -2,6 +2,8 @@ package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.Plan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
@@ -12,6 +14,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
 /**
@@ -116,7 +120,7 @@ public interface OutputFormatter {
     @Nonnull static String joinWithSpace(@Nonnull List<String> strings) {
         return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(SPACE));
     }
-    static  String joinNonBlanks(String delim, List<String> strings) {
+    @Nonnull static  String joinNonBlanks(@Nonnull String delim, @Nonnull List<String> strings) {
         return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(delim));
     }
 
@@ -159,4 +163,29 @@ public interface OutputFormatter {
     @Nonnull default String formatFooter(@Nonnull BoltResult result) {
         return "";
     }
+
+
+    List<String> INFO = asList("Version", "Planner", "Runtime", "Time", "Rows", "DbHits");
+
+    @Nonnull
+    static Map<String, Value> info(@Nonnull ResultSummary summary) {
+        Map<String, Value> result = new LinkedHashMap<>();
+        if (!summary.hasPlan()) return result;
+
+        Plan plan = summary.plan();
+        result.put("Plan", Values.value(summary.hasProfile() ? "PROFILE" : "EXPLAIN"));
+        result.put("Statement", Values.value(summary.statementType().name()));
+        Map<String, Value> arguments = plan.arguments();
+        Value defaultValue = Values.value("");
+
+        for (String key : INFO) {
+            Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), defaultValue));
+            result.put(key, value);
+        }
+        result.put("Time", Values.value(summary.resultAvailableAfter(MILLISECONDS)+summary.resultConsumedAfter(MILLISECONDS)));
+        if (summary.hasProfile()) result.put("DbHits", Values.value( summary.profile().dbHits() ));
+        if (summary.hasProfile()) result.put("Rows", Values.value( summary.profile().records() ));
+        return result;
+    }
+
 }

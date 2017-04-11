@@ -1,14 +1,11 @@
 package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.Plan;
-import org.neo4j.driver.v1.summary.ResultSummary;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
@@ -39,28 +35,6 @@ class TablePlanFormatter {
     private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, TIME, IDENTIFIERS, OTHER);
 
     private static final Set<String> OTHERS = new LinkedHashSet<>(asList("Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "version", "runtime", "runtime-impl", "time", "source-code"));
-    private static final List<String> INFO = asList("Version", "Planner", "Runtime", "Time", "Rows", "DbHits");
-
-    @Nonnull
-    Map<String, Value> info(@Nonnull ResultSummary summary) {
-        Map<String, Value> result = new LinkedHashMap<>();
-        if (!summary.hasPlan()) return result;
-
-        Plan plan = summary.plan();
-        result.put("Plan", Values.value(summary.hasProfile() ? "PROFILE" : "EXPLAIN"));
-        result.put("Statement", Values.value(summary.statementType().name()));
-        Map<String, Value> arguments = plan.arguments();
-        Value defaultValue = Values.value("");
-
-        for (String key : INFO) {
-            Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), defaultValue));
-            result.put(key, value);
-        }
-        result.put("Time", Values.value(summary.resultAvailableAfter(MILLISECONDS)+summary.resultConsumedAfter(MILLISECONDS)));
-        if (summary.hasProfile()) result.put("DbHits", Values.value( summary.profile().dbHits() ));
-        if (summary.hasProfile()) result.put("Rows", Values.value( summary.profile().records() ));
-        return result;
-    }
 
     private int width(@Nonnull String header, @Nonnull Map<String, Integer> columns) {
         return 2 + Math.max(header.length(), columns.get(header));

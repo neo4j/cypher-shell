@@ -100,10 +100,8 @@ public class TableOutputFormatter implements OutputFormatter {
 
     @Override
     @Nonnull
-    public String formatInfo(@Nullable ResultSummary summary) {
-        TablePlanFormatter tablePlanFormatter = new TablePlanFormatter();
-
-        Map<String, Value> info = tablePlanFormatter.info(summary);
+    public String formatInfo(@Nonnull ResultSummary summary) {
+        Map<String, Value> info = OutputFormatter.info(summary);
         return formatValues(Collections.singletonList(new MapValue(info)));
     }
 

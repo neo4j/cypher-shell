@@ -5,8 +5,8 @@ import org.mockito.Matchers;
 import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.summary.SummaryCounters;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.*;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
@@ -15,15 +15,20 @@ import org.neo4j.shell.state.BoltResult;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
+import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.neo4j.driver.internal.util.Iterables.map;
 
 public class PrettyPrinterTest {
 
@@ -48,6 +53,44 @@ public class PrettyPrinterTest {
 
         // then
         assertThat(actual, containsString("Added 10 nodes, Added 1 labels"));
+    }
+
+    @Test
+    public void prettyPrintPlanInformation() throws Exception {
+        // given
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ProfiledPlan plan = mock(ProfiledPlan.class);
+        when(plan.dbHits()).thenReturn(1000L);
+        when(plan.records()).thenReturn(20L);
+
+        when(resultSummary.hasPlan()).thenReturn(true);
+        when(resultSummary.hasProfile()).thenReturn(true);
+        when(resultSummary.plan()).thenReturn(plan);
+        when(resultSummary.profile()).thenReturn(plan);
+        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
+        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
+        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
+        when(plan.arguments()).thenReturn(argumentMap);
+
+        BoltResult result = mock(BoltResult.class);
+        when(result.getRecords()).thenReturn(Collections.emptyList());
+        when(result.getSummary()).thenReturn(resultSummary);
+
+        // when
+        String actual = plainPrinter.format(result);
+
+        // then
+        String expected =
+                "Plan: \"PROFILE\"\n" +
+                "Statement: \"READ_ONLY\"\n" +
+                "Version: \"3.1\"\n" +
+                "Planner: \"COST\"\n" +
+                "Runtime: \"INTERPRETED\"\n" +
+                "Time: 12\n" +
+                "Rows: 20\n" +
+                "DbHits: 1000";
+        Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
     }
 
     @Test

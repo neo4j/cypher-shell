@@ -82,6 +82,42 @@ public class CypherShellIntegrationTest {
     }
 
     @Test
+    public void cypherWithProfileStatements() throws CommandException {
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE RETURN null");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        String actual = result.get(0);
+        assertThat(actual, containsString("+------+\n| null |\n+------+\n| NULL |\n+------+"));
+        assertThat(actual, containsString("| \"PROFILE\" | \"READ_ONLY\" | \"CYPHER 3.1\" | \"COST\"  | \"INTERPRETED\" | " ));
+        assertThat(actual, containsString("| Operator        | Estimated Rows | Rows | DB Hits | Identifiers | Other           |" ));
+        assertThat(actual, containsString("| +Projection     |              1 |    1 |       0 | null        | {null : Null()} |" ));
+        assertThat(actual, containsString("1 row available after "));
+    }
+
+    @Test
+    public void cypherWithExplainStatements() throws CommandException {
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN RETURN null");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        String actual = result.get(0);
+        assertThat(actual, containsString("| \"EXPLAIN\" | \"READ_ONLY\" | \"CYPHER 3.1\" | \"COST\"  | \"INTERPRETED\" |"));
+        assertThat(actual, containsString("| Operator        | Estimated Rows | Identifiers | Other           |" ));
+        assertThat(actual, containsString("| +ProduceResults |              1 | null        | null            |" ));
+        assertThat(actual, containsString("| +Projection     |              1 | null        | {null : Null()} |" ));
+        assertThat(actual, containsString("0 rows available after "));
+    }
+
+    @Test
     public void connectTwiceThrows() throws CommandException {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
