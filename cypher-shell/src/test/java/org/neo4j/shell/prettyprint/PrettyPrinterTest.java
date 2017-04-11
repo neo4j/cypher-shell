@@ -56,7 +56,7 @@ public class PrettyPrinterTest {
     }
 
     @Test
-    public void prettyPrintPlanInformation() throws Exception {
+    public void prettyPrintProfileInformation() throws Exception {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         ProfiledPlan plan = mock(ProfiledPlan.class);
@@ -90,6 +90,41 @@ public class PrettyPrinterTest {
                 "Time: 12\n" +
                 "Rows: 20\n" +
                 "DbHits: 1000";
+        Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
+    }
+
+    @Test
+    public void prettyPrintExplainInformation() throws Exception {
+        // given
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ProfiledPlan plan = mock(ProfiledPlan.class);
+        when(plan.dbHits()).thenReturn(1000L);
+        when(plan.records()).thenReturn(20L);
+
+        when(resultSummary.hasPlan()).thenReturn(true);
+        when(resultSummary.hasProfile()).thenReturn(false);
+        when(resultSummary.plan()).thenReturn(plan);
+        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
+        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
+        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
+        when(plan.arguments()).thenReturn(argumentMap);
+
+        BoltResult result = mock(BoltResult.class);
+        when(result.getRecords()).thenReturn(Collections.emptyList());
+        when(result.getSummary()).thenReturn(resultSummary);
+
+        // when
+        String actual = plainPrinter.format(result);
+
+        // then
+        String expected =
+                "Plan: \"EXPLAIN\"\n" +
+                "Statement: \"READ_ONLY\"\n" +
+                "Version: \"3.1\"\n" +
+                "Planner: \"COST\"\n" +
+                "Runtime: \"INTERPRETED\"\n" +
+                "Time: 12";
         Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
     }
 

@@ -1,6 +1,7 @@
 package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.Plan;
 
 import javax.annotation.Nonnull;
@@ -26,15 +27,17 @@ class TablePlanFormatter {
     private static final String ESTIMATED_ROWS = "Estimated Rows";
     private static final String ROWS = "Rows";
     private static final String HITS = "DB Hits";
+    private static final String PAGE_CACHE = "Cache H/M";
     private static final String TIME = "Time (ms)";
     private static final String IDENTIFIERS = "Identifiers";
     private static final String OTHER = "Other";
     private static final String SEPARATOR = ", ";
     private static final Pattern DEDUP_PATTERN = Pattern.compile("\\s*(\\S+)@\\d+");
 
-    private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, TIME, IDENTIFIERS, OTHER);
+    private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, PAGE_CACHE, TIME, IDENTIFIERS, OTHER);
 
-    private static final Set<String> OTHERS = new LinkedHashSet<>(asList("Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "version", "runtime", "runtime-impl", "time", "source-code"));
+    private static final Set<String> OTHERS = new LinkedHashSet<>(asList("Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "version", "runtime", "runtime-impl", "time", "source-code","PageCacheMisses","PageCacheHits"));
+    public static final Value ZERO_VALUE = Values.value(0);
 
     private int width(@Nonnull String header, @Nonnull Map<String, Integer> columns) {
         return 2 + Math.max(header.length(), columns.get(header));
@@ -145,8 +148,10 @@ class TablePlanFormatter {
                 return v.asString();
             case "EntityByIdRhs":
                 return v.asString();
+            case "PageCacheMisses":
+                return v.asNumber().toString();
             default:
-                return v.asString();
+                return v.asObject().toString();
         }
     }
 
@@ -189,7 +194,9 @@ class TablePlanFormatter {
 
     @Nonnull
     private Map<String, Justified> details(@Nonnull Plan plan, @Nonnull Map<String, Integer> columns) {
-        Stream<Optional<Pair<String, Justified>>> formattedPlan = plan.arguments().entrySet().stream().map((e) -> {
+        Map<String, Value> args = plan.arguments();
+
+        Stream<Optional<Pair<String, Justified>>> formattedPlan = args.entrySet().stream().map((e) -> {
             Value value = e.getValue();
             switch (e.getKey()) {
                 case "EstimatedRows":
@@ -198,6 +205,8 @@ class TablePlanFormatter {
                     return mapping(ROWS, new Right(value.asNumber().toString()), columns);
                 case "DbHits":
                     return mapping(HITS, new Right(value.asNumber().toString()), columns);
+                case "PageCacheHits":
+                    return mapping(PAGE_CACHE, new Right(String.format("%s/%s",value.asNumber(),args.getOrDefault("PageCacheMisses", ZERO_VALUE).asNumber())), columns);
                 case "Time":
                     return mapping(TIME, new Right(String.format("%.3f", value.asLong() / 1000000.0d)), columns);
                 default:

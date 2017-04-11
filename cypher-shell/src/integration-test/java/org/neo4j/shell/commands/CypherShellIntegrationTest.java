@@ -93,9 +93,12 @@ public class CypherShellIntegrationTest {
         List<String> result = captor.getAllValues();
         String actual = result.get(0);
         assertThat(actual, containsString("+------+\n| null |\n+------+\n| NULL |\n+------+"));
-        assertThat(actual, containsString("| \"PROFILE\" | \"READ_ONLY\" | \"CYPHER 3.1\" | \"COST\"  | \"INTERPRETED\" | " ));
-        assertThat(actual, containsString("| Operator        | Estimated Rows | Rows | DB Hits | Identifiers | Other           |" ));
-        assertThat(actual, containsString("| +Projection     |              1 |    1 |       0 | null        | {null : Null()} |" ));
+        assertThat(actual, containsString("| \"PROFILE\" | \"READ_ONLY\" | \"CYPHER 3." ));
+        assertThat(actual, containsString("| \"COST\"  | \"INTERPRETED\" | " ));
+        assertThat(actual, containsString("| Operator        | Estimated Rows | Rows | DB Hits " ));
+        assertThat(actual, containsString("| Identifiers | Other           |" ));
+        assertThat(actual, containsString("| +Projection     |              1 |    1 |       0 " ));
+        assertThat(actual, containsString("| null        | {null : Null()} |" ));
         assertThat(actual, containsString("1 row available after "));
     }
 
@@ -110,9 +113,10 @@ public class CypherShellIntegrationTest {
 
         List<String> result = captor.getAllValues();
         String actual = result.get(0);
-        assertThat(actual, containsString("| \"EXPLAIN\" | \"READ_ONLY\" | \"CYPHER 3.1\" | \"COST\"  | \"INTERPRETED\" |"));
+        assertThat(actual, containsString("| \"EXPLAIN\" | \"READ_ONLY\" | \"CYPHER "));
+        assertThat(actual, containsString("| \"COST\"  | \"INTERPRETED\" |"));
         assertThat(actual, containsString("| Operator        | Estimated Rows | Identifiers | Other           |" ));
-        assertThat(actual, containsString("| +ProduceResults |              1 | null        | null            |" ));
+        assertThat(actual, containsString("| +ProduceResults |              1 | null        | " ));
         assertThat(actual, containsString("| +Projection     |              1 | null        | {null : Null()} |" ));
         assertThat(actual, containsString("0 rows available after "));
     }
