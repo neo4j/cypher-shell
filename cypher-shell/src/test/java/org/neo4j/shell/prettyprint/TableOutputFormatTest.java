@@ -1,7 +1,9 @@
 package org.neo4j.shell.prettyprint;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalRecord;
@@ -12,17 +14,21 @@ import org.neo4j.driver.internal.summary.InternalSummaryCounters;
 import org.neo4j.driver.internal.summary.SummaryBuilder;
 import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.summary.ProfiledPlan;
 import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.summary.StatementType;
 import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.v1.util.Function;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -38,6 +44,39 @@ import static org.mockito.Mockito.when;
 public class TableOutputFormatTest {
 
     private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
+
+
+    @Test
+    public void prettyPrintPlanInformation() throws Exception {
+        // given
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ProfiledPlan plan = mock(ProfiledPlan.class);
+        when(plan.dbHits()).thenReturn(1000L);
+        when(plan.records()).thenReturn(20L);
+
+        when(resultSummary.hasPlan()).thenReturn(true);
+        when(resultSummary.hasProfile()).thenReturn(true);
+        when(resultSummary.plan()).thenReturn(plan);
+        when(resultSummary.profile()).thenReturn(plan);
+        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
+        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
+        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
+        when(plan.arguments()).thenReturn(argumentMap);
+
+        BoltResult result = mock(BoltResult.class);
+        when(result.getRecords()).thenReturn(Collections.emptyList());
+        when(result.getSummary()).thenReturn(resultSummary);
+
+        // when
+        String actual = verbosePrinter.format(result);
+
+        // then
+        argumentMap.forEach((k,v) -> {
+            assertThat(actual, CoreMatchers.containsString("| "+k));
+            assertThat(actual, CoreMatchers.containsString("| "+v.toString()));
+        });
+    }
 
     @Test
     public void prettyPrintNode() throws Exception {
@@ -58,9 +97,13 @@ public class TableOutputFormatTest {
         when(node.labels()).thenReturn(asList("label1", "label2"));
         when(node.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
 
+        Map<String,Value> recordMap = new LinkedHashMap<>();
+        recordMap.put("col1",value);
+        recordMap.put("col2",value);
         when(record.keys()).thenReturn(asList("col1", "col2"));
         when(record.get(eq("col1"))).thenReturn(value);
         when(record.get(eq("col2"))).thenReturn(value);
+        when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
 
         when(record.values()).thenReturn(asList(value));
 
@@ -96,7 +139,7 @@ public class TableOutputFormatTest {
         when(record.keys()).thenReturn(asList("rel"));
         when(record.get(eq("rel"))).thenReturn(value);
         when(record.values()).thenReturn(asList(value));
-
+        when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("rel",value));
         when(result.getRecords()).thenReturn(asList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
@@ -140,9 +183,14 @@ public class TableOutputFormatTest {
         when(node.asMap(anyObject())).thenReturn(unmodifiableMap(nodeProp));
 
 
+        Map<String,Value> recordMap = new LinkedHashMap<>();
+        recordMap.put("rel",relVal);
+        recordMap.put("node",nodeVal);
         when(record.keys()).thenReturn(asList("rel", "node"));
         when(record.get(eq("rel"))).thenReturn(relVal);
         when(record.get(eq("node"))).thenReturn(nodeVal);
+
+        when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
 
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
@@ -167,7 +215,6 @@ public class TableOutputFormatTest {
         // THEN
         assertThat( table, containsString( "| c1  | c2 |" ) );
         assertThat( table, containsString( "| \"a\" | 42 |" ) );
-        assertThat( table, containsString( "1 row" ) );
     }
 
     @Test
@@ -180,7 +227,6 @@ public class TableOutputFormatTest {
         // THEN
         assertThat( table, containsString( "| \"a\" | 42 |" ) );
         assertThat( table, containsString( "| \"b\" | 43 |" ) );
-        assertThat( table, containsString( "2 rows" ) );
     }
 
     @Test

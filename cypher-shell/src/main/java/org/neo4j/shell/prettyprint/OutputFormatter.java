@@ -2,6 +2,9 @@ package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.Plan;
+import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
@@ -11,6 +14,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
 /**
@@ -115,25 +120,72 @@ public interface OutputFormatter {
     @Nonnull static String joinWithSpace(@Nonnull List<String> strings) {
         return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(SPACE));
     }
+    @Nonnull static  String joinNonBlanks(@Nonnull String delim, @Nonnull List<String> strings) {
+        return strings.stream().filter(OutputFormatter::isNotBlank).collect(Collectors.joining(delim));
+    }
 
     static boolean isNotBlank(String string) {
         return string != null && !string.trim().isEmpty();
     }
 
-    @Nonnull static String repeat(char c, int width) {
-        char[] chars = new char[width];
+    @Nonnull static String repeat(char c, int times) {
+        char[] chars = new char[times];
         Arrays.fill(chars, c);
         return String.valueOf(chars);
     }
 
-    @Nonnull static String rightPad(@Nonnull String str, int wantedSize) {
+    @Nonnull static String repeat(@Nonnull String c, int times) {
+        StringBuilder sb = new StringBuilder(times*c.length());
+        for (int i=0;i<times;i++) sb.append(c);
+        return sb.toString();
+    }
+
+    @Nonnull static String rightPad(@Nonnull String str, int width) {
+        return rightPad(str,width,' ');
+    }
+    @Nonnull static String rightPad(@Nonnull String str, int width, char c) {
         int actualSize = str.length();
-        if (actualSize > wantedSize) {
-            return str.substring(0, wantedSize);
-        } else if (actualSize < wantedSize) {
-            return str + repeat(' ', wantedSize - actualSize);
+        if (actualSize > width) {
+            return str.substring(0, width);
+        } else if (actualSize < width) {
+            return str + repeat( c, width - actualSize);
         } else {
             return str;
         }
     }
+
+    @Nonnull default String formatPlan(@Nonnull ResultSummary summary) {
+        return "";
+    }
+    @Nonnull default String formatInfo(@Nonnull ResultSummary summary) {
+        return "";
+    }
+    @Nonnull default String formatFooter(@Nonnull BoltResult result) {
+        return "";
+    }
+
+
+    List<String> INFO = asList("Version", "Planner", "Runtime");
+
+    @Nonnull
+    static Map<String, Value> info(@Nonnull ResultSummary summary) {
+        Map<String, Value> result = new LinkedHashMap<>();
+        if (!summary.hasPlan()) return result;
+
+        Plan plan = summary.plan();
+        result.put("Plan", Values.value(summary.hasProfile() ? "PROFILE" : "EXPLAIN"));
+        result.put("Statement", Values.value(summary.statementType().name()));
+        Map<String, Value> arguments = plan.arguments();
+        Value defaultValue = Values.value("");
+
+        for (String key : INFO) {
+            Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), defaultValue));
+            result.put(key, value);
+        }
+        result.put("Time", Values.value(summary.resultAvailableAfter(MILLISECONDS)+summary.resultConsumedAfter(MILLISECONDS)));
+        if (summary.hasProfile()) result.put("DbHits", Values.value( summary.profile().dbHits() ));
+        if (summary.hasProfile()) result.put("Rows", Values.value( summary.profile().records() ));
+        return result;
+    }
+
 }
