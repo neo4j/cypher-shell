@@ -148,10 +148,13 @@ public class CliArgHelper {
         parser.setDefault("fail-behavior", FAIL_FAST);
 
         parser.addArgument("--format")
-                .help("desired output format, verbose(default) displays statistics, plain only displays data")
+                .help("desired output format, verbose displays results in tabular format and prints statistics, " +
+                        "plain displays data with minimal formatting")
                 .choices(new CollectionArgumentChoice<>(
-                        Format.VERBOSE.name().toLowerCase(), Format.PLAIN.name().toLowerCase()))
-                .setDefault(Format.VERBOSE.name().toLowerCase());
+                        Format.AUTO.name().toLowerCase(),
+                        Format.VERBOSE.name().toLowerCase(),
+                        Format.PLAIN.name().toLowerCase()))
+                .setDefault(Format.AUTO.name().toLowerCase());
 
         parser.addArgument("--debug")
                 .help("print additional debug information")
