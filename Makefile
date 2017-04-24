@@ -5,7 +5,7 @@ gitdescribe := $(shell git describe --tags --match [0-9]*)
 lasttag := $(shell git describe --tags --match [0-9]* --abbrev=0)
 
 version ?= $(lasttag)
-versionlabel = $(shell echo ${version} | awk '{ sub("^[0-9]+\.[0-9]+\.[0-9]+-?", "", $$1); print }')
+versionlabel = $(shell echo ${version} | awk '{ sub("^[0-9]+.[0-9]+.[0-9]+-?", "", $$1); print }')
 versionnumber = $(shell echo ${version} | awk '{ sub("-.*$$", "", $$1); print }')
 
 pkgversion ?= 1
