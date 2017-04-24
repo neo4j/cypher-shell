@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
+import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.isatty;
 import static org.neo4j.shell.system.Utils.isWindows;
 
@@ -74,7 +75,7 @@ public interface ShellRunner {
      * Checks if STDIN is a TTY. In case TTY checking is not possible (lack of libc), then the check falls back to
      * the built in Java {@link System#console()} which checks if EITHER STDIN or STDOUT has been redirected.
      *
-     * @return true if the shell reading from an interactive terminal, false otherwise (e.g., we are reading from a
+     * @return true if the shell is reading from an interactive terminal, false otherwise (e.g., we are reading from a
      * file).
      */
     static boolean isInputInteractive() {
@@ -85,6 +86,28 @@ public interface ShellRunner {
         }
         try {
             return 1 == isatty(STDIN_FILENO);
+        } catch (Throwable ignored) {
+            // system is not using libc (like Alpine Linux)
+            // Fallback to checking stdin OR stdout
+            return System.console() != null;
+        }
+    }
+
+    /**
+     * Checks if STDOUT is a TTY. In case TTY checking is not possible (lack of libc), then the check falls back to
+     * the built in Java {@link System#console()} which checks if EITHER STDIN or STDOUT has been redirected.
+     *
+     * @return true if the shell is outputting to an interactive terminal, false otherwise (e.g., we are outputting
+     * to a file)
+     */
+    static boolean isOutputInteractive() {
+        if (isWindows()) {
+            // Input will never be a TTY on windows and it isatty seems to be able to block forever on Windows so avoid
+            // calling it.
+            return System.console() != null;
+        }
+        try {
+            return 1 == isatty(STDOUT_FILENO);
         } catch (Throwable ignored) {
             // system is not using libc (like Alpine Linux)
             // Fallback to checking stdin OR stdout

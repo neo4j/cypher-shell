@@ -11,7 +11,7 @@ public class CliArgs {
     private String username = "";
     private String password = "";
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
-    private Format format = Format.VERBOSE;
+    private Format format = Format.AUTO;
     private Optional<String> cypher = Optional.empty();
     private boolean encryption;
     private boolean debugMode;

@@ -61,10 +61,13 @@ public class CliArgsTest {
     @Test
     public void setFormat() throws Exception {
         // default
-        assertEquals(Format.VERBOSE, cliArgs.getFormat());
+        assertEquals(Format.AUTO, cliArgs.getFormat());
 
         cliArgs.setFormat(Format.PLAIN);
         assertEquals(Format.PLAIN, cliArgs.getFormat());
+
+        cliArgs.setFormat(Format.VERBOSE);
+        assertEquals(Format.VERBOSE, cliArgs.getFormat());
     }
 
     @Test
