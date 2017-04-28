@@ -45,7 +45,7 @@ public class CypherShellIntegrationTest {
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
 
-        shell.connect(new ConnectionConfig(logger, "bolt://", "localhost", 7687, "neo4j", "neo", true));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true));
     }
 
     @After
@@ -126,7 +126,7 @@ public class CypherShellIntegrationTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
 
-        ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "localhost", 7687, "neo4j", "neo", true);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true);
         assertTrue("Shell should already be connected", shell.isConnected());
         shell.connect(config);
     }
