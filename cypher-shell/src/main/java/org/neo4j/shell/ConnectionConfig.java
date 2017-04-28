@@ -21,15 +21,6 @@ public class ConnectionConfig {
         this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
         this.password = fallbackToEnvVariable(password, "NEO4J_PASSWORD");
         this.encryption = encryption ? Config.EncryptionLevel.REQUIRED : Config.EncryptionLevel.NONE;
-
-        if ("bolt+routing://".equalsIgnoreCase(scheme)) {
-            logger.printError(
-                    AnsiFormattedText.s()
-                                     .colorRed()
-                                     .append("Routing is not supported by cypher-shell. Falling back to direct connection.")
-                                     .formattedString());
-            scheme = "bolt://";
-        }
         this.scheme = scheme;
     }
 
