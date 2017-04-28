@@ -276,6 +276,7 @@ public class TableOutputFormatTest {
         }
         when(result.list()).thenReturn(records);
         when(result.consume()).thenReturn(summary);
+        when(result.summary()).thenReturn(summary);
         return result;
     }
 

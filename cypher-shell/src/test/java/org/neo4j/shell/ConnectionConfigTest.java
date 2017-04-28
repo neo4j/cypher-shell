@@ -44,14 +44,6 @@ public class ConnectionConfigTest {
     }
 
     @Test
-    public void driverUrlRoutingScheme() throws Exception {
-        ConnectionConfig config = new ConnectionConfig(logger, "bolt+routing://", "localhost", 1, "bob",
-                "pass", false);
-        verify(logger).printError("@|RED Routing is not supported by cypher-shell. Falling back to direct connection.|@");
-        assertEquals("bolt://localhost:1", config.driverUrl());
-    }
-
-    @Test
     public void encryption() {
         assertEquals(Config.EncryptionLevel.REQUIRED,
                 new ConnectionConfig(logger, "bolt://", "", -1, "", "", true).encryption());
