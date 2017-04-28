@@ -6,11 +6,10 @@ import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class ConnectionConfigTest {
     private Logger logger = mock(Logger.class);
-    private ConnectionConfig config = new ConnectionConfig(logger, "bolt://", "localhost", 1, "bob",
+    private ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 1, "bob",
             "pass", false);
 
     @Test
@@ -46,8 +45,8 @@ public class ConnectionConfigTest {
     @Test
     public void encryption() {
         assertEquals(Config.EncryptionLevel.REQUIRED,
-                new ConnectionConfig(logger, "bolt://", "", -1, "", "", true).encryption());
+                new ConnectionConfig("bolt://", "", -1, "", "", true).encryption());
         assertEquals(Config.EncryptionLevel.NONE,
-                new ConnectionConfig(logger, "bolt://", "", -1, "", "", false).encryption());
+                new ConnectionConfig("bolt://", "", -1, "", "", false).encryption());
     }
 }

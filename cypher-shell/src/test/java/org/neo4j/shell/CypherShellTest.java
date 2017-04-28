@@ -21,7 +21,6 @@ import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
@@ -59,7 +58,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig(logger, "bolt://", "", 1, "", "", false);
+        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false);
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.connect(cc);

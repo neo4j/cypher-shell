@@ -57,7 +57,6 @@ public class Main {
         logger.setFormat(cliArgs.getFormat());
 
         ConnectionConfig connectionConfig = new ConnectionConfig(
-                logger,
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
                 cliArgs.getPort(),

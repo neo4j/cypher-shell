@@ -1,8 +1,6 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.Config;
-import org.neo4j.shell.log.AnsiFormattedText;
-import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 
@@ -14,7 +12,7 @@ public class ConnectionConfig {
     private String username;
     private String password;
 
-    public ConnectionConfig(@Nonnull Logger logger, @Nonnull String scheme, @Nonnull String host, int port,
+    public ConnectionConfig(@Nonnull String scheme, @Nonnull String host, int port,
                             @Nonnull String username, @Nonnull String password, boolean encryption) {
         this.host = host;
         this.port = port;
