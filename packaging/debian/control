@@ -9,5 +9,7 @@ Homepage: http://neo4j.org/
 Package: cypher-shell
 Architecture: all
 Depends: ${misc:Depends}, openjdk-8-jre-headless | java8-runtime-headless
+Replaces: neo4j (<< 3.1.4), neo4j-enterprise (<< 3.1.4)
+Breaks: neo4j (<< 3.1.4), neo4j-enterprise (<< 3.1.4)
 Description: command line shell for neo4j
  Cypher-shell is a command line shell for Neo4j.
