@@ -26,8 +26,6 @@ import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.asList;
-
 /**
  * Handles interactions with the driver
  */
@@ -142,9 +140,16 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             transactionStatements.add(new Statement(cypher, queryParams));
             return Optional.empty();
         } else {
-            List<Statement> transactionStatements = asList(new Statement(cypher, queryParams));
-            BoltResult boltResult = captureResults(transactionStatements).get().get(0);
-            return Optional.of(boltResult);
+            // Note that PERIODIC COMMIT can't execute in a transaction, so if the user has not typed BEGIN, then
+            // the statement should NOT be executed in a transaction.
+            StatementResult statementResult = session.run(new Statement(cypher, queryParams));
+
+            if (statementResult == null) {
+                return Optional.empty();
+            }
+
+            // calling list()/consume() is what actually executes cypher on the server
+            return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
         }
     }
 
