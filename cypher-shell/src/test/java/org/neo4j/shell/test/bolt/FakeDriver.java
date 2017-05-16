@@ -18,19 +18,19 @@ public class FakeDriver implements Driver {
 
     @Override
     public Session session(AccessMode mode) {
-        return null;
+        return new FakeSession();
     }
 
     @Override
     public Session session( String bookmark )
     {
-        return null;
+        return new FakeSession();
     }
 
     @Override
     public Session session( AccessMode mode, String bookmark )
     {
-        return null;
+        return new FakeSession();
     }
 
     @Override

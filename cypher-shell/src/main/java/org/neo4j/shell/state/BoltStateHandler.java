@@ -1,6 +1,7 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.internal.logging.ConsoleLogging;
+import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
@@ -10,6 +11,7 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.exceptions.SessionExpiredException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
@@ -98,11 +100,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
         try {
             driver = getDriver(connectionConfig, authToken);
-            session = driver.session();
-            // Bug in Java driver forces us to run a statement to make it actually connect
-            StatementResult run = session.run( "RETURN 1" );
-            this.version = run.summary().server().version();
-            run.consume();
+            reconnect();
         } catch (Throwable t) {
             try {
                 silentDisconnect();
@@ -111,6 +109,18 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             }
             throw t;
         }
+    }
+
+    private void reconnect() {
+        String bookmark = null;
+        if (session != null) {
+            bookmark = session.lastBookmark();
+            session.close();
+        }
+        session = driver.session(AccessMode.WRITE, bookmark);
+        StatementResult run = session.run("RETURN 1");
+        this.version = run.summary().server().version();
+        run.consume();
     }
 
     @Nonnull
@@ -140,17 +150,32 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             transactionStatements.add(new Statement(cypher, queryParams));
             return Optional.empty();
         } else {
-            // Note that PERIODIC COMMIT can't execute in a transaction, so if the user has not typed BEGIN, then
-            // the statement should NOT be executed in a transaction.
-            StatementResult statementResult = session.run(new Statement(cypher, queryParams));
-
-            if (statementResult == null) {
-                return Optional.empty();
+            try {
+                // Note that PERIODIC COMMIT can't execute in a transaction, so if the user has not typed BEGIN, then
+                // the statement should NOT be executed in a transaction.
+                return getBoltResult(cypher, queryParams);
+            } catch (SessionExpiredException e) {
+                // Server is no longer accepting writes, reconnect and try again.
+                // If it still fails, leave it up to the user
+                reconnect();
+                return getBoltResult(cypher, queryParams);
             }
-
-            // calling list()/consume() is what actually executes cypher on the server
-            return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
         }
+    }
+
+    /**
+     * @throws SessionExpiredException when server no longer serves writes anymore
+     */
+    @Nonnull
+    private Optional<BoltResult> getBoltResult(@Nonnull String cypher, @Nonnull Map<String, Object> queryParams) throws SessionExpiredException {
+        StatementResult statementResult = session.run(new Statement(cypher, queryParams));
+
+        if (statementResult == null) {
+            return Optional.empty();
+        }
+
+        // calling list()/consume() is what actually executes cypher on the server
+        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
     }
 
     /**
