@@ -42,7 +42,8 @@ public class AnsiLogger implements Logger {
             } else {
                 Ansi.setEnabled(false);
             }
-        } catch (UnsatisfiedLinkError t) {
+        } catch (Throwable t) {
+            // Not running on a distro with standard c library, disable Ansi.
             Ansi.setEnabled(false);
         }
     }
@@ -58,6 +59,8 @@ public class AnsiLogger implements Logger {
 
     /**
      * @return true if the shell is outputting to a TTY, false otherwise (e.g., we are writing to a file)
+     * @throws UnsatisfiedLinkError maybe if standard c library can't be found
+     * @throws NoClassDefFoundError maybe if standard c library can't be found
      */
     private static boolean isOutputInteractive() {
         return 1 == isatty(STDOUT_FILENO) && 1 == isatty(STDERR_FILENO);
