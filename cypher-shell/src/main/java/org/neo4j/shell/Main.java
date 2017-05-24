@@ -1,11 +1,11 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
-
 import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
@@ -53,9 +53,7 @@ public class Main {
             out.println("Cypher-Shell " + Build.version());
             return;
         }
-        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
-        logger.setFormat(cliArgs.getFormat());
-
+        Logger logger = instantiateLogger(cliArgs);
         ConnectionConfig connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
@@ -82,6 +80,15 @@ public class Main {
             logger.printError(e);
             System.exit(1);
         }
+    }
+
+    private Logger instantiateLogger(@Nonnull CliArgs cliArgs) {
+        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
+        logger.setFormat(cliArgs.getFormat());
+        if (cliArgs.isStringShell() && Format.AUTO.equals(cliArgs.getFormat())) {
+            logger.setFormat(Format.PLAIN);
+        }
+        return logger;
     }
 
     /**

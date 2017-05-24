@@ -21,9 +21,8 @@ public class StringShellRunner implements ShellRunner {
                              @Nonnull Logger logger) {
         this.executer = executer;
         this.logger = logger;
-        Optional<String> cypherString = cliArgs.getCypher();
-        if (cypherString.isPresent()) {
-            this.cypher = cypherString.get();
+        if (cliArgs.isStringShell()) {
+            this.cypher = cliArgs.getCypher().get();
         } else {
             throw new NullPointerException("No cypher string specified");
         }

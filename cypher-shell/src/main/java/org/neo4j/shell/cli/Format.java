@@ -2,10 +2,11 @@ package org.neo4j.shell.cli;
 
 import javax.annotation.Nonnull;
 
+import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
 
 public enum Format {
-    // Will select depending on if stdout is redirected or not
+    // Will select depending based on STDOUT and STDIN redirection
     AUTO,
     // Intended for human consumption
     VERBOSE,
@@ -19,7 +20,7 @@ public enum Format {
         } else if (format.equalsIgnoreCase( VERBOSE.name() )) {
             return VERBOSE;
         } else {
-            return isOutputInteractive() ? VERBOSE : PLAIN;
+            return isInputInteractive() && isOutputInteractive() ? VERBOSE : PLAIN;
         }
     }
 }

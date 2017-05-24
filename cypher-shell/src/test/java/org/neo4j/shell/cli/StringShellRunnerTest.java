@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.shell.cli.CliArgHelper.parse;
 
 public class StringShellRunnerTest {
     @Rule
@@ -37,7 +38,7 @@ public class StringShellRunnerTest {
     @Test
     public void cypherShouldBePassedToRun() throws IOException, CommandException {
         String cypherString = "nonsense string";
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse(cypherString), statementExecuter, logger);
+        StringShellRunner runner = new StringShellRunner(parse(cypherString), statementExecuter, logger);
 
         int code = runner.runUntilEnd();
 
@@ -51,7 +52,7 @@ public class StringShellRunnerTest {
         ClientException kaboom = new ClientException("Error kaboom");
         doThrow(kaboom).when(statementExecuter).execute(anyString());
 
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
+        StringShellRunner runner = new StringShellRunner(parse("nan anana"), statementExecuter, logger);
 
         int code = runner.runUntilEnd();
 
@@ -62,7 +63,7 @@ public class StringShellRunnerTest {
     @Test
     public void shellRunnerHasNoHistory() throws Exception {
         // given
-        StringShellRunner runner = new StringShellRunner(CliArgHelper.parse("nan anana"), statementExecuter, logger);
+        StringShellRunner runner = new StringShellRunner(parse("nan anana"), statementExecuter, logger);
 
         // when then
         assertEquals(Historian.empty, runner.getHistorian());
