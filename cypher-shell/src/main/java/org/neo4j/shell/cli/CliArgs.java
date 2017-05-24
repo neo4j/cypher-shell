@@ -154,4 +154,8 @@ public class CliArgs {
     public void setVersion(boolean version) {
         this.version = version;
     }
+
+    public boolean isStringShell() {
+        return cypher.isPresent();
+    }
 }
