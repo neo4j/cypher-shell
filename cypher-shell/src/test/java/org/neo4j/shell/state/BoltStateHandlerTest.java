@@ -38,6 +38,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -56,7 +57,7 @@ public class BoltStateHandlerTest {
 
     @Before
     public void setup() {
-        when(mockDriver.session(any(), any())).thenReturn(new FakeSession());
+        when(mockDriver.session(any(), anyString())).thenReturn(new FakeSession());
         doReturn(System.out).when(logger).getOutputStream();
     }
 
@@ -303,7 +304,7 @@ public class BoltStateHandlerTest {
         BoltResult boltResult = boltStateHandler.runCypher("RETURN 999",
                 new HashMap<>()).get();
 
-        verify(driverMock, times(2)).session(any(), any());
+        verify(driverMock, times(2)).session(any(), anyString());
         verify(sessionMock, times(2)).run(any(Statement.class));
 
         assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
@@ -396,7 +397,7 @@ public class BoltStateHandlerTest {
 
         when(sessionMock.isOpen()).thenReturn(true);
         when(sessionMock.run("RETURN 1")).thenReturn(versionMock);
-        when(driverMock.session(any(), any())).thenReturn(sessionMock);
+        when(driverMock.session(any(), anyString())).thenReturn(sessionMock);
 
         return driverMock;
     }

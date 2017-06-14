@@ -104,6 +104,11 @@ class FakeValue implements Value {
     }
 
     @Override
+    public byte[] asByteArray() {
+        throw new Uncoercible(getClass().getSimpleName(), "Byte[]");
+    }
+
+    @Override
     public String asString() {
         throw new Uncoercible(getClass().getSimpleName(), "String");
     }
