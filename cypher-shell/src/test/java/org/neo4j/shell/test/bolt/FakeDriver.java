@@ -34,6 +34,16 @@ public class FakeDriver implements Driver {
     }
 
     @Override
+    public Session session(Iterable<String> bookmarks) {
+        return new FakeSession();
+    }
+
+    @Override
+    public Session session(AccessMode mode, Iterable<String> bookmarks) {
+        return new FakeSession();
+    }
+
+    @Override
     public void close() throws Neo4jException {
     }
 }
