@@ -55,4 +55,44 @@ public class CypherShellPlainIntegrationTest {
         List<String> queryResult = captor.getAllValues();
         assertThat(queryResult.get(1), containsString("Europe"));
     }
+
+    @Test
+    public void cypherWithProfileStatements() throws CommandException {
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE RETURN null");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        String actual = result.get(0);
+        //      This assertion checks everything except for time and cypher
+        assertThat(actual, containsString("Plan: \"PROFILE\""));
+        assertThat(actual, containsString("Statement: \"READ_ONLY\""));
+        assertThat(actual, containsString("Planner: \"COST\""));
+        assertThat(actual, containsString("Runtime: \"INTERPRETED\""));
+        assertThat(actual, containsString("DbHits: 0"));
+        assertThat(actual, containsString("Rows: 1"));
+        assertThat(actual, containsString("null"));
+        assertThat(actual, containsString("NULL"));
+    }
+
+    @Test
+    public void cypherWithExplainStatements() throws CommandException {
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN RETURN null");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(1)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        String actual = result.get(0);
+        //      This assertion checks everything except for time and cypher
+        assertThat(actual, containsString("Plan: \"EXPLAIN\""));
+        assertThat(actual, containsString("Statement: \"READ_ONLY\""));
+        assertThat(actual, containsString("Planner: \"COST\""));
+        assertThat(actual, containsString("Runtime: \"INTERPRETED\""));
+    }
 }
