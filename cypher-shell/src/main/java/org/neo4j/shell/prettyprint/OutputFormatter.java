@@ -67,15 +67,12 @@ public interface OutputFormatter {
             for (Path.Segment segment : path) {
                 Relationship relationship = segment.relationship();
                 if (relationship.startNodeId() == lastTraversed.id()) {
-                    //-[:r]->
                     list.add("-" + relationshipAsString(relationship) + "->");
-                    list.add(nodeAsString(segment.end()));
-                    lastTraversed = segment.start();
                 } else {
                     list.add("<-" + relationshipAsString(relationship) + "-");
-                    list.add(nodeAsString(segment.end()));
-                    lastTraversed = segment.end();
                 }
+                list.add(nodeAsString(segment.end()));
+                lastTraversed = segment.end();
             }
         }
 
