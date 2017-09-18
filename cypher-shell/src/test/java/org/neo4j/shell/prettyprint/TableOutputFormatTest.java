@@ -151,6 +151,70 @@ public class TableOutputFormatTest {
     }
 
     @Test
+    public void prettyPrintPath() throws Exception {
+        // given
+        BoltResult result = mock(BoltResult.class);
+        Record record = mock(Record.class);
+        Value value = mock(Value.class);
+        Path path = mock(Path.class);
+
+
+        Node n1 = mock(Node.class);
+        when(n1.id()).thenReturn(1L);
+        when(n1.labels()).thenReturn(asList("L1"));
+        when(n1.asMap(anyObject())).thenReturn(Collections.emptyMap());
+
+        Relationship r1 = mock(Relationship.class);
+        when(r1.startNodeId()).thenReturn(2L);
+        when(r1.type()).thenReturn("R1");
+        when(r1.asMap(anyObject())).thenReturn(Collections.emptyMap());
+
+        Node n2 = mock(Node.class);
+        when(n2.id()).thenReturn(2L);
+        when(n2.labels()).thenReturn(asList("L2"));
+        when(n2.asMap(anyObject())).thenReturn(Collections.emptyMap());
+
+        Relationship r2 = mock(Relationship.class);
+        when(r2.startNodeId()).thenReturn(2L);
+        when(r2.type()).thenReturn("R2");
+        when(r2.asMap(anyObject())).thenReturn(Collections.emptyMap());
+
+        Node n3 = mock(Node.class);
+        when(n3.id()).thenReturn(3L);
+        when(n3.labels()).thenReturn(asList("L3"));
+        when(n3.asMap(anyObject())).thenReturn(Collections.emptyMap());
+
+        Path.Segment s1 = mock(Path.Segment.class);
+        when(s1.relationship()).thenReturn(r1);
+        when(s1.start()).thenReturn(n1);
+        when(s1.end()).thenReturn(n2);
+
+        Path.Segment s2 = mock(Path.Segment.class);
+        when(s2.relationship()).thenReturn(r2);
+        when(s2.start()).thenReturn(n2);
+        when(s2.end()).thenReturn(n3);
+   
+        when(path.start()).thenReturn(n1);
+        when(path.iterator()).thenAnswer((i) -> Arrays.asList(s1,s2).iterator());
+
+        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.PATH());
+        when(value.asPath()).thenReturn(path);
+
+        when(record.keys()).thenReturn(asList("path"));
+        when(record.get(eq("path"))).thenReturn(value);
+        when(record.values()).thenReturn(asList(value));
+        when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("path",value));
+        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+
+        // when
+        String actual = verbosePrinter.format(result);
+
+        // then
+        assertThat(actual, containsString("| (:L1)<-[:R1]-(:L2)-[:R2]->(:L3) |"));
+    }
+
+    @Test
     public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
         BoltResult result = mock(BoltResult.class);
 
