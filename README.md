@@ -1,5 +1,7 @@
 ## How to build
 
+just a test
+
 Use `make help` (`gradlew tasks`) to list possible tasks. But you
 probably want either
 
