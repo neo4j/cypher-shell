@@ -1,5 +1,7 @@
 package org.neo4j.shell.test.bolt;
 
+import java.util.concurrent.CompletionStage;
+
 import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
@@ -45,5 +47,11 @@ public class FakeDriver implements Driver {
 
     @Override
     public void close() throws Neo4jException {
+    }
+
+    @Override
+    public CompletionStage<Void> closeAsync()
+    {
+        return null;
     }
 }
