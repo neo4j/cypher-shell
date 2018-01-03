@@ -72,7 +72,7 @@ ext {
 
     argparse4jVersion = '0.7.0'
     junitVersion = '4.12'
-    neo4jJavaVersion = '1.4.3'
+    neo4jJavaVersion = '1.5.0'
     findbugsVersion = '3.0.0'
     jansiVersion = '1.13'
     jlineVersion = '2.14.2'

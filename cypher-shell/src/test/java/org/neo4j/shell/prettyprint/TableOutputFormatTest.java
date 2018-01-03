@@ -8,10 +8,6 @@ import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.internal.net.BoltServerAddress;
-import org.neo4j.driver.internal.summary.InternalServerInfo;
-import org.neo4j.driver.internal.summary.InternalSummaryCounters;
-import org.neo4j.driver.internal.summary.SummaryBuilder;
 import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.summary.ProfiledPlan;
@@ -330,7 +326,8 @@ public class TableOutputFormatTest {
     private StatementResult mockResult(List<String> cols, Object... data) {
         StatementResult result = mock(StatementResult.class);
         Statement statement = mock(Statement.class);
-        ResultSummary summary = new SummaryBuilder(statement, null).build();
+        ResultSummary summary = mock(ResultSummary.class);
+        when(summary.statement()).thenReturn(statement);
         when(result.keys()).thenReturn(cols);
         List<Record> records = new ArrayList<>();
         List<Object> input = asList(data);

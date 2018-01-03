@@ -5,6 +5,8 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
 
+import java.util.concurrent.CompletionStage;
+
 public class FakeDriver implements Driver {
     @Override
     public boolean isEncrypted() {
@@ -22,14 +24,12 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public Session session( String bookmark )
-    {
+    public Session session(String bookmark) {
         return new FakeSession();
     }
 
     @Override
-    public Session session( AccessMode mode, String bookmark )
-    {
+    public Session session(AccessMode mode, String bookmark) {
         return new FakeSession();
     }
 
@@ -45,5 +45,10 @@ public class FakeDriver implements Driver {
 
     @Override
     public void close() throws Neo4jException {
+    }
+
+    @Override
+    public CompletionStage<Void> closeAsync() {
+        return null;
     }
 }
