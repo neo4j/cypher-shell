@@ -1,11 +1,11 @@
 package org.neo4j.shell.test.bolt;
 
-import java.util.concurrent.CompletionStage;
-
 import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
+
+import java.util.concurrent.CompletionStage;
 
 public class FakeDriver implements Driver {
     @Override
@@ -24,14 +24,12 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public Session session( String bookmark )
-    {
+    public Session session(String bookmark) {
         return new FakeSession();
     }
 
     @Override
-    public Session session( AccessMode mode, String bookmark )
-    {
+    public Session session(AccessMode mode, String bookmark) {
         return new FakeSession();
     }
 
@@ -50,8 +48,7 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public CompletionStage<Void> closeAsync()
-    {
+    public CompletionStage<Void> closeAsync() {
         return null;
     }
 }

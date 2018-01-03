@@ -1,17 +1,10 @@
 package org.neo4j.shell.test.bolt;
 
+import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.types.TypeSystem;
+
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
-
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.StatementResultCursor;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.TransactionWork;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.types.TypeSystem;
 
 /**
  * A fake session which returns fake StatementResults
@@ -30,32 +23,27 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<Transaction> beginTransactionAsync()
-    {
+    public CompletionStage<Transaction> beginTransactionAsync() {
         return null;
     }
 
     @Override
-    public <T> T readTransaction( TransactionWork<T> work )
-    {
+    public <T> T readTransaction(TransactionWork<T> work) {
         return null;
     }
 
     @Override
-    public <T> CompletionStage<T> readTransactionAsync( TransactionWork<CompletionStage<T>> work )
-    {
+    public <T> CompletionStage<T> readTransactionAsync(TransactionWork<CompletionStage<T>> work) {
         return null;
     }
 
     @Override
-    public <T> T writeTransaction( TransactionWork<T> work )
-    {
+    public <T> T writeTransaction(TransactionWork<T> work) {
         return null;
     }
 
     @Override
-    public <T> CompletionStage<T> writeTransactionAsync( TransactionWork<CompletionStage<T>> work )
-    {
+    public <T> CompletionStage<T> writeTransactionAsync(TransactionWork<CompletionStage<T>> work) {
         return null;
     }
 
@@ -79,8 +67,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<Void> closeAsync()
-    {
+    public CompletionStage<Void> closeAsync() {
         return null;
     }
 
@@ -90,8 +77,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<StatementResultCursor> runAsync( String statementTemplate, Value parameters )
-    {
+    public CompletionStage<StatementResultCursor> runAsync(String statementTemplate, Value parameters) {
         return null;
     }
 
@@ -101,9 +87,8 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<StatementResultCursor> runAsync( String statementTemplate,
-            Map<String,Object> statementParameters )
-    {
+    public CompletionStage<StatementResultCursor> runAsync(String statementTemplate,
+                                                           Map<String, Object> statementParameters) {
         return null;
     }
 
@@ -113,8 +98,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<StatementResultCursor> runAsync( String statementTemplate, Record statementParameters )
-    {
+    public CompletionStage<StatementResultCursor> runAsync(String statementTemplate, Record statementParameters) {
         return null;
     }
 
@@ -124,8 +108,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<StatementResultCursor> runAsync( String statementTemplate )
-    {
+    public CompletionStage<StatementResultCursor> runAsync(String statementTemplate) {
         return null;
     }
 
@@ -135,8 +118,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public CompletionStage<StatementResultCursor> runAsync( Statement statement )
-    {
+    public CompletionStage<StatementResultCursor> runAsync(Statement statement) {
         return null;
     }
 
