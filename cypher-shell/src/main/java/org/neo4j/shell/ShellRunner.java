@@ -11,9 +11,7 @@ import org.neo4j.shell.parser.ShellStatementParser;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 
-import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
-import static org.fusesource.jansi.internal.CLibrary.isatty;
+import static org.fusesource.jansi.internal.CLibrary.*;
 import static org.neo4j.shell.system.Utils.isWindows;
 
 public interface ShellRunner {
@@ -91,6 +89,23 @@ public interface ShellRunner {
             // Fallback to checking stdin OR stdout
             return System.console() != null;
         }
+    }
+
+    static int ttyColumns() {
+        String cols = System.getProperty("terminal.columns");
+        if (cols != null && !cols.trim().isEmpty()) return Integer.parseInt(cols);
+        if (isOutputInteractive()) {
+            try {
+                WinSize winSize = new WinSize();
+                if (ioctl(STDOUT_FILENO, TIOCSWINSZ, winSize) == 0) {
+                    System.err.printf("row %d col %d px x %d  px y %d%n",winSize.ws_row,winSize.ws_col,winSize.ws_xpixel,winSize.ws_ypixel);
+                    if (winSize.ws_col > 0) return winSize.ws_col;
+                }
+            } catch (Throwable ignored) {
+                // system is not using libc (like Alpine Linux)
+            }
+        }
+        return -1;
     }
 
     /**

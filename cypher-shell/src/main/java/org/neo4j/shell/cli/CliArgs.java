@@ -1,5 +1,7 @@
 package org.neo4j.shell.cli;
 
+import org.neo4j.shell.ShellRunner;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -17,6 +19,8 @@ public class CliArgs {
     private boolean debugMode;
     private boolean nonInteractive = false;
     private boolean version = false;
+    private int width = ShellRunner.ttyColumns();
+    private boolean wrap = true;
 
     /**
      * Set the scheme to the primary value, or if null, the fallback value.
@@ -157,5 +161,24 @@ public class CliArgs {
 
     public boolean isStringShell() {
         return cypher.isPresent();
+    }
+
+    public void setWidth(Integer width) {
+        if (width != null && width > 0) {
+            this.width = width;
+        }
+    }
+
+    @Nonnull
+    public int getWidth() {
+        return width;
+    }
+
+    public boolean getWrap() {
+        return wrap;
+    }
+
+    public void setWrap(boolean wrap) {
+        this.wrap = wrap;
     }
 }

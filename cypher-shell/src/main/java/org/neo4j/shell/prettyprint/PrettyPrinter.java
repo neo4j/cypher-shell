@@ -5,7 +5,8 @@ import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
 
-import static java.util.Arrays.asList;
+import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Print the result from neo4j in a intelligible fashion.
@@ -14,17 +15,19 @@ public class PrettyPrinter {
     private final StatisticsCollector statisticsCollector;
     private final OutputFormatter outputFormatter;
 
-    public PrettyPrinter(@Nonnull Format format) {
+    public PrettyPrinter(@Nonnull Format format, int width, boolean wrap) {
         this.statisticsCollector = new StatisticsCollector(format);
-        this.outputFormatter = format == Format.VERBOSE ? new TableOutputFormatter() : new SimpleOutputFormatter();
+        this.outputFormatter = format == Format.VERBOSE ? new TableOutputFormatter(width, wrap) : new SimpleOutputFormatter();
     }
 
-    public String format(@Nonnull final BoltResult result) {
-        String infoOutput = outputFormatter.formatInfo(result.getSummary());
-        String planOutput = outputFormatter.formatPlan(result.getSummary());
-        String statistics = statisticsCollector.collect(result.getSummary());
-        String resultOutput = outputFormatter.format(result);
-        String footer = outputFormatter.formatFooter(result);
-        return OutputFormatter.joinNonBlanks(OutputFormatter.NEWLINE, asList(infoOutput, planOutput, resultOutput, footer, statistics));
+    public void format(@Nonnull final BoltResult result, Consumer<String> outputConsumer) {
+        Set<OutputFormatter.Capablities> capabilities = outputFormatter.capabilities();
+
+        if (capabilities.contains(OutputFormatter.Capablities.result)) outputFormatter.format(result,outputConsumer);
+
+        if (capabilities.contains(OutputFormatter.Capablities.info)) outputConsumer.accept(outputFormatter.formatInfo(result.getSummary()));
+        if (capabilities.contains(OutputFormatter.Capablities.plan)) outputConsumer.accept(outputFormatter.formatPlan(result.getSummary()));
+        if (capabilities.contains(OutputFormatter.Capablities.footer)) outputConsumer.accept(outputFormatter.formatFooter(result));
+        if (capabilities.contains(OutputFormatter.Capablities.statistics)) outputConsumer.accept(statisticsCollector.collect(result.getSummary()));
     }
 }

@@ -88,6 +88,8 @@ public class Main {
         if (cliArgs.isStringShell() && Format.AUTO.equals(cliArgs.getFormat())) {
             logger.setFormat(Format.PLAIN);
         }
+        logger.setWidth(cliArgs.getWidth());
+        logger.setWrap(cliArgs.getWrap());
         return logger;
     }
 

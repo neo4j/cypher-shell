@@ -59,6 +59,20 @@ public class CliArgsTest {
     }
 
     @Test
+    public void setWidth() throws Exception {
+        assertEquals(-1, cliArgs.getWidth());
+
+        cliArgs.setWidth(null);
+        assertEquals(-1, cliArgs.getWidth());
+
+        cliArgs.setWidth(120);
+        assertEquals(120, cliArgs.getWidth());
+
+        cliArgs.setWidth(0);
+        assertEquals(120, cliArgs.getWidth());
+    }
+
+    @Test
     public void setFormat() throws Exception {
         // default
         assertEquals(Format.AUTO, cliArgs.getFormat());

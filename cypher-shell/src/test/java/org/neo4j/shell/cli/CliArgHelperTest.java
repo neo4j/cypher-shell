@@ -39,6 +39,22 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void testWidth() {
+        assertEquals("width 120",120, CliArgHelper.parse("--width 120".split(" ")).getWidth());
+        assertNull("invalid width", CliArgHelper.parse("--width 0".split(" ")));
+        assertNull("invalid width", CliArgHelper.parse("--width -1".split(" ")));
+        assertNull("invalid width",CliArgHelper.parse("--width foo".split(" ")));
+    }
+
+    @Test
+    public void testWrap() {
+        assertTrue("wrap true", CliArgHelper.parse("--wrap true".split(" ")).getWrap());
+        assertFalse("wrap false", CliArgHelper.parse("--wrap false".split(" ")).getWrap());
+        assertTrue("default wrap", CliArgHelper.parse().getWrap());
+        assertNull("invalid wrap",CliArgHelper.parse("--wrap foo".split(" ")));
+    }
+
+    @Test
     public void testDebugIsNotDefault() {
         assertFalse("Debug should not be the default mode",
                 CliArgHelper.parse(asArray()).getDebugMode());
@@ -120,8 +136,9 @@ public class CliArgHelperTest {
 
         assertNull(cliargs);
 
-        assertTrue(bout.toString().startsWith("usage: cypher-shell [-h]"));
-        assertTrue(bout.toString().contains("cypher-shell: error: unrecognized arguments: '-notreally'"));
+        String output = bout.toString();
+        assertTrue(output, output.startsWith("usage: cypher-shell [-h]"));
+        assertTrue(output, output.contains("cypher-shell: error: unrecognized arguments: '-notreally'"));
     }
 
     @Test

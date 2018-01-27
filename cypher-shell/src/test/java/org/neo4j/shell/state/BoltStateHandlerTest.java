@@ -179,8 +179,8 @@ public class BoltStateHandlerTest {
         Session sessionMock = mock(Session.class);
         Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
 
-        BoltResult boltResultMock1 = mock(BoltResult.class);
-        BoltResult boltResultMock2 = mock(BoltResult.class);
+        BoltResult boltResultMock1 = mock(ListBoltResult.class);
+        BoltResult boltResultMock2 = mock(ListBoltResult.class);
 
         Record record1 = mock(Record.class);
         Record record2 = mock(Record.class);

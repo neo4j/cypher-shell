@@ -5,11 +5,7 @@ import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
 import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.impl.type.BooleanArgumentType;
-import net.sourceforge.argparse4j.inf.ArgumentGroup;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
-import net.sourceforge.argparse4j.inf.Namespace;
+import net.sourceforge.argparse4j.inf.*;
 
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
@@ -88,6 +84,9 @@ public class CliArgHelper {
 
         cliArgs.setNonInteractive(ns.getBoolean("force-non-interactive"));
 
+        cliArgs.setWidth(ns.getInt("width"));
+        cliArgs.setWrap(ns.getBoolean("wrap"));
+
         cliArgs.setVersion(ns.getBoolean("version"));
 
         return cliArgs;
@@ -165,6 +164,15 @@ public class CliArgHelper {
                 .dest("force-non-interactive")
               .action(new StoreTrueArgumentAction());
 
+        parser.addArgument("--width")
+                .help("terminal width, only for table format")
+                .type(new WidthArgumentType())
+        .setDefault(-1);
+        parser.addArgument("--wrap")
+                .help("wrap table colum values if table is too narrow, default true")
+                .type(new BooleanArgumentType())
+        .setDefault(true);
+
         parser.addArgument("-v", "--version")
                 .help("print version of cypher-shell and exit")
                 .action(new StoreTrueArgumentAction());
@@ -177,4 +185,16 @@ public class CliArgHelper {
     }
 
 
+    private static class WidthArgumentType implements ArgumentType<Integer> {
+        @Override
+        public Integer convert(ArgumentParser parser, Argument arg, String value) throws ArgumentParserException {
+            try {
+                int result = Integer.parseInt(value);
+                if (result < 1) throw new NumberFormatException(value);
+                return result;
+            } catch (NumberFormatException nfe) {
+                throw new ArgumentParserException("Invalid width value: "+value,parser);
+            }
+        }
+    }
 }

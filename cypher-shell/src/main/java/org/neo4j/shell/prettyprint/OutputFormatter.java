@@ -11,6 +11,7 @@ import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -24,15 +25,18 @@ import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
  */
 public interface OutputFormatter {
 
+    enum Capablities {info, plan, result, footer, statistics}
+
     String COMMA_SEPARATOR = ", ";
     String COLON_SEPARATOR = ": ";
     String COLON = ":";
     String SPACE = " ";
     String NEWLINE =  System.getProperty("line.separator");
 
-    @Nonnull String format(@Nonnull BoltResult result);
+    void format(@Nonnull BoltResult result, @Nonnull Consumer<String> output);
 
-    @Nonnull default String formatValue(@Nonnull final Value value) {
+    @Nonnull default String formatValue(final Value value) {
+        if (value == null) return "";
         TypeRepresentation type = (TypeRepresentation) value.type();
         switch (type.constructor()) {
             case LIST_TyCon:
@@ -161,6 +165,7 @@ public interface OutputFormatter {
         return "";
     }
 
+    Set<Capablities> capabilities();
 
     List<String> INFO = asList("Version", "Planner", "Runtime");
 

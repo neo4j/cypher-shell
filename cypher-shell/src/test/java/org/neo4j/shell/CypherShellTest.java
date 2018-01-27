@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -18,10 +19,12 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
+import org.neo4j.shell.state.ListBoltResult;
 import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
@@ -30,11 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.contains;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class CypherShellTest {
     @Rule
@@ -135,7 +134,7 @@ public class CypherShellTest {
     public void setParamShouldAddParamWithSpecialCharactersAndValue() throws CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
-        BoltResult boltResult = mock(BoltResult.class);
+        BoltResult boltResult = mock(ListBoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
         when(boltResult.getRecords()).thenReturn(asList(recordMock));
@@ -153,7 +152,7 @@ public class CypherShellTest {
     public void setParamShouldAddParam() throws CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
-        BoltResult boltResult = mock(BoltResult.class);
+        BoltResult boltResult = mock(ListBoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
         when(boltResult.getRecords()).thenReturn(asList(recordMock));
@@ -171,13 +170,13 @@ public class CypherShellTest {
     public void executeShouldPrintResult() throws CommandException {
         Driver mockedDriver = mock(Driver.class);
         Session session = mock(Session.class);
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
 
         when(boltStateHandler.isConnected()).thenReturn(true);
         when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(result));
-        when(mockedPrettyPrinter.format(result)).thenReturn("999");
+        doAnswer((a) -> { ((Consumer<String>)a.getArguments()[1]).accept("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
         when(mockedDriver.session()).thenReturn(session);
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
@@ -187,11 +186,11 @@ public class CypherShellTest {
 
     @Test
     public void commitShouldPrintResult() throws CommandException {
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
 
-        when(mockedPrettyPrinter.format(result)).thenReturn("999");
+        doAnswer((a) -> { ((Consumer<String>)a.getArguments()[1]).accept("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
         when(boltStateHandler.commitTransaction()).thenReturn(Optional.of(asList(result)));
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);

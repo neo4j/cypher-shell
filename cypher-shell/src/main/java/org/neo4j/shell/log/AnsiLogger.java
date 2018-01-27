@@ -7,6 +7,7 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.AnsiFormattedException;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,8 @@ public class AnsiLogger implements Logger {
     private final PrintStream err;
     private final boolean debug;
     private Format format;
+    private int width;
+    private boolean wrap = true;
 
     public AnsiLogger(final boolean debug) {
         this(debug, Format.VERBOSE, System.out, System.err);
@@ -66,6 +69,19 @@ public class AnsiLogger implements Logger {
         return 1 == isatty(STDOUT_FILENO) && 1 == isatty(STDERR_FILENO);
     }
 
+    public int getWidth() {
+        return width != -1 || isOutputInteractive() ? width : -1;
+    }
+
+    @Override
+    public boolean getWrap() {
+        return wrap;
+    }
+
+    public void setWrap(boolean wrap) {
+        this.wrap = wrap;
+    }
+
     @Nonnull
     @Override
     public PrintStream getOutputStream() {
@@ -92,6 +108,11 @@ public class AnsiLogger implements Logger {
     @Override
     public boolean isDebugEnabled() {
         return debug;
+    }
+
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     @Override
@@ -131,9 +152,9 @@ public class AnsiLogger implements Logger {
                     cause.getMessage() != null && cause.getMessage().contains("Missing username")) {
                 // Username and password was not specified
                 msg = msg.append(cause.getMessage())
-                         .append("\nPlease specify --username, and optionally --password, as argument(s)")
-                         .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
-                         .append("\nSee --help for more info.");
+                        .append("\nPlease specify --username, and optionally --password, as argument(s)")
+                        .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
+                        .append("\nSee --help for more info.");
             } else {
                 if (cause.getMessage() != null) {
                     msg = msg.append(cause.getMessage());

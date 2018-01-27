@@ -2,8 +2,6 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalRecord;
@@ -13,18 +11,14 @@ import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.summary.ProfiledPlan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.StatementType;
-import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
-import org.neo4j.driver.v1.util.Function;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
+import org.neo4j.shell.state.ListBoltResult;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -39,7 +33,7 @@ import static org.mockito.Mockito.when;
 
 public class TableOutputFormatTest {
 
-    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE,-1, true);
 
 
     @Test
@@ -60,24 +54,26 @@ public class TableOutputFormatTest {
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
-        BoltResult result = mock(BoltResult.class);
-        when(result.getRecords()).thenReturn(Collections.emptyList());
+        BoltResult result = mock(ListBoltResult.class);
+        when(result.iterate()).thenReturn(Collections.emptyIterator());
         when(result.getSummary()).thenReturn(resultSummary);
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
+
 
         // then
         argumentMap.forEach((k,v) -> {
-            assertThat(actual, CoreMatchers.containsString("| "+k));
-            assertThat(actual, CoreMatchers.containsString("| "+v.toString()));
+            assertThat(actual.toString(), CoreMatchers.containsString("| "+k));
+            assertThat(actual.toString(), CoreMatchers.containsString("| "+v.toString()));
         });
     }
 
     @Test
     public void prettyPrintNode() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -97,26 +93,27 @@ public class TableOutputFormatTest {
         recordMap.put("col1",value);
         recordMap.put("col2",value);
         when(record.keys()).thenReturn(asList("col1", "col2"));
-        when(record.get(eq("col1"))).thenReturn(value);
-        when(record.get(eq("col2"))).thenReturn(value);
+        when(record.get(eq(0))).thenReturn(value);
+        when(record.get(eq(1))).thenReturn(value);
         when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
 
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
 
         // then
-        assertThat(actual, containsString("| (:label1:label2 {prop2: prop2_value, prop1: prop1_value}) |"));
+        assertThat(actual.toString(), containsString("| (:label1:label2 {prop2: prop2_value, prop1: prop1_value}) |"));
     }
 
     @Test
     public void prettyPrintRelationships() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -133,23 +130,25 @@ public class TableOutputFormatTest {
         when(relationship.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
 
         when(record.keys()).thenReturn(asList("rel"));
-        when(record.get(eq("rel"))).thenReturn(value);
+        when(record.get(eq(0))).thenReturn(value);
         when(record.values()).thenReturn(asList(value));
         when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("rel",value));
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
+
 
         // then
-        assertThat(actual, containsString("| [:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}] |"));
+        assertThat(actual.toString(), containsString("| [:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}] |"));
     }
 
     @Test
     public void prettyPrintPath() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
         Record record = mock(Record.class);
         Value value = mock(Value.class);
         Path path = mock(Path.class);
@@ -197,22 +196,24 @@ public class TableOutputFormatTest {
         when(value.asPath()).thenReturn(path);
 
         when(record.keys()).thenReturn(asList("path"));
-        when(record.get(eq("path"))).thenReturn(value);
+        when(record.get(eq(0))).thenReturn(value);
         when(record.values()).thenReturn(asList(value));
         when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("path",value));
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
+
 
         // then
-        assertThat(actual, containsString("| (:L1)<-[:R1]-(:L2)-[:R2]->(:L3) |"));
+        assertThat(actual.toString(), containsString("| (:L1)<-[:R1]-(:L2)-[:R2]->(:L3) |"));
     }
 
     @Test
     public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value relVal = mock(Value.class);
@@ -247,22 +248,24 @@ public class TableOutputFormatTest {
         recordMap.put("rel",relVal);
         recordMap.put("node",nodeVal);
         when(record.keys()).thenReturn(asList("rel", "node"));
-        when(record.get(eq("rel"))).thenReturn(relVal);
-        when(record.get(eq("node"))).thenReturn(nodeVal);
+        when(record.get(eq(0))).thenReturn(relVal);
+        when(record.get(eq(1))).thenReturn(nodeVal);
 
         when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
 
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
+
 
         // then
-        assertThat(actual, containsString("| [:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}] |"));
-        assertThat(actual, containsString("| (:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
+        assertThat(actual.toString(), containsString("| [:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}] |"));
+        assertThat(actual.toString(), containsString("| (:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
     }
 
     @Test
@@ -287,6 +290,52 @@ public class TableOutputFormatTest {
         // THEN
         assertThat( table, containsString( "| \"a\" | 42 |" ) );
         assertThat( table, containsString( "| \"b\" | 43 |" ) );
+    }
+
+    @Test
+    public void wrapContent() throws Exception
+    {
+        // GIVEN
+        StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
+        // WHEN
+        StringBuilder sb = new StringBuilder();
+        new TableOutputFormatter(6, true).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
+        String table = sb.toString();
+        // THEN
+        assertThat(table, is(
+                  "+------+\n" +
+                        "| c1   |\n" +
+                        "+------+\n" +
+                        "| \"a\"  |\n" +
+                        "| \"bb\" |\n" +
+                        "| \"ccc |\n" +
+                        "| \"    |\n" +
+                        "| \"ddd |\n" +
+                        "| d\"   |\n" +
+                        "| \"eee |\n" +
+                        "| ee\"  |\n" +
+                        "+------+\n"));
+    }
+    @Test
+    public void cutContent() throws Exception
+    {
+        // GIVEN
+        StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
+        // WHEN
+        StringBuilder sb = new StringBuilder();
+        new TableOutputFormatter(6, false).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
+        String table = sb.toString();
+        // THEN
+        assertThat(table, is(
+                  "+------+\n" +
+                        "| c1   |\n" +
+                        "+------+\n" +
+                        "| \"a\"  |\n" +
+                        "| \"bb\" |\n" +
+                        "| \"ccc |\n" +
+                        "| \"ddd |\n" +
+                        "| \"eee |\n" +
+                        "+------+\n"));
     }
 
     @Test
@@ -320,7 +369,9 @@ public class TableOutputFormatTest {
     }
 
     private String formatResult(StatementResult result) {
-        return new TableOutputFormatter().format(new BoltResult(result.list(), result.summary()));
+        StringBuilder sb = new StringBuilder();
+        new TableOutputFormatter(-1, true).format(new ListBoltResult(result.list(), result.summary()), sb::append);
+        return sb.toString();
     }
 
     private StatementResult mockResult(List<String> cols, Object... data) {

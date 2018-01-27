@@ -12,47 +12,49 @@ import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
+import org.neo4j.shell.state.ListBoltResult;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
-import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.neo4j.driver.internal.util.Iterables.map;
 
 public class PrettyPrinterTest {
 
-    private final PrettyPrinter plainPrinter = new PrettyPrinter(Format.PLAIN);
-    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
+    private final PrettyPrinter plainPrinter = new PrettyPrinter(Format.PLAIN,-1, false);
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE, -1, true);
 
     @Test
     public void returnStatisticsForEmptyRecords() throws Exception {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         SummaryCounters summaryCounters = mock(SummaryCounters.class);
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
-        when(result.getRecords()).thenReturn(Collections.emptyList());
+        when(result.iterate()).thenReturn(Collections.emptyIterator());
+
         when(result.getSummary()).thenReturn(resultSummary);
         when(resultSummary.counters()).thenReturn(summaryCounters);
         when(summaryCounters.labelsAdded()).thenReturn(1);
         when(summaryCounters.nodesCreated()).thenReturn(10);
 
         // when
-        String actual = verbosePrinter.format(result);
+        StringBuilder actual = new StringBuilder();
+        verbosePrinter.format(result, actual::append);
+
 
         // then
-        assertThat(actual, containsString("Added 10 nodes, Added 1 labels"));
+        assertThat(actual.toString(), containsString("Added 10 nodes, Added 1 labels"));
     }
 
     @Test
@@ -73,12 +75,13 @@ public class PrettyPrinterTest {
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
-        BoltResult result = mock(BoltResult.class);
-        when(result.getRecords()).thenReturn(Collections.emptyList());
+        BoltResult result = mock(ListBoltResult.class);
+        when(result.iterate()).thenReturn(Collections.emptyIterator());
         when(result.getSummary()).thenReturn(resultSummary);
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         String expected =
@@ -110,12 +113,13 @@ public class PrettyPrinterTest {
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
-        BoltResult result = mock(BoltResult.class);
-        when(result.getRecords()).thenReturn(Collections.emptyList());
+        BoltResult result = mock(ListBoltResult.class);
+        when(result.iterate()).thenReturn(Collections.emptyIterator());
         when(result.getSummary()).thenReturn(resultSummary);
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         String expected =
@@ -131,7 +135,7 @@ public class PrettyPrinterTest {
     @Test
     public void prettyPrintList() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record1 = mock(Record.class);
         Record record2 = mock(Record.class);
@@ -149,20 +153,23 @@ public class PrettyPrinterTest {
         when(record1.values()).thenReturn(asList(value1, value2));
         when(record2.values()).thenReturn(asList(value2));
 
-        when(result.getRecords()).thenReturn(asList(record1, record2));
+        List<Record> records = asList(record1, record2);
+        when(result.iterate()).thenReturn(records.iterator());
+
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
-        assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]"));
+        assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]\n"));
     }
 
     @Test
     public void prettyPrintNode() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -181,21 +188,22 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("col1", "col2"));
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         assertThat(actual, is("col1, col2\n" +
-                "(:label1:label2 {prop2: prop2_value, prop1: prop1_value})"));
+                "(:label1:label2 {prop2: prop2_value, prop1: prop1_value})\n"));
     }
 
     @Test
     public void prettyPrintRelationships() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -214,19 +222,20 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("rel"));
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
-        assertThat(actual, is("rel\n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]"));
+        assertThat(actual, is("rel\n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]\n"));
     }
 
     @Test
     public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value relVal = mock(Value.class);
@@ -260,21 +269,22 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("rel", "node"));
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         assertThat(actual, is("rel, node\n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
-                "(:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
+                "(:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})\n"));
     }
 
     @Test
     public void prettyPrintPaths() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -322,22 +332,23 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("path"));
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         assertThat(actual, is("path\n" +
                 "(:start {prop1: prop1_value})-[:RELATIONSHIP_TYPE]->" +
-                "(:middle)<-[:RELATIONSHIP_TYPE]-(:end {prop2: prop2_value})"));
+                "(:middle)<-[:RELATIONSHIP_TYPE]-(:end {prop2: prop2_value})\n"));
     }
 
     @Test
     public void prettyPrintSingleNodePath() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -370,20 +381,21 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("path"));
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
-        assertThat(actual, is("path\n(:start)-[:RELATIONSHIP_TYPE]->(:end)"));
+        assertThat(actual, is("path\n(:start)-[:RELATIONSHIP_TYPE]->(:end)\n"));
     }
 
     @Test
     public void prettyPrintThreeSegmentPath() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        BoltResult result = mock(ListBoltResult.class);
 
         Record record = mock(Record.class);
         Value value = mock(Value.class);
@@ -434,15 +446,22 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("path"));
         when(record.values()).thenReturn(asList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.iterate()).thenReturn(asList(record).iterator());
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
-        String actual = plainPrinter.format(result);
+        String actual = configureFormat(result);
+
 
         // then
         assertThat(actual, is("path\n" +
                 "(:start)-[:RELATIONSHIP_TYPE]->" +
-                "(:second)<-[:RELATIONSHIP_TYPE]-(:third)-[:RELATIONSHIP_TYPE]->(:end)"));
+                "(:second)<-[:RELATIONSHIP_TYPE]-(:third)-[:RELATIONSHIP_TYPE]->(:end)\n"));
+    }
+
+    private String configureFormat(BoltResult result) {
+        StringBuilder actual = new StringBuilder();
+        plainPrinter.format(result, (s) ->  {if (s!=null && !s.trim().isEmpty()) actual.append(s).append(OutputFormatter.NEWLINE);});
+        return actual.toString();
     }
 }

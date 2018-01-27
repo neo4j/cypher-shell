@@ -85,6 +85,6 @@ if [ -z "${JARPATH}" ]; then
   exit 1
 fi
 
-exec "$JAVA_CMD" ${JAVA_OPTS:-} \
+exec "$JAVA_CMD" ${JAVA_OPTS:-} -Dterminal.columns=${COLUMNS:-} \
   -jar "$JARPATH" \
   "$@"

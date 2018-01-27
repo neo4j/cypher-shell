@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +33,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected CommandHelper commandHelper;
 
     public CypherShell(@Nonnull Logger logger) {
-        this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat()));
+        this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat(), logger.getWidth(), logger.getWrap()));
     }
 
     protected CypherShell(@Nonnull Logger logger,
@@ -81,7 +82,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
-        result.ifPresent(boltResult -> logger.printOut(prettyPrinter.format(boltResult)));
+        result.ifPresent(boltResult -> prettyPrinter.format(boltResult, printer()));
+    }
+
+    private Consumer<String> printer() {
+        return (text) -> {if (text!=null && !text.trim().isEmpty()) logger.printOut(text);};
     }
 
     @Override
@@ -136,7 +141,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public Optional<List<BoltResult>> commitTransaction() throws CommandException {
         Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
-        results.ifPresent(boltResult -> boltResult.forEach(result -> logger.printOut(prettyPrinter.format(result))));
+        results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, printer())));
         return results;
     }
 

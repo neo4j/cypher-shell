@@ -175,7 +175,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         }
 
         // calling list()/consume() is what actually executes cypher on the server
-        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
+        return Optional.of(new StatementBoltResult(statementResult));
     }
 
     /**
@@ -230,7 +230,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list()/consume() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            return new BoltResult(sr.list(), sr.consume());
+            return new ListBoltResult(sr.list(), sr.consume());
         });
 
         clearTransactionStatements();

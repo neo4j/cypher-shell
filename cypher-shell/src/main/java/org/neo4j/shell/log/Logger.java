@@ -92,4 +92,11 @@ public interface Logger {
             printOut(text);
         }
     }
+
+    void setWidth(int width);
+    int getWidth();
+
+    boolean getWrap();
+
+    void setWrap(boolean wrap);
 }
