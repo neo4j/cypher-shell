@@ -42,8 +42,8 @@ public class NonInteractiveShellRunner implements ShellRunner {
     @Override
     public int runUntilEnd() {
         List<String> statements;
-        try {
-            new BufferedReader(new InputStreamReader(inputStream))
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+            bufferedReader
                     .lines()
                     .forEach(line -> statementParser.parseMoreText(line + "\n"));
             statements = statementParser.consumeStatements();
