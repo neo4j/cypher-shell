@@ -33,7 +33,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("neo4j# ");
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
-    private final AtomicBoolean currentyExecuting;
+    private final AtomicBoolean currentlyExecuting;
 
     private final Logger logger;
     private final ConsoleReader reader;
@@ -51,7 +51,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                                   @Nonnull File historyFile,
                                   @Nonnull UserMessagesHandler userMessagesHandler) throws IOException {
         this.userMessagesHandler = userMessagesHandler;
-        this.currentyExecuting = new AtomicBoolean(false);
+        this.currentlyExecuting = new AtomicBoolean(false);
         this.executer = executer;
         this.txHandler = txHandler;
         this.logger = logger;
@@ -83,9 +83,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         while (running) {
             try {
                 for (String statement : readUntilStatement()) {
-                    currentyExecuting.set(true);
+                    currentlyExecuting.set(true);
                     executer.execute(statement);
-                    currentyExecuting.set(false);
+                    currentlyExecuting.set(false);
                 }
             } catch (ExitException e) {
                 exitCode = e.getCode();
@@ -96,7 +96,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             } catch (Throwable e) {
                 logger.printError(e);
             } finally {
-                currentyExecuting.set(false);
+                currentlyExecuting.set(false);
             }
         }
         logger.printIfVerbose(userMessagesHandler.getExitMessage());
@@ -159,7 +159,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Override
     public void handle(final Signal signal) {
         // Stop any running cypher statements
-        if (currentyExecuting.get()) {
+        if (currentlyExecuting.get()) {
             executer.reset();
         } else {
             // Print a literal newline here to get around us being in the middle of the prompt
