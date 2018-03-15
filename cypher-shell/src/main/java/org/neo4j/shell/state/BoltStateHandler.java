@@ -1,6 +1,5 @@
 package org.neo4j.shell.state;
 
-import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.AuthTokens;
@@ -17,6 +16,7 @@ import org.neo4j.shell.Connector;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.NullLogging;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
@@ -221,7 +220,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         Config config = Config.build()
-                              .withLogging(new ConsoleLogging(Level.OFF))
+                              .withLogging(NullLogging.NULL_LOGGING)
                               .withEncryptionLevel(connectionConfig.encryption()).toConfig();
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
     }
