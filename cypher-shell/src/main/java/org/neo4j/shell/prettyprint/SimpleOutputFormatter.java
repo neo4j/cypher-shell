@@ -34,8 +34,11 @@ public class SimpleOutputFormatter implements OutputFormatter {
     @Nonnull
     @Override
     public String formatInfo(@Nonnull ResultSummary summary) {
-        if (!summary.hasPlan()) return "";
+        if (!summary.hasPlan()) {
+            return "";
+        }
         Map<String, Value> info = OutputFormatter.info(summary);
-        return info.entrySet().stream().map( e -> String.format("%s: %s",e.getKey(),e.getValue())).collect(Collectors.joining(NEWLINE));
+        return info.entrySet().stream()
+                .map( e -> String.format("%s: %s",e.getKey(),e.getValue())).collect(Collectors.joining(NEWLINE));
     }
 }
