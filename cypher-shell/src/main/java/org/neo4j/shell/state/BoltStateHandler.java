@@ -6,6 +6,7 @@ import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -173,8 +174,9 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             return Optional.empty();
         }
 
-        // calling list()/consume() is what actually executes cypher on the server
-        return Optional.of(new BoltResult(statementResult.list(), statementResult.consume()));
+        // calling list() is what actually executes cypher on the server
+        List<Record> list = statementResult.list();
+        return Optional.of(new BoltResult(list, statementResult.summary()));
     }
 
     /**
@@ -227,9 +229,10 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
-            // calling list()/consume() is what actually executes cypher on the server
+            // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            return new BoltResult(sr.list(), sr.consume());
+            List<Record> list = sr.list();
+            return new BoltResult(list, sr.summary());
         });
 
         clearTransactionStatements();

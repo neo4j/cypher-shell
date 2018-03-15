@@ -14,7 +14,6 @@ public class BoltResult {
     private final ResultSummary summary;
 
     public BoltResult(@Nonnull List<Record> records, @Nonnull ResultSummary summary) {
-
         this.records = records;
         this.summary = summary;
     }

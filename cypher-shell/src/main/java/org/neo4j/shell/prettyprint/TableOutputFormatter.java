@@ -1,17 +1,14 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.util.Iterables;
 import org.neo4j.driver.internal.value.MapValue;
 import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -27,9 +24,13 @@ public class TableOutputFormatter implements OutputFormatter {
 
     @Nonnull
     String formatValues(@Nonnull List<Value> data) {
-        if (data.isEmpty()) return "";
+        if (data.isEmpty()) {
+            return "";
+        }
         List<String> columns = Iterables.asList(data.get(0).keys());
-        if (columns.isEmpty()) return "";
+        if (columns.isEmpty()) {
+            return "";
+        }
 
         StringBuilder sb = new StringBuilder();
         Map<String, Integer> columnSizes = calculateColumnSizes(columns, data);

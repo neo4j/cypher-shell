@@ -18,10 +18,6 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
-/**
- * @author mh
- * @since 09.04.17
- */
 public interface OutputFormatter {
 
     String COMMA_SEPARATOR = ", ";
