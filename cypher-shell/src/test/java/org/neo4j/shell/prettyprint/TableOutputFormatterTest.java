@@ -2,34 +2,31 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.internal.types.InternalTypeSystem;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.internal.value.NodeValue;
+import org.neo4j.driver.internal.value.PathValue;
+import org.neo4j.driver.internal.value.RelationshipValue;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Statement;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.ProfiledPlan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.StatementType;
-import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
-import org.neo4j.driver.v1.util.Function;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
-import static java.util.Collections.unmodifiableMap;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Matchers.anyObject;
@@ -37,10 +34,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TableOutputFormatTest {
+public class TableOutputFormatterTest {
 
     private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
-
 
     @Test
     public void prettyPrintPlanInformation() throws Exception {
@@ -77,87 +73,62 @@ public class TableOutputFormatTest {
     @Test
     public void prettyPrintNode() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        StatementResult statementResult = mock(StatementResult.class);
 
-        Record record = mock(Record.class);
-        Value value = mock(Value.class);
+        List<String> labels = asList("label1", "label2");
+        Map<String, Value> propertiesAsMap = new HashMap<>();
+        propertiesAsMap.put("prop1", Values.value("prop1_value"));
+        propertiesAsMap.put("prop2", Values.value("prop2_value"));
+        List<String> keys = asList("col1", "col2");
 
-        Node node = mock(Node.class);
-        HashMap<String, Object> propertiesAsMap = new HashMap<>();
-        propertiesAsMap.put("prop1", "prop1_value");
-        propertiesAsMap.put("prop2", "prop2_value");
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
 
-        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.NODE());
-
-        when(value.asNode()).thenReturn(node);
-        when(node.labels()).thenReturn(asList("label1", "label2"));
-        when(node.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
-
-        Map<String,Value> recordMap = new LinkedHashMap<>();
-        recordMap.put("col1",value);
-        recordMap.put("col2",value);
-        when(record.keys()).thenReturn(asList("col1", "col2"));
-        when(record.get(eq("col1"))).thenReturn(value);
-        when(record.get(eq("col2"))).thenReturn(value);
-        when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
-
-        when(record.values()).thenReturn(asList(value));
-
-        when(result.getRecords()).thenReturn(asList(record));
-        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+        Value value = new NodeValue(new InternalNode(1, labels, propertiesAsMap));
+        Record record = new InternalRecord(keys, new Value[]{value});
 
         // when
-        String actual = verbosePrinter.format(result);
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
 
         // then
-        assertThat(actual, containsString("| (:label1:label2 {prop2: prop2_value, prop1: prop1_value}) |"));
+        assertThat(actual, containsString("| (:label1:label2 {prop2: \"prop2_value\", prop1: \"prop1_value\"}) |"));
     }
 
     @Test
     public void prettyPrintRelationships() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("rel");
 
-        Record record = mock(Record.class);
-        Value value = mock(Value.class);
+        Map<String, Value> propertiesAsMap = new HashMap<>();
+        propertiesAsMap.put("prop1", Values.value("prop1_value"));
+        propertiesAsMap.put("prop2", Values.value("prop2_value"));
 
-        Relationship relationship = mock(Relationship.class);
-        HashMap<String, Object> propertiesAsMap = new HashMap<>();
-        propertiesAsMap.put("prop1", "prop1_value");
-        propertiesAsMap.put("prop2", "prop2_value");
+        RelationshipValue relationship =
+                new RelationshipValue(new InternalRelationship(1, 1, 2, "RELATIONSHIP_TYPE", propertiesAsMap));
 
-        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.RELATIONSHIP());
+        Record record = new InternalRecord(keys, new Value[]{relationship});
 
-        when(value.asRelationship()).thenReturn(relationship);
-        when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
-        when(relationship.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
-
-        when(record.keys()).thenReturn(asList("rel"));
-        when(record.get(eq("rel"))).thenReturn(value);
-        when(record.values()).thenReturn(asList(value));
-        when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("rel",value));
-        when(result.getRecords()).thenReturn(asList(record));
-        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
 
         // when
-        String actual = verbosePrinter.format(result);
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
 
         // then
-        assertThat(actual, containsString("| [:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}] |"));
+        assertThat(actual, containsString("| [:RELATIONSHIP_TYPE {prop2: \"prop2_value\", prop1: \"prop1_value\"}] |"));
     }
 
     @Test
     public void prettyPrintPath() throws Exception {
         // given
-        BoltResult result = mock(BoltResult.class);
-        Record record = mock(Record.class);
-        Value value = mock(Value.class);
-        Path path = mock(Path.class);
-
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("path");
 
         Node n1 = mock(Node.class);
         when(n1.id()).thenReturn(1L);
-        when(n1.labels()).thenReturn(asList("L1"));
+        List<String> labels = asList("L1");
+        when(n1.labels()).thenReturn(labels);
         when(n1.asMap(anyObject())).thenReturn(Collections.emptyMap());
 
         Relationship r1 = mock(Relationship.class);
@@ -189,22 +160,19 @@ public class TableOutputFormatTest {
         when(s2.relationship()).thenReturn(r2);
         when(s2.start()).thenReturn(n2);
         when(s2.end()).thenReturn(n3);
-   
-        when(path.start()).thenReturn(n1);
-        when(path.iterator()).thenAnswer((i) -> Arrays.asList(s1,s2).iterator());
 
-        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.PATH());
-        when(value.asPath()).thenReturn(path);
+        List<Path.Segment> segments = asList(s1, s2);
+        List<Node> nodes = asList(n1, n2);
+        List<Relationship> relationships = asList(r1);
+        InternalPath internalPath = new InternalPath(segments, nodes, relationships);
+        Value value = new PathValue(internalPath);
 
-        when(record.keys()).thenReturn(asList("path"));
-        when(record.get(eq("path"))).thenReturn(value);
-        when(record.values()).thenReturn(asList(value));
-        when(record.asMap(anyObject())).thenReturn(Collections.singletonMap("path",value));
-        when(result.getRecords()).thenReturn(asList(record));
-        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+        Record record = new InternalRecord(keys, new Value[]{value});
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
 
         // when
-        String actual = verbosePrinter.format(result);
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
 
         // then
         assertThat(actual, containsString("| (:L1)<-[:R1]-(:L2)-[:R2]->(:L3) |"));
@@ -212,41 +180,27 @@ public class TableOutputFormatTest {
 
     @Test
     public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
-        BoltResult result = mock(BoltResult.class);
-
         Record record = mock(Record.class);
-        Value relVal = mock(Value.class);
-        Value nodeVal = mock(Value.class);
-
-        Relationship relationship = mock(Relationship.class);
-        HashMap<String, Object> relProp = new HashMap<>();
-        relProp.put("prop1", "\"prop1, value\"");
-        relProp.put("prop2", "prop2_value");
-
-        Node node = mock(Node.class);
-        HashMap<String, Object> nodeProp = new HashMap<>();
-        nodeProp.put("prop1", "\"prop1:value\"");
-        nodeProp.put("1prop2", "\"\"");
-        nodeProp.put("ä", "not-escaped");
+        Map<String, Value> propertiesAsMap = new HashMap<>();
+        propertiesAsMap.put("prop1", Values.value("prop1, value"));
+        propertiesAsMap.put("prop2", Values.value(1));
+        Value relVal = new RelationshipValue(new InternalRelationship(1, 1, 2, "RELATIONSHIP,TYPE", propertiesAsMap));
 
 
-        when(relVal.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.RELATIONSHIP());
-        when(nodeVal.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.NODE());
+        List<String> labels = asList("label `1", "label2");
+        Map<String, Value> nodeProperties = new HashMap<>();
+        nodeProperties.put("prop1", Values.value("prop1:value"));
+        String doubleQuotes = "\"\"";
+        nodeProperties.put("1prop1", Values.value(doubleQuotes));
+        nodeProperties.put("ä", Values.value("not-escaped"));
 
-        when(relVal.asRelationship()).thenReturn(relationship);
-        when(relationship.type()).thenReturn("RELATIONSHIP,TYPE");
-        when(relationship.asMap(anyObject())).thenReturn(unmodifiableMap(relProp));
-
-
-        when(nodeVal.asNode()).thenReturn(node);
-        when(node.labels()).thenReturn(asList("label `1", "label2"));
-        when(node.asMap(anyObject())).thenReturn(unmodifiableMap(nodeProp));
-
+        Value nodeVal = new NodeValue(new InternalNode(1, labels, nodeProperties));
 
         Map<String,Value> recordMap = new LinkedHashMap<>();
         recordMap.put("rel",relVal);
         recordMap.put("node",nodeVal);
-        when(record.keys()).thenReturn(asList("rel", "node"));
+        List<String> keys = asList("rel", "node");
+        when(record.keys()).thenReturn(keys);
         when(record.get(eq("rel"))).thenReturn(relVal);
         when(record.get(eq("node"))).thenReturn(nodeVal);
 
@@ -254,15 +208,16 @@ public class TableOutputFormatTest {
 
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
-        when(result.getRecords()).thenReturn(asList(record));
-        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+        StatementResult statementResult = mock(StatementResult.class);
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
 
         // when
-        String actual = verbosePrinter.format(result);
-
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
         // then
-        assertThat(actual, containsString("| [:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}] |"));
-        assertThat(actual, containsString("| (:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
+        assertThat(actual, containsString("| [:`RELATIONSHIP,TYPE` {prop2: 1, prop1: \"prop1, value\"}] |"));
+        assertThat(actual, containsString("| (:`label ``1`:label2 {`1prop1`: \"\\\"\\\"\", " +
+                "prop1: \"prop1:value\", ä: \"not-escaped\"}) |"));
     }
 
     @Test
@@ -276,7 +231,6 @@ public class TableOutputFormatTest {
         assertThat( table, containsString( "| c1  | c2 |" ) );
         assertThat( table, containsString( "| \"a\" | 42 |" ) );
     }
-
     @Test
     public void twoRows() throws Exception
     {
@@ -320,7 +274,9 @@ public class TableOutputFormatTest {
     }
 
     private String formatResult(StatementResult result) {
-        return new TableOutputFormatter().format(new BoltResult(result.list(), result.summary()));
+        // calling list() is what actually executes cypher on the server
+        List<Record> list = result.list();
+        return new TableOutputFormatter().format(new BoltResult(list, result));
     }
 
     private StatementResult mockResult(List<String> cols, Object... data) {

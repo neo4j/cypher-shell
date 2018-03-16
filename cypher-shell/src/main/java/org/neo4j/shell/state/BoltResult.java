@@ -1,6 +1,7 @@
 package org.neo4j.shell.state;
 
 import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 
 import javax.annotation.Nonnull;
@@ -11,12 +12,12 @@ import java.util.List;
  */
 public class BoltResult {
     private final List<Record> records;
-    private final ResultSummary summary;
+    private StatementResult statementResult;
 
-    public BoltResult(@Nonnull List<Record> records, @Nonnull ResultSummary summary) {
-
+    public BoltResult(@Nonnull List<Record> records, StatementResult statementResult) {
+        //Not calling statementResult.list() because it executes cypher in the server
         this.records = records;
-        this.summary = summary;
+        this.statementResult = statementResult;
     }
 
     @Nonnull
@@ -25,7 +26,12 @@ public class BoltResult {
     }
 
     @Nonnull
+    public List<String> getKeys() {
+        return statementResult.keys();
+    }
+
+    @Nonnull
     public ResultSummary getSummary() {
-        return summary;
+        return statementResult.summary();
     }
 }

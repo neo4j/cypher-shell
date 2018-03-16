@@ -14,13 +14,14 @@ ifeq ($(versionlabel),)
 	release := $(pkgversion)
 	distribution ?= stable
 	buildversion := $(version)
+	debversion := $(versionnumber)
 else
 	release := 0.$(versionlabel).$(pkgversion)
 	distribution ?= unstable
 	buildversion := $(gitdescribe)
+	debversion := $(versionnumber)~$(versionlabel)
 endif
 
-debversion := $(versionnumber)-$(release)
 rpmversion := $(versionnumber)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
