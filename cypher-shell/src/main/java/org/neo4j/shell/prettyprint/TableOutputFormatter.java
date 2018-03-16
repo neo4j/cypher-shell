@@ -41,14 +41,18 @@ public class TableOutputFormatter implements OutputFormatter {
         String headerLine = padColumnHeading(columnSizes);
         int lineWidth = headerLine.length() - 2;
         String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
+        addHeader(sb, headerLine, dashes);
 
+        data.forEach(record -> sb.append(padColumnHeading(columnSizes, record)).append(NEWLINE));
+
+        sb.append(dashes).append(NEWLINE);
+        return sb.toString();
+    }
+
+    private void addHeader(StringBuilder sb, String headerLine, String dashes) {
         sb.append(dashes).append(NEWLINE);
         sb.append(headerLine).append(NEWLINE);
         sb.append(dashes).append(NEWLINE);
-
-        data.forEach(record -> sb.append(padColumnHeading(columns, columnSizes, record)).append(NEWLINE));
-        sb.append(dashes).append(NEWLINE);
-        return sb.toString();
     }
 
     @Nonnull
@@ -62,17 +66,15 @@ public class TableOutputFormatter implements OutputFormatter {
     }
 
     @Nonnull
-    private String padColumnHeading(@Nonnull List<String> columns,
-                                    @Nonnull Map<String, Integer> columnSizes, @Nonnull Value m) {
+    private String padColumnHeading(@Nonnull Map<String, Integer> columnSizes, @Nonnull Value m) {
         StringBuilder sb = new StringBuilder("|");
-        for (String column : columns) {
+        columnSizes.entrySet().forEach(entry -> {
             sb.append(" ");
-            Integer length = columnSizes.get(column);
-            String txt = formatValue(m.get(column));
-            String value = OutputFormatter.rightPad(txt, length);
+            String txt = formatValue(m.get(entry.getKey()));
+            String value = OutputFormatter.rightPad(txt, entry.getValue());
             sb.append(value);
             sb.append(" |");
-        }
+        });
         return sb.toString();
     }
 
@@ -114,8 +116,7 @@ public class TableOutputFormatter implements OutputFormatter {
     public String formatInfo(@Nonnull ResultSummary summary) {
         Map<String, Value> info = OutputFormatter.info(summary);
         List<Value> data = Collections.singletonList(Values.value(info));
-        List<String> columns = new ArrayList<>();
-        data.get(0).keys().forEach(columns::add);
+        List<String> columns = new ArrayList<>(info.keySet());
         return formatValues(data, columns);
     }
 
