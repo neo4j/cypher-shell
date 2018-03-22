@@ -10,9 +10,9 @@ import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -31,23 +31,23 @@ public interface OutputFormatter {
     @Nonnull default String formatValue(@Nonnull final Value value) {
         TypeRepresentation type = (TypeRepresentation) value.type();
         switch (type.constructor()) {
-            case LIST_TyCon:
+            case LIST:
                 return listAsString(value.asList(this::formatValue));
-            case MAP_TyCon:
+            case MAP:
                 return mapAsString(value.asMap(this::formatValue));
-            case NODE_TyCon:
+            case NODE:
                 return nodeAsString(value.asNode());
-            case RELATIONSHIP_TyCon:
+            case RELATIONSHIP:
                 return relationshipAsString(value.asRelationship());
-            case PATH_TyCon:
+            case PATH:
                 return pathAsString(value.asPath());
-            case ANY_TyCon:
-            case BOOLEAN_TyCon:
-            case STRING_TyCon:
-            case NUMBER_TyCon:
-            case INTEGER_TyCon:
-            case FLOAT_TyCon:
-            case NULL_TyCon:
+            case ANY:
+            case BOOLEAN:
+            case STRING:
+            case NUMBER:
+            case INTEGER:
+            case FLOAT:
+            case NULL:
             default:
                 return value.toString();
         }
