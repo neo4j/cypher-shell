@@ -7,11 +7,16 @@ import org.neo4j.driver.v1.summary.Plan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
+import org.neo4j.driver.v1.types.Point;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -41,16 +46,39 @@ public interface OutputFormatter {
                 return relationshipAsString(value.asRelationship());
             case PATH:
                 return pathAsString(value.asPath());
+            case POINT:
+                return pointAsString(value.asPoint());
+            case DURATION:
             case ANY:
             case BOOLEAN:
+            case BYTES:
             case STRING:
             case NUMBER:
             case INTEGER:
             case FLOAT:
+            case DATE:
+            case TIME:
+            case DATE_TIME:
+            case LOCAL_TIME:
+            case LOCAL_DATE_TIME:
             case NULL:
             default:
                 return value.toString();
         }
+    }
+
+    @Nonnull
+    default String pointAsString(Point point) {
+        StringBuilder stringBuilder = new StringBuilder("point({");
+        stringBuilder.append("srid:" + point.srid() + ",");
+        stringBuilder.append(" x:" + point.x() + ",");
+        stringBuilder.append(" y:" + point.y());
+        Double z = point.z();
+        if (!Double.isNaN(z)) {
+            stringBuilder.append(", z:" + z);
+        }
+        stringBuilder.append("})");
+        return stringBuilder.toString();
     }
 
     @Nonnull
