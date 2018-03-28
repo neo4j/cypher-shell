@@ -99,7 +99,7 @@ public class ParamTest {
     @Test
     public void shouldFailForVariablesMixingMapStyleAssignmentAndLambdas() throws CommandException {
         thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+        thrown.expectMessage(containsString("Incorrect usage"));
 
         cmd.execute("bob: => 9");
 
