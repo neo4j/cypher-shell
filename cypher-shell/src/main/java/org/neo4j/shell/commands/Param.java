@@ -7,6 +7,7 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,30 +64,42 @@ public class Param implements Command {
     public void execute(@Nonnull final String argString) throws CommandException {
         Matcher lambdaMapMatcher = lambdaMapPattern.matcher(argString);
         if (lambdaMapMatcher.matches()) {
+            throw new CommandException(AnsiFormattedText.from("Incorrect usage.\nusage: ")
+                    .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+        }
+        if (!validParameterAssignment(argString)) {
             throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
                     .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
-        Matcher lambdaMatcher = lambdaPattern.matcher(argString);
-        if (lambdaMatcher.matches()) {
-            variableHolder.set(lambdaMatcher.group("key"), lambdaMatcher.group("value"));
-            return;
-        }
-        Matcher alphanumericMatcher = argPattern.matcher(argString);
-        if (alphanumericMatcher.matches()) {
-            variableHolder.set(alphanumericMatcher.group("key"), alphanumericMatcher.group("value"));
-            return;
-        }
-        Matcher backtickLambdaMatcher = backtickLambdaPattern.matcher(argString);
-        if (argString.trim().startsWith("`") && backtickLambdaMatcher.matches() && backtickLambdaMatcher.group("key").length() > 2) {
-            variableHolder.set(backtickLambdaMatcher.group("key"), backtickLambdaMatcher.group("value"));
-            return;
-        }
-        Matcher matcher = backtickPattern.matcher(argString);
-        if (argString.trim().startsWith("`") && matcher.matches() && matcher.group("key").length() > 2) {
+    }
+
+    private boolean validParameterAssignment(@Nonnull String argString) throws CommandException {
+        return setParameterIfItMatchesPattern(argString, lambdaPattern, validParameterAssignment())
+                || setParameterIfItMatchesPattern(argString, argPattern, validParameterAssignment())
+                || setParameterIfItMatchesPattern(argString, backtickLambdaPattern, backTickMatchPattern())
+                || setParameterIfItMatchesPattern(argString, backtickPattern, backTickMatchPattern());
+    }
+
+    private boolean setParameterIfItMatchesPattern(@Nonnull String argString, Pattern pattern,
+                                                   BiFunction<String, Matcher, Boolean> matchingFunction) throws CommandException {
+        Matcher matcher = pattern.matcher(argString);
+        if (matchingFunction.apply(argString, matcher)) {
             variableHolder.set(matcher.group("key"), matcher.group("value"));
-            return;
+            return true;
+        } else {
+            return false;
         }
-        throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
-                .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+    }
+
+    private BiFunction<String, Matcher, Boolean> validParameterAssignment() {
+        return (argString, matcher) -> matcher.matches();
+    }
+
+    private BiFunction<String, Matcher, Boolean> backTickMatchPattern() {
+        return (argString, backtickLambdaMatcher) -> {
+            return argString.trim().startsWith("`")
+                    && backtickLambdaMatcher.matches()
+                    && backtickLambdaMatcher.group("key").length() > 2;
+        };
     }
 }
