@@ -56,7 +56,7 @@ public class ParamsTest {
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("var: 9");
+        verify(logger).printOut("var => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -68,8 +68,8 @@ public class ParamsTest {
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("param: 99999");
-        verify(logger).printOut("var  : 9");
+        verify(logger).printOut("param => 99999");
+        verify(logger).printOut("var   => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -81,7 +81,7 @@ public class ParamsTest {
         // when
         cmd.execute("var");
         // then
-        verify(logger).printOut("var: 9");
+        verify(logger).printOut("var => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -93,7 +93,7 @@ public class ParamsTest {
         // when
         cmd.execute(" var");
         // then
-        verify(logger).printOut("var: 9");
+        verify(logger).printOut("var => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -105,7 +105,7 @@ public class ParamsTest {
         // when
         cmd.execute("`var`");
         // then
-        verify(logger).printOut("`var`: 9");
+        verify(logger).printOut("`var` => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -117,7 +117,7 @@ public class ParamsTest {
         // when
         cmd.execute("`var ```");
         // then
-        verify(logger).printOut("`var ```: 9");
+        verify(logger).printOut("`var ``` => 9");
         verifyNoMoreInteractions(logger);
     }
 

@@ -85,7 +85,7 @@ public class Params implements Command {
     }
 
     private void listParam(int leftColWidth, @Nonnull String key, @Nonnull Object value) {
-        logger.printOut(String.format("%-" + leftColWidth + "s: %s", key, value));
+        logger.printOut(String.format("%-" + leftColWidth + "s => %s", key, value));
     }
 
     private void listAllParams() {
