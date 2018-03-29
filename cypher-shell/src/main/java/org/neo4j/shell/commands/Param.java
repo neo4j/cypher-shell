@@ -7,7 +7,7 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,23 +67,23 @@ public class Param implements Command {
             throw new CommandException(AnsiFormattedText.from("Incorrect usage.\nusage: ")
                     .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
-        if (!validParameterAssignment(argString)) {
+        if (!assignIfValidParameter(argString)) {
             throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
                     .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
     }
 
-    private boolean validParameterAssignment(@Nonnull String argString) throws CommandException {
-        return setParameterIfItMatchesPattern(argString, lambdaPattern, validParameterAssignment())
-                || setParameterIfItMatchesPattern(argString, argPattern, validParameterAssignment())
+    private boolean assignIfValidParameter(@Nonnull String argString) throws CommandException {
+        return setParameterIfItMatchesPattern(argString, lambdaPattern, assignIfValidParameter())
+                || setParameterIfItMatchesPattern(argString, argPattern, assignIfValidParameter())
                 || setParameterIfItMatchesPattern(argString, backtickLambdaPattern, backTickMatchPattern())
                 || setParameterIfItMatchesPattern(argString, backtickPattern, backTickMatchPattern());
     }
 
     private boolean setParameterIfItMatchesPattern(@Nonnull String argString, Pattern pattern,
-                                                   BiFunction<String, Matcher, Boolean> matchingFunction) throws CommandException {
+                                                   BiPredicate<String, Matcher> matchingFunction) throws CommandException {
         Matcher matcher = pattern.matcher(argString);
-        if (matchingFunction.apply(argString, matcher)) {
+        if (matchingFunction.test(argString, matcher)) {
             variableHolder.set(matcher.group("key"), matcher.group("value"));
             return true;
         } else {
@@ -91,11 +91,11 @@ public class Param implements Command {
         }
     }
 
-    private BiFunction<String, Matcher, Boolean> validParameterAssignment() {
+    private BiPredicate<String, Matcher> assignIfValidParameter() {
         return (argString, matcher) -> matcher.matches();
     }
 
-    private BiFunction<String, Matcher, Boolean> backTickMatchPattern() {
+    private BiPredicate<String, Matcher> backTickMatchPattern() {
         return (argString, backtickLambdaMatcher) -> {
             return argString.trim().startsWith("`")
                     && backtickLambdaMatcher.matches()

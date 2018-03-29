@@ -73,6 +73,13 @@ public class ParamTest {
     }
 
     @Test
+    public void setSpecialCharacterParameterForLambdaExpressions() throws CommandException {
+        cmd.execute("`first=>Name` => \"Bruce\"");
+
+        verify(mockShell).set("`first=>Name`", "\"Bruce\"");
+    }
+
+    @Test
     public void setParamWithSpecialCharacters() throws CommandException {
         cmd.execute("`bob#`   9");
 
