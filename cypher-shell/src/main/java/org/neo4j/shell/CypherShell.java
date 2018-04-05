@@ -12,12 +12,14 @@ import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 
 import javax.annotation.Nonnull;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A possibly interactive shell for evaluating cypher statements.
@@ -25,7 +27,7 @@ import java.util.regex.Pattern;
 public class CypherShell implements StatementExecuter, Connector, TransactionHandler, VariableHolder {
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
-    protected final Map<String, Object> queryParams = new HashMap<>();
+    protected final Map<String, AbstractMap.SimpleEntry<String, Object>> queryParams = new HashMap<>();
     private final Logger logger;
     private final BoltStateHandler boltStateHandler;
     private final PrettyPrinter prettyPrinter;
@@ -80,7 +82,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param cypher non-empty cypher text to executeLine
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
-        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
+        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, getAll());
         result.ifPresent(boltResult -> logger.printOut(prettyPrinter.format(boltResult)));
     }
 
@@ -156,13 +158,13 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         final BoltResult result = setParamsAndValidate(name, valueString);
         String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
         final Object value = result.getRecords().get(0).get(parameterName).asObject();
-        queryParams.put(parameterName, value);
+        queryParams.put(parameterName, new AbstractMap.SimpleEntry<>(valueString, value));
         return Optional.ofNullable(value);
     }
 
     private BoltResult setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         String cypher = "RETURN " + valueString + " as " + name;
-        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, queryParams);
+        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, getAll());
         if (!result.isPresent() || result.get().getRecords().isEmpty()) {
             throw new CommandException("Failed to set value of parameter");
         }
@@ -172,6 +174,16 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     @Nonnull
     public Map<String, Object> getAll() {
+        return queryParams.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        value -> value.getValue().getValue()));
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, AbstractMap.SimpleEntry<String, Object>> getAllAsUserInput() {
         return queryParams;
     }
 
