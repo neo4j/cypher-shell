@@ -8,6 +8,7 @@ import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -21,7 +22,7 @@ public class ParamsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private HashMap<String, Object> vars;
+    private HashMap<String, AbstractMap.SimpleEntry<String, Object>> vars;
     private Logger logger;
     private Params cmd;
 
@@ -30,7 +31,7 @@ public class ParamsTest {
         vars = new HashMap<>();
         logger = mock(Logger.class);
         VariableHolder shell = mock(VariableHolder.class);
-        when(shell.getAll()).thenReturn(vars);
+        when(shell.getAllAsUserInput()).thenReturn(vars);
         cmd = new Params(logger, shell);
     }
 
@@ -52,72 +53,74 @@ public class ParamsTest {
     @Test
     public void runCommand() throws CommandException {
         // given
-        vars.put("var", 9);
+        String var = "var";
+        int value = 9;
+        vars.put(var, new AbstractMap.SimpleEntry<>(String.valueOf(value), value));
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("var => 9");
+        verify(logger).printOut(":param var => 9");
         verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandAlignment() throws CommandException {
         // given
-        vars.put("var", 9);
-        vars.put("param", 99999);
+        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(99999), 99999));
         // when
         cmd.execute("");
         // then
-        verify(logger).printOut("param => 99999");
-        verify(logger).printOut("var   => 9");
+        verify(logger).printOut(":param param => 99999");
+        verify(logger).printOut(":param var   => 9");
         verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandWithArg() throws CommandException {
         // given
-        vars.put("var", 9);
-        vars.put("param", 9999);
+        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
         // when
         cmd.execute("var");
         // then
-        verify(logger).printOut("var => 9");
+        verify(logger).printOut(":param var => 9");
         verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandWithArgWithExtraSpace() throws CommandException {
         // given
-        vars.put("var", 9);
-        vars.put("param", 9999);
+        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
         // when
         cmd.execute(" var");
         // then
-        verify(logger).printOut("var => 9");
+        verify(logger).printOut(":param var => 9");
         verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandWithArgWithBackticks() throws CommandException {
         // given
-        vars.put("var", 9);
-        vars.put("param", 9999);
+        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
         // when
         cmd.execute("`var`");
         // then
-        verify(logger).printOut("`var` => 9");
+        verify(logger).printOut(":param `var` => 9");
         verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void runCommandWithSpecialCharacters() throws CommandException {
         // given
-        vars.put("var `", 9);
-        vars.put("param", 9999);
+        vars.put("var `", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
         // when
         cmd.execute("`var ```");
         // then
-        verify(logger).printOut("`var ``` => 9");
+        verify(logger).printOut(":param `var ``` => 9");
         verifyNoMoreInteractions(logger);
     }
 
@@ -127,7 +130,7 @@ public class ParamsTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage(containsString("Unknown parameter: bob"));
         // given
-        vars.put("var", 9);
+        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
         // when
         cmd.execute("bob");
     }

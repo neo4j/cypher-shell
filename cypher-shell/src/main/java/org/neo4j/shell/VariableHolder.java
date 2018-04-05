@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import org.neo4j.shell.exception.CommandException;
 
 import javax.annotation.Nonnull;
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,4 +23,10 @@ public interface VariableHolder {
      */
     @Nonnull
     Map<String, Object> getAll();
+
+    /**
+     * @return map of all currently set variables and their values corresponding to the user valueString
+     */
+    @Nonnull
+    Map<String, AbstractMap.SimpleEntry<String, Object>> getAllAsUserInput();
 }
