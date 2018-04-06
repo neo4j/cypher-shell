@@ -11,7 +11,11 @@ import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
