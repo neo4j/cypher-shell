@@ -81,7 +81,7 @@ public class Params implements Command {
         if (!this.variableHolder.getAllAsUserInput().containsKey(parameterName)) {
             throw new CommandException("Unknown parameter: " + name);
         }
-        listParam(name.length(), name, this.variableHolder.getAllAsUserInput().get(parameterName).getKey());
+        listParam(name.length(), name, this.variableHolder.getAllAsUserInput().get(parameterName).getValueAsString());
     }
 
     private void listParam(int leftColWidth, @Nonnull String key, @Nonnull Object value) {
@@ -93,6 +93,6 @@ public class Params implements Command {
 
         int leftColWidth = keys.stream().map((s) -> escape(s).length()).reduce(0, Math::max);
 
-        keys.forEach(key -> listParam(leftColWidth, escape(key), variableHolder.getAllAsUserInput().get(key).getKey()));
+        keys.forEach(key -> listParam(leftColWidth, escape(key), variableHolder.getAllAsUserInput().get(key).getValueAsString()));
     }
 }

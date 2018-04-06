@@ -7,6 +7,7 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.state.ParamValue;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class ParamsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private HashMap<String, AbstractMap.SimpleEntry<String, Object>> vars;
+    private HashMap<String, ParamValue> vars;
     private Logger logger;
     private Params cmd;
 
@@ -55,7 +56,7 @@ public class ParamsTest {
         // given
         String var = "var";
         int value = 9;
-        vars.put(var, new AbstractMap.SimpleEntry<>(String.valueOf(value), value));
+        vars.put(var, new ParamValue(String.valueOf(value), value));
         // when
         cmd.execute("");
         // then
@@ -66,8 +67,8 @@ public class ParamsTest {
     @Test
     public void runCommandAlignment() throws CommandException {
         // given
-        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
-        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(99999), 99999));
+        vars.put("var", new ParamValue(String.valueOf(9), 9));
+        vars.put("param", new ParamValue(String.valueOf(99999), 99999));
         // when
         cmd.execute("");
         // then
@@ -79,8 +80,8 @@ public class ParamsTest {
     @Test
     public void runCommandWithArg() throws CommandException {
         // given
-        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
-        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
+        vars.put("var", new ParamValue(String.valueOf(9), 9));
+        vars.put("param", new ParamValue(String.valueOf(9999), 9999));
         // when
         cmd.execute("var");
         // then
@@ -91,8 +92,8 @@ public class ParamsTest {
     @Test
     public void runCommandWithArgWithExtraSpace() throws CommandException {
         // given
-        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
-        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
+        vars.put("var", new ParamValue(String.valueOf(9), 9));
+        vars.put("param", new ParamValue(String.valueOf(9999), 9999));
         // when
         cmd.execute(" var");
         // then
@@ -103,8 +104,8 @@ public class ParamsTest {
     @Test
     public void runCommandWithArgWithBackticks() throws CommandException {
         // given
-        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
-        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
+        vars.put("var", new ParamValue(String.valueOf(9), 9));
+        vars.put("param", new ParamValue(String.valueOf(9999), 9999));
         // when
         cmd.execute("`var`");
         // then
@@ -115,8 +116,8 @@ public class ParamsTest {
     @Test
     public void runCommandWithSpecialCharacters() throws CommandException {
         // given
-        vars.put("var `", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
-        vars.put("param", new AbstractMap.SimpleEntry<>(String.valueOf(9999), 9999));
+        vars.put("var `", new ParamValue(String.valueOf(9), 9));
+        vars.put("param", new ParamValue(String.valueOf(9999), 9999));
         // when
         cmd.execute("`var ```");
         // then
@@ -130,7 +131,7 @@ public class ParamsTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage(containsString("Unknown parameter: bob"));
         // given
-        vars.put("var", new AbstractMap.SimpleEntry<>(String.valueOf(9), 9));
+        vars.put("var", new ParamValue(String.valueOf(9), 9));
         // when
         cmd.execute("bob");
     }
