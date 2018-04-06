@@ -4,13 +4,10 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
-import org.neo4j.driver.internal.InternalPoint2D;
-import org.neo4j.driver.internal.InternalPoint3D;
 import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.InternalRelationship;
 import org.neo4j.driver.internal.value.NodeValue;
 import org.neo4j.driver.internal.value.PathValue;
-import org.neo4j.driver.internal.value.PointValue;
 import org.neo4j.driver.internal.value.RelationshipValue;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
@@ -71,27 +68,6 @@ public class TableOutputFormatterTest {
             assertThat(actual, CoreMatchers.containsString("| "+k));
             assertThat(actual, CoreMatchers.containsString("| "+v.toString()));
         });
-    }
-
-    @Test
-    public void prettyPrintPoint() throws Exception {
-        // given
-        StatementResult statementResult = mock(StatementResult.class);
-        List<String> keys = asList("p1", "p2");
-
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
-
-        Value point2d = new PointValue(new InternalPoint2D(4326, 42.78, 56.7));
-        Value point3d = new PointValue(new InternalPoint3D(4326, 1.7, 26.79, 34.23));
-        Record record = new InternalRecord(keys, new Value[]{point2d, point3d});
-
-        // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
-
-        // then
-        assertThat(actual, containsString("| point({srid:4326, x:42.78, y:56.7}) |"));
-        assertThat(actual, containsString("| point({srid:4326, x:1.7, y:26.79, z:34.23}) |"));
     }
 
     @Test
