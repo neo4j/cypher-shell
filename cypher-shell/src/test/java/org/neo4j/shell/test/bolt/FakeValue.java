@@ -2,9 +2,20 @@ package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.exceptions.value.Uncoercible;
-import org.neo4j.driver.v1.types.*;
+import org.neo4j.driver.v1.types.Entity;
+import org.neo4j.driver.v1.types.IsoDuration;
+import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Path;
+import org.neo4j.driver.v1.types.Point;
+import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.v1.types.Type;
 import org.neo4j.driver.v1.util.Function;
 
+import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.List;
 import java.util.Map;
 
@@ -166,6 +177,41 @@ class FakeValue implements Value {
     @Override
     public Path asPath() {
         throw new Uncoercible(getClass().getSimpleName(), "Path");
+    }
+
+    @Override
+    public LocalDate asLocalDate() {
+        throw new Uncoercible(getClass().getSimpleName(), "LocalDate");
+    }
+
+    @Override
+    public OffsetTime asOffsetTime() {
+        throw new Uncoercible(getClass().getSimpleName(), "OffsetTime");
+    }
+
+    @Override
+    public LocalTime asLocalTime() {
+        throw new Uncoercible(getClass().getSimpleName(), "LocalTime");
+    }
+
+    @Override
+    public LocalDateTime asLocalDateTime() {
+        throw new Uncoercible(getClass().getSimpleName(), "LocalDateTime");
+    }
+
+    @Override
+    public ZonedDateTime asZonedDateTime() {
+        throw new Uncoercible(getClass().getSimpleName(), "ZonedDateTime");
+    }
+
+    @Override
+    public IsoDuration asIsoDuration() {
+        throw new Uncoercible(getClass().getSimpleName(), "IsoDuration");
+    }
+
+    @Override
+    public Point asPoint() {
+        throw new Uncoercible(getClass().getSimpleName(), "Point");
     }
 
     @Override
