@@ -2,12 +2,14 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import org.neo4j.driver.internal.InternalIsoDuration;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalPoint2D;
 import org.neo4j.driver.internal.InternalPoint3D;
 import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.InternalRelationship;
+import org.neo4j.driver.internal.value.DurationValue;
 import org.neo4j.driver.internal.value.NodeValue;
 import org.neo4j.driver.internal.value.PathValue;
 import org.neo4j.driver.internal.value.PointValue;
@@ -92,6 +94,25 @@ public class TableOutputFormatterTest {
         // then
         assertThat(actual, containsString("| point({srid:4326, x:42.78, y:56.7}) |"));
         assertThat(actual, containsString("| point({srid:4326, x:1.7, y:26.79, z:34.23}) |"));
+    }
+
+    @Test
+    public void prettyPrintDuration() throws Exception {
+        // given
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("d");
+
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
+
+        Value duration = new DurationValue(new InternalIsoDuration(1, 2, 3, 4));
+        Record record = new InternalRecord(keys, new Value[]{duration});
+
+        // when
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+
+        // then
+        assertThat(actual, containsString("| Duration{months=1, days=2, seconds=3, nanoseconds=4} |"));
     }
 
     @Test

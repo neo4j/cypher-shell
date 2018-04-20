@@ -5,6 +5,7 @@ import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.Plan;
 import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.types.IsoDuration;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Point;
@@ -49,6 +50,7 @@ public interface OutputFormatter {
             case POINT:
                 return pointAsString(value.asPoint());
             case DURATION:
+                return durationAsString(value.asIsoDuration());
             case ANY:
             case BOOLEAN:
             case BYTES:
@@ -79,6 +81,11 @@ public interface OutputFormatter {
         }
         stringBuilder.append("})");
         return stringBuilder.toString();
+    }
+
+    @Nonnull
+    default String durationAsString(IsoDuration duration) {
+        return duration.toString();
     }
 
     @Nonnull
