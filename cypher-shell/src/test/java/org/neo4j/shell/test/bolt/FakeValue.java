@@ -110,7 +110,17 @@ class FakeValue implements Value {
     }
 
     @Override
+    public <T> T computeOrDefault(Function<Value, T> mapper, T defaultValue) {
+        throw new UnsupportedOperationException("No implementation");
+    }
+
+    @Override
     public boolean asBoolean() {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public boolean asBoolean(boolean defaultValue) {
         throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
@@ -120,8 +130,18 @@ class FakeValue implements Value {
     }
 
     @Override
+    public byte[] asByteArray(byte[] defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
     public String asString() {
         throw new Uncoercible(getClass().getSimpleName(), "String");
+    }
+
+    @Override
+    public String asString(String defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
     @Override
@@ -135,8 +155,18 @@ class FakeValue implements Value {
     }
 
     @Override
+    public long asLong(long defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
     public int asInt() {
         throw new Uncoercible(getClass().getSimpleName(), "Int");
+    }
+
+    @Override
+    public int asInt(int defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
     @Override
@@ -145,8 +175,18 @@ class FakeValue implements Value {
     }
 
     @Override
+    public double asDouble(double defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
     public float asFloat() {
         throw new Uncoercible(getClass().getSimpleName(), "Float");
+    }
+
+    @Override
+    public float asFloat(float defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
     @Override
@@ -155,8 +195,18 @@ class FakeValue implements Value {
     }
 
     @Override
+    public List<Object> asList(List<Object> defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
     public <T> List<T> asList(Function<Value, T> mapFunction) {
         throw new Uncoercible(getClass().getSimpleName(), "List");
+    }
+
+    @Override
+    public <T> List<T> asList(Function<Value, T> mapFunction, List<T> defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
     @Override
@@ -212,6 +262,51 @@ class FakeValue implements Value {
     @Override
     public Point asPoint() {
         throw new Uncoercible(getClass().getSimpleName(), "Point");
+    }
+
+    @Override
+    public LocalDate asLocalDate(LocalDate defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public OffsetTime asOffsetTime(OffsetTime defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public LocalTime asLocalTime(LocalTime defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public LocalDateTime asLocalDateTime(LocalDateTime defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public ZonedDateTime asZonedDateTime(ZonedDateTime defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public IsoDuration asIsoDuration(IsoDuration defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public Point asPoint(Point defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public Map<String, Object> asMap(Map<String, Object> defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public <T> Map<String, T> asMap(Function<Value, T> mapFunction, Map<String, T> defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
     @Override

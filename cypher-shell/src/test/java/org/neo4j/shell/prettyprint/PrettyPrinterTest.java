@@ -10,6 +10,7 @@ import org.neo4j.driver.v1.summary.*;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.v1.util.Function;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
@@ -142,8 +143,8 @@ public class PrettyPrinterTest {
         when(value1.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.LIST());
         when(value2.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.LIST());
 
-        when(value1.asList(Matchers.anyObject())).thenReturn(asList("val1_1", "val1_2"));
-        when(value2.asList(Matchers.anyObject())).thenReturn(asList("val2_1"));
+        when(value1.asList(Matchers.any(Function.class))).thenReturn(asList("val1_1", "val1_2"));
+        when(value2.asList(Matchers.any(Function.class))).thenReturn(asList("val2_1"));
 
         when(record1.keys()).thenReturn(asList("col1", "col2"));
         when(record1.values()).thenReturn(asList(value1, value2));

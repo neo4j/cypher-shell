@@ -5,7 +5,6 @@ import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.Plan;
 import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.types.IsoDuration;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Point;
@@ -49,8 +48,6 @@ public interface OutputFormatter {
                 return pathAsString(value.asPath());
             case POINT:
                 return pointAsString(value.asPoint());
-            case DURATION:
-                return durationAsString(value.asIsoDuration());
             case ANY:
             case BOOLEAN:
             case BYTES:
@@ -63,6 +60,7 @@ public interface OutputFormatter {
             case DATE_TIME:
             case LOCAL_TIME:
             case LOCAL_DATE_TIME:
+            case DURATION:
             case NULL:
             default:
                 return value.toString();
@@ -73,19 +71,14 @@ public interface OutputFormatter {
     default String pointAsString(Point point) {
         StringBuilder stringBuilder = new StringBuilder("point({");
         stringBuilder.append("srid:" + point.srid() + ",");
-        stringBuilder.append(" x:" + point.x() + ",");
-        stringBuilder.append(" y:" + point.y());
+        stringBuilder.append(" x:").append(point.x()).append(",");
+        stringBuilder.append(" y:").append(point.y());
         Double z = point.z();
         if (!Double.isNaN(z)) {
-            stringBuilder.append(", z:" + z);
+            stringBuilder.append(", z:").append(z);
         }
         stringBuilder.append("})");
         return stringBuilder.toString();
-    }
-
-    @Nonnull
-    default String durationAsString(IsoDuration duration) {
-        return duration.toString();
     }
 
     @Nonnull

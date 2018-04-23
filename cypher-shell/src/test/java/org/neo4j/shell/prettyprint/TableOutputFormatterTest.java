@@ -112,7 +112,7 @@ public class TableOutputFormatterTest {
         String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
 
         // then
-        assertThat(actual, containsString("| Duration{months=1, days=2, seconds=3, nanoseconds=4} |"));
+        assertThat(actual, containsString("| P1M2DT3.000000004S |"));
     }
 
     @Test
@@ -344,10 +344,9 @@ public class TableOutputFormatterTest {
 
     private Record record(List<String> cols, List<Object> data) {
         assert cols.size() == data.size();
-        Value[] values = new Value[data.size()];
-        for (int i = 0; i < data.size(); i++) {
-            values[i] = Values.value(data.get(i));
-        }
+        Value[] values = data.stream()
+                .map(Values::value)
+                .toArray(Value[]::new);
         return new InternalRecord(cols, values);
     }
 }
