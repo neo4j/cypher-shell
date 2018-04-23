@@ -2,12 +2,17 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import org.neo4j.driver.internal.InternalIsoDuration;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
+import org.neo4j.driver.internal.InternalPoint2D;
+import org.neo4j.driver.internal.InternalPoint3D;
 import org.neo4j.driver.internal.InternalRecord;
 import org.neo4j.driver.internal.InternalRelationship;
+import org.neo4j.driver.internal.value.DurationValue;
 import org.neo4j.driver.internal.value.NodeValue;
 import org.neo4j.driver.internal.value.PathValue;
+import org.neo4j.driver.internal.value.PointValue;
 import org.neo4j.driver.internal.value.RelationshipValue;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
@@ -68,6 +73,46 @@ public class TableOutputFormatterTest {
             assertThat(actual, CoreMatchers.containsString("| "+k));
             assertThat(actual, CoreMatchers.containsString("| "+v.toString()));
         });
+    }
+
+    @Test
+    public void prettyPrintPoint() throws Exception {
+        // given
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("p1", "p2");
+
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
+
+        Value point2d = new PointValue(new InternalPoint2D(4326, 42.78, 56.7));
+        Value point3d = new PointValue(new InternalPoint3D(4326, 1.7, 26.79, 34.23));
+        Record record = new InternalRecord(keys, new Value[]{point2d, point3d});
+
+        // when
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+
+        // then
+        assertThat(actual, containsString("| point({srid:4326, x:42.78, y:56.7}) |"));
+        assertThat(actual, containsString("| point({srid:4326, x:1.7, y:26.79, z:34.23}) |"));
+    }
+
+    @Test
+    public void prettyPrintDuration() throws Exception {
+        // given
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("d");
+
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
+
+        Value duration = new DurationValue(new InternalIsoDuration(1, 2, 3, 4));
+        Record record = new InternalRecord(keys, new Value[]{duration});
+
+        // when
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+
+        // then
+        assertThat(actual, containsString("| P1M2DT3.000000004S |"));
     }
 
     @Test
@@ -299,10 +344,9 @@ public class TableOutputFormatterTest {
 
     private Record record(List<String> cols, List<Object> data) {
         assert cols.size() == data.size();
-        Value[] values = new Value[data.size()];
-        for (int i = 0; i < data.size(); i++) {
-            values[i] = Values.value(data.get(i));
-        }
+        Value[] values = data.stream()
+                .map(Values::value)
+                .toArray(Value[]::new);
         return new InternalRecord(cols, values);
     }
 }
