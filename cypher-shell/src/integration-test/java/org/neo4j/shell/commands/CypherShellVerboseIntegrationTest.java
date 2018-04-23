@@ -170,19 +170,22 @@ public class CypherShellVerboseIntegrationTest {
         assertTrue(shell.getAll().isEmpty());
 
         long randomLong = System.currentTimeMillis();
+        String stringInput = "\"randomString\"";
+        shell.set("string", stringInput);
         Optional result = shell.set("bob", String.valueOf(randomLong));
         assertTrue(result.isPresent());
         assertEquals(randomLong, result.get());
 
-        shell.execute("RETURN { bob }");
+        shell.execute("RETURN { bob }, $string");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(logger).printOut(captor.capture());
 
         List<String> queryResult = captor.getAllValues();
         assertThat(queryResult.get(0), containsString("| { bob }"));
-        assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
+        assertThat(queryResult.get(0), containsString("| " + randomLong + " | " + stringInput + " |"));
         assertEquals(randomLong, shell.getAll().get("bob"));
+        assertEquals("randomString", shell.getAll().get("string"));
     }
 
     @Test

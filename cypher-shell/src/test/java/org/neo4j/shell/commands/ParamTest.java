@@ -8,6 +8,7 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.shell.VariableHolder;
 import org.neo4j.shell.exception.CommandException;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
@@ -44,10 +45,24 @@ public class ParamTest {
     }
 
     @Test
-    public void setValue() throws CommandException {
+    public void setParam() throws CommandException {
         cmd.execute("bob   9");
 
         verify(mockShell).set("bob", "9");
+    }
+
+    @Test
+    public void setLambdasAsParam() throws CommandException {
+        cmd.execute("bob => 9");
+
+        verify(mockShell).set("bob", "9");
+    }
+
+    @Test
+    public void setLambdasAsParamWithBackticks() throws CommandException {
+        cmd.execute("`bob` => 9");
+
+        verify(mockShell).set("`bob`", "9");
     }
 
     @Test
@@ -58,14 +73,21 @@ public class ParamTest {
     }
 
     @Test
-    public void setValueWithSpecialCharacters() throws CommandException {
+    public void setSpecialCharacterParameterForLambdaExpressions() throws CommandException {
+        cmd.execute("`first=>Name` => \"Bruce\"");
+
+        verify(mockShell).set("`first=>Name`", "\"Bruce\"");
+    }
+
+    @Test
+    public void setParamWithSpecialCharacters() throws CommandException {
         cmd.execute("`bob#`   9");
 
         verify(mockShell).set("`bob#`", "9");
     }
 
     @Test
-    public void setValueWithOddNoOfBackTicks() throws CommandException {
+    public void setParamWithOddNoOfBackTicks() throws CommandException {
         cmd.execute(" `bo `` sömething ```   9");
 
         verify(mockShell).set("`bo `` sömething ```", "9");
@@ -77,6 +99,16 @@ public class ParamTest {
         thrown.expectMessage(containsString("Incorrect number of arguments"));
 
         cmd.execute("bob#   9");
+
+        fail("Expected error");
+    }
+
+    @Test
+    public void shouldFailForVariablesMixingMapStyleAssignmentAndLambdas() throws CommandException {
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(containsString("Incorrect usage"));
+
+        cmd.execute("bob: => 9");
 
         fail("Expected error");
     }
@@ -142,5 +174,11 @@ public class ParamTest {
     public void shouldNotExecuteEscapedCypher() throws CommandException {
         cmd.execute("bob \"RETURN 5 as bob\"");
         verify(mockShell).set("bob", "\"RETURN 5 as bob\"");
+    }
+
+    @Test
+    public void printUsage() throws CommandException {
+        String usage = cmd.getUsage();
+        assertEquals(usage, "name => value");
     }
 }

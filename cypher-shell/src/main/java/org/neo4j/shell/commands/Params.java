@@ -78,21 +78,21 @@ public class Params implements Command {
 
     private void listParam(@Nonnull String name) throws CommandException {
         String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
-        if (!variableHolder.getAll().containsKey(parameterName)) {
+        if (!this.variableHolder.getAllAsUserInput().containsKey(parameterName)) {
             throw new CommandException("Unknown parameter: " + name);
         }
-        listParam(name.length(), name, variableHolder.getAll().get(parameterName));
+        listParam(name.length(), name, this.variableHolder.getAllAsUserInput().get(parameterName).getValueAsString());
     }
 
     private void listParam(int leftColWidth, @Nonnull String key, @Nonnull Object value) {
-        logger.printOut(String.format("%-" + leftColWidth + "s: %s", key, value));
+        logger.printOut(String.format(":param %-" + leftColWidth + "s => %s", key, value));
     }
 
     private void listAllParams() {
-        List<String> keys = variableHolder.getAll().keySet().stream().sorted().collect(Collectors.toList());
+        List<String> keys = variableHolder.getAllAsUserInput().keySet().stream().sorted().collect(Collectors.toList());
 
         int leftColWidth = keys.stream().map((s) -> escape(s).length()).reduce(0, Math::max);
 
-        keys.stream().forEach(k -> listParam(leftColWidth, escape(k), variableHolder.getAll().get(k)));
+        keys.forEach(key -> listParam(leftColWidth, escape(key), variableHolder.getAllAsUserInput().get(key).getValueAsString()));
     }
 }
