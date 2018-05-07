@@ -69,9 +69,9 @@ public class TableOutputFormatterTest {
         String actual = verbosePrinter.format(result);
 
         // then
-        argumentMap.forEach((k,v) -> {
-            assertThat(actual, CoreMatchers.containsString("| "+k));
-            assertThat(actual, CoreMatchers.containsString("| "+v.toString()));
+        argumentMap.forEach((k, v) -> {
+            assertThat(actual, CoreMatchers.containsString("| " + k));
+            assertThat(actual, CoreMatchers.containsString("| " + v.toString()));
         });
     }
 
@@ -113,6 +113,26 @@ public class TableOutputFormatterTest {
 
         // then
         assertThat(actual, containsString("| P1M2DT3.000000004S |"));
+    }
+
+    @Test
+    public void prettyPrintDurationWithNoTrailingZeroes() throws Exception {
+        // given
+        StatementResult statementResult = mock(StatementResult.class);
+        List<String> keys = asList("d");
+
+        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
+        when(statementResult.keys()).thenReturn(keys);
+
+        Value duration = new DurationValue(new InternalIsoDuration(1, 2, 3, 0));
+        Record record = new InternalRecord(keys, new Value[]{duration});
+
+        // when
+        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+
+        // then
+        System.out.println(actual);
+        assertThat(actual, containsString("| P1M2DT3S |"));
     }
 
     @Test
@@ -241,9 +261,9 @@ public class TableOutputFormatterTest {
 
         Value nodeVal = new NodeValue(new InternalNode(1, labels, nodeProperties));
 
-        Map<String,Value> recordMap = new LinkedHashMap<>();
-        recordMap.put("rel",relVal);
-        recordMap.put("node",nodeVal);
+        Map<String, Value> recordMap = new LinkedHashMap<>();
+        recordMap.put("rel", relVal);
+        recordMap.put("node", nodeVal);
         List<String> keys = asList("rel", "node");
         when(record.keys()).thenReturn(keys);
         when(record.get(eq("rel"))).thenReturn(relVal);
@@ -266,56 +286,53 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void basicTable() throws Exception
-    {
+    public void basicTable() throws Exception {
         // GIVEN
-        StatementResult result = mockResult( asList( "c1", "c2" ), "a", 42 );
+        StatementResult result = mockResult(asList("c1", "c2"), "a", 42);
         // WHEN
-        String table = formatResult( result );
+        String table = formatResult(result);
         // THEN
-        assertThat( table, containsString( "| c1  | c2 |" ) );
-        assertThat( table, containsString( "| \"a\" | 42 |" ) );
-    }
-    @Test
-    public void twoRows() throws Exception
-    {
-        // GIVEN
-        StatementResult result = mockResult( asList( "c1", "c2" ), "a", 42, "b", 43 );
-        // WHEN
-        String table = formatResult( result );
-        // THEN
-        assertThat( table, containsString( "| \"a\" | 42 |" ) );
-        assertThat( table, containsString( "| \"b\" | 43 |" ) );
+        assertThat(table, containsString("| c1  | c2 |"));
+        assertThat(table, containsString("| \"a\" | 42 |"));
     }
 
     @Test
-    public void formatCollections() throws Exception
-    {
+    public void twoRows() throws Exception {
         // GIVEN
-        StatementResult result = mockResult( asList( "a", "b", "c" ), singletonMap( "a", 42 ), asList( 12, 13 ),
-                singletonMap( "a", asList( 14, 15 ) ) );
+        StatementResult result = mockResult(asList("c1", "c2"), "a", 42, "b", 43);
         // WHEN
-        String table = formatResult( result );
+        String table = formatResult(result);
         // THEN
-        assertThat( table, containsString( "| {a: 42} | [12, 13] | {a: [14, 15]} |" ) );
+        assertThat(table, containsString("| \"a\" | 42 |"));
+        assertThat(table, containsString("| \"b\" | 43 |"));
     }
 
     @Test
-    public void formatEntities() throws Exception
-    {
+    public void formatCollections() throws Exception {
         // GIVEN
-        Map<String,Value> properties = singletonMap( "name", Values.value( "Mark" ) );
-        Map<String,Value> relProperties = singletonMap( "since", Values.value( 2016 ) );
-        InternalNode node = new InternalNode( 12, asList( "Person" ), properties );
-        InternalRelationship relationship = new InternalRelationship( 24, 12, 12, "TEST", relProperties );
+        StatementResult result = mockResult(asList("a", "b", "c"), singletonMap("a", 42), asList(12, 13),
+                singletonMap("a", asList(14, 15)));
+        // WHEN
+        String table = formatResult(result);
+        // THEN
+        assertThat(table, containsString("| {a: 42} | [12, 13] | {a: [14, 15]} |"));
+    }
+
+    @Test
+    public void formatEntities() throws Exception {
+        // GIVEN
+        Map<String, Value> properties = singletonMap("name", Values.value("Mark"));
+        Map<String, Value> relProperties = singletonMap("since", Values.value(2016));
+        InternalNode node = new InternalNode(12, asList("Person"), properties);
+        InternalRelationship relationship = new InternalRelationship(24, 12, 12, "TEST", relProperties);
         StatementResult result =
-                mockResult( asList( "a", "b", "c" ), node, relationship, new InternalPath( node, relationship, node ) );
+                mockResult(asList("a", "b", "c"), node, relationship, new InternalPath(node, relationship, node));
         // WHEN
-        String table = formatResult( result );
+        String table = formatResult(result);
         // THEN
-        assertThat( table, containsString( "| (:Person {name: \"Mark\"}) | [:TEST {since: 2016}] |" ) );
-        assertThat( table, containsString(
-                "| (:Person {name: \"Mark\"})-[:TEST {since: 2016}]->(:Person {name: \"Mark\"}) |" ) );
+        assertThat(table, containsString("| (:Person {name: \"Mark\"}) | [:TEST {since: 2016}] |"));
+        assertThat(table, containsString(
+                "| (:Person {name: \"Mark\"})-[:TEST {since: 2016}]->(:Person {name: \"Mark\"}) |"));
     }
 
     private String formatResult(StatementResult result) {
