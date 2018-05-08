@@ -131,7 +131,6 @@ public class TableOutputFormatterTest {
         String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
 
         // then
-        System.out.println(actual);
         assertThat(actual, containsString("| P1M2DT3S |"));
     }
 
