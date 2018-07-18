@@ -19,7 +19,7 @@ public class MainIntegrationTest {
     public void connectInteractivelyPromptsOnWrongAuthentication() throws Exception {
         // given
         // what the user inputs when prompted
-        String inputString = "neo4j\nneo\n";
+        String inputString = String.format( "neo4j%nneo%n" );
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -58,7 +58,6 @@ public class MainIntegrationTest {
         assertEquals("neo", connectionConfig.password());
 
         String out = baos.toString();
-        assertEquals( "username: neo4j\r\n" +
-                "password: ***\r\n", out );
+        assertEquals( String.format( "username: neo4j%npassword: ***%n" ), out );
     }
 }
