@@ -88,7 +88,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, "username: bob\r\npassword: ******\r\n");
+        assertEquals( out, String.format( "username: bob%npassword: ******%n" ));
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
@@ -130,7 +130,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, "username: bob\r\n");
+        assertEquals(out, String.format( "username: bob%n" ));
         verify(connectionConfig).setUsername("bob");
         verify(shell, times(2)).connect(connectionConfig);
     }
@@ -151,7 +151,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, "password: ******\r\n");
+        assertEquals(out, String.format("password: ******%n"));
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
     }
@@ -171,7 +171,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, "username: bo!b\r\npassword: *******\r\n");
+        assertEquals(out, String.format("username: bo!b%npassword: *******%n"));
         verify(connectionConfig).setUsername("bo!b");
         verify(connectionConfig).setPassword("sec!ret");
         verify(shell, times(2)).connect(connectionConfig);
@@ -214,8 +214,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, "username: \r\nusername cannot be empty" + System.lineSeparator() + System.lineSeparator() +
-                "username: bob\r\npassword: ******\r\n");
+        assertEquals(out, String.format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n") );
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
