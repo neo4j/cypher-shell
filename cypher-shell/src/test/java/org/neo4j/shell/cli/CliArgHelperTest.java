@@ -120,7 +120,7 @@ public class CliArgHelperTest {
 
         assertNull(cliargs);
 
-        assertTrue(bout.toString().startsWith("usage: cypher-shell [-h]"));
+        assertTrue(bout.toString().contains("cypher-shell [-h]"));
         assertTrue(bout.toString().contains("cypher-shell: error: unrecognized arguments: '-notreally'"));
     }
 
@@ -134,7 +134,7 @@ public class CliArgHelperTest {
         assertNull("should have failed", cliargs);
 
         assertTrue("expected usage: " + bout.toString(),
-                bout.toString().startsWith("usage: cypher-shell [-h]"));
+                bout.toString().contains("cypher-shell [-h]"));
         assertTrue("expected error: " + bout.toString(),
                 bout.toString().contains("cypher-shell: error: Failed to parse address"));
         assertTrue("expected error detail: " + bout.toString(),
