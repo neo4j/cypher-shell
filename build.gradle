@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.9'
     }
 }
