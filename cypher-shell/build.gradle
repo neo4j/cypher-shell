@@ -1,7 +1,7 @@
 version = buildVersion
 
 task generateBuildProperties {
-  def outputDir = file("${buildDir}/resources/test")
+  def outputDir = file("${buildDir}/resources/main")
   doFirst {
     outputDir.exists() || outputDir.mkdirs()
     def propFile = new File(outputDir, "build.properties")
