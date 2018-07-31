@@ -3,3 +3,6 @@
 
 # Windows scripts should always have windows line-endings on checkout
 *.bat text eol=crlf
+
+# Java archives are definitely binary, do not convert line endings
+*.jar binary
