@@ -233,6 +233,7 @@ public class MainTest {
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
 
         verify(printStream).println(argument.capture());
+        System.out.println("Captured argument: " + argument.getValue());
         assertTrue(argument.getValue().matches("Cypher-Shell \\d+\\.\\d+\\.\\d+.*"));
     }
 }

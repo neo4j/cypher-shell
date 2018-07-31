@@ -23,6 +23,7 @@ public class Build {
             props = new Properties();
             try (InputStream stream = Build.class.getClassLoader().getResourceAsStream("build.properties")) {
                 props.load(stream);
+                System.out.println("Read properties: " + props);
             } catch (Exception e) {
                 System.err.println("Could not read build properties: " + e.getMessage());
             }
