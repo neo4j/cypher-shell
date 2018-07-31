@@ -7,6 +7,7 @@ task generateBuildProperties {
     def propFile = new File(outputDir, "build.properties")
     def props = new Properties()
     props.setProperty("version", buildVersion)
+    println "Writing build.properties to " + outputDir
     props.store(propFile.newWriter(), null)
   }
 }
