@@ -10,7 +10,8 @@ check_java() {
   [[ -n "${JAVA_MEMORY_OPTS:-}" ]] && version_command+=("${JAVA_MEMORY_OPTS[@]}")
 
   JAVA_VERSION=$("${version_command[@]}" 2>&1 | awk -F '"' '/version/ {print $2}')
-  if [[ "${JAVA_VERSION}" < "1.8" ]]; then
+  MAX_VERSION=`echo -e "$JAVA_VERSION\n1.8" | sort -t '.' -k 1,1 -k 2,2 -k 3,3 -k 4,4 -g | tail -1`
+  if [[ "${MAX_VERSION}" = "1.8" ]]; then
     echo "ERROR! Java version ${JAVA_VERSION} is not supported. "
     _show_java_help
     exit 1
