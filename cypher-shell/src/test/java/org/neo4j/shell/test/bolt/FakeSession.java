@@ -18,6 +18,12 @@ public class FakeSession implements Session {
     }
 
     @Override
+    public Transaction beginTransaction( TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
     public Transaction beginTransaction(String bookmark) {
         return null;
     }
@@ -28,7 +34,19 @@ public class FakeSession implements Session {
     }
 
     @Override
+    public CompletionStage<Transaction> beginTransactionAsync( TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
     public <T> T readTransaction(TransactionWork<T> work) {
+        return null;
+    }
+
+    @Override
+    public <T> T readTransaction( TransactionWork<T> work, TransactionConfig config )
+    {
         return null;
     }
 
@@ -38,12 +56,66 @@ public class FakeSession implements Session {
     }
 
     @Override
+    public <T> CompletionStage<T> readTransactionAsync( TransactionWork<CompletionStage<T>> work, TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
     public <T> T writeTransaction(TransactionWork<T> work) {
         return null;
     }
 
     @Override
+    public <T> T writeTransaction( TransactionWork<T> work, TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
     public <T> CompletionStage<T> writeTransactionAsync(TransactionWork<CompletionStage<T>> work) {
+        return null;
+    }
+
+    @Override
+    public <T> CompletionStage<T> writeTransactionAsync( TransactionWork<CompletionStage<T>> work, TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
+    public StatementResult run( String statement, TransactionConfig config )
+    {
+        return FakeStatementResult.parseStatement(statement);
+    }
+
+    @Override
+    public StatementResult run( String statement, Map<String,Object> parameters, TransactionConfig config )
+    {
+        return FakeStatementResult.parseStatement(statement);
+    }
+
+    @Override
+    public StatementResult run( Statement statement, TransactionConfig config )
+    {
+        return new FakeStatementResult();
+    }
+
+    @Override
+    public CompletionStage<StatementResultCursor> runAsync( String statement, TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
+    public CompletionStage<StatementResultCursor> runAsync( String statement, Map<String,Object> parameters, TransactionConfig config )
+    {
+        return null;
+    }
+
+    @Override
+    public CompletionStage<StatementResultCursor> runAsync( Statement statement, TransactionConfig config )
+    {
         return null;
     }
 
