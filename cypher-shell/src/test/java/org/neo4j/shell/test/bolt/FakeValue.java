@@ -11,6 +11,7 @@ import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.driver.v1.types.Type;
 import org.neo4j.driver.v1.util.Function;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -250,6 +251,12 @@ class FakeValue implements Value {
     }
 
     @Override
+    public OffsetDateTime asOffsetDateTime()
+    {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
     public ZonedDateTime asZonedDateTime() {
         throw new Uncoercible(getClass().getSimpleName(), "ZonedDateTime");
     }
@@ -281,6 +288,12 @@ class FakeValue implements Value {
 
     @Override
     public LocalDateTime asLocalDateTime(LocalDateTime defaultValue) {
+        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+    }
+
+    @Override
+    public OffsetDateTime asOffsetDateTime( OffsetDateTime defaultValue )
+    {
         throw new Uncoercible(getClass().getSimpleName(), "Bool");
     }
 
