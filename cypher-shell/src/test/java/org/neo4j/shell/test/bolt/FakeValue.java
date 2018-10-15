@@ -11,6 +11,7 @@ import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.driver.v1.types.Type;
 import org.neo4j.driver.v1.util.Function;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -131,7 +132,7 @@ class FakeValue implements Value {
 
     @Override
     public byte[] asByteArray(byte[] defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Byte[]");
     }
 
     @Override
@@ -141,7 +142,7 @@ class FakeValue implements Value {
 
     @Override
     public String asString(String defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "String");
     }
 
     @Override
@@ -156,7 +157,7 @@ class FakeValue implements Value {
 
     @Override
     public long asLong(long defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Long");
     }
 
     @Override
@@ -166,7 +167,7 @@ class FakeValue implements Value {
 
     @Override
     public int asInt(int defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Int");
     }
 
     @Override
@@ -176,7 +177,7 @@ class FakeValue implements Value {
 
     @Override
     public double asDouble(double defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Double");
     }
 
     @Override
@@ -186,7 +187,7 @@ class FakeValue implements Value {
 
     @Override
     public float asFloat(float defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Float");
     }
 
     @Override
@@ -196,7 +197,7 @@ class FakeValue implements Value {
 
     @Override
     public List<Object> asList(List<Object> defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "List");
     }
 
     @Override
@@ -206,7 +207,7 @@ class FakeValue implements Value {
 
     @Override
     public <T> List<T> asList(Function<Value, T> mapFunction, List<T> defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "List");
     }
 
     @Override
@@ -250,6 +251,12 @@ class FakeValue implements Value {
     }
 
     @Override
+    public OffsetDateTime asOffsetDateTime()
+    {
+        throw new Uncoercible(getClass().getSimpleName(), "OffsetDateTime");
+    }
+
+    @Override
     public ZonedDateTime asZonedDateTime() {
         throw new Uncoercible(getClass().getSimpleName(), "ZonedDateTime");
     }
@@ -266,47 +273,53 @@ class FakeValue implements Value {
 
     @Override
     public LocalDate asLocalDate(LocalDate defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "LocalDate");
     }
 
     @Override
     public OffsetTime asOffsetTime(OffsetTime defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "OffsetTime");
     }
 
     @Override
     public LocalTime asLocalTime(LocalTime defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "LocalTime");
     }
 
     @Override
     public LocalDateTime asLocalDateTime(LocalDateTime defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "LocalDateTime");
+    }
+
+    @Override
+    public OffsetDateTime asOffsetDateTime( OffsetDateTime defaultValue )
+    {
+        throw new Uncoercible(getClass().getSimpleName(), "OffsetDateTime");
     }
 
     @Override
     public ZonedDateTime asZonedDateTime(ZonedDateTime defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "ZonedDateTime");
     }
 
     @Override
     public IsoDuration asIsoDuration(IsoDuration defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "IsoDuration");
     }
 
     @Override
     public Point asPoint(Point defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Point");
     }
 
     @Override
     public Map<String, Object> asMap(Map<String, Object> defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Map");
     }
 
     @Override
     public <T> Map<String, T> asMap(Function<Value, T> mapFunction, Map<String, T> defaultValue) {
-        throw new Uncoercible(getClass().getSimpleName(), "Bool");
+        throw new Uncoercible(getClass().getSimpleName(), "Map");
     }
 
     @Override

@@ -51,6 +51,18 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void testVersionIsParsed() {
+        assertTrue("Version should have been parsed to true",
+                CliArgHelper.parse(asArray("--version")).getVersion());
+    }
+
+    @Test
+    public void testDriverVersionIsParsed() {
+        assertTrue("Driver version should have been parsed to true",
+                CliArgHelper.parse(asArray("--driver-version")).getDriverVersion());
+    }
+
+    @Test
     public void testFailFastIsDefault() {
         assertEquals("Unexpected fail-behavior", FailBehavior.FAIL_FAST,
                 CliArgHelper.parse(asArray()).getFailBehavior());

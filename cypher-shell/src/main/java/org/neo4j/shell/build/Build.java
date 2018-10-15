@@ -22,7 +22,11 @@ public class Build {
         if (props == null) {
             props = new Properties();
             try (InputStream stream = Build.class.getClassLoader().getResourceAsStream("build.properties")) {
-                props.load(stream);
+                if (stream == null) {
+                    throw new IllegalStateException("Cannot read build.properties");
+                } else {
+                    props.load(stream);
+                }
             } catch (IOException e) {
                 System.err.println("Could not read build properties: " + e.getMessage());
             }
@@ -37,5 +41,13 @@ public class Build {
     @Nonnull
     public static String version() {
         return getProperties().getProperty("version", "dev");
+    }
+
+    /**
+     * @return the revision of the Neo4j Driver, or "dev" if no properties file could be read.
+     */
+    @Nonnull
+    public static String driverVersion() {
+        return getProperties().getProperty("driverVersion", "dev");
     }
 }

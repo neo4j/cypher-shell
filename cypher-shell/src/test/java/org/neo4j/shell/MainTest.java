@@ -221,7 +221,7 @@ public class MainTest {
     }
 
     @Test
-    public void printsVersionAndExits() throws Exception {
+    public void printsVersionAndExits() {
         CliArgs args = new CliArgs();
         args.setVersion(true);
 
@@ -234,5 +234,21 @@ public class MainTest {
 
         verify(printStream).println(argument.capture());
         assertTrue(argument.getValue().matches("Cypher-Shell \\d+\\.\\d+\\.\\d+.*"));
+    }
+
+    @Test
+    public void printsDriverVersionAndExits() {
+        CliArgs args = new CliArgs();
+        args.setDriverVersion(true);
+
+        PrintStream printStream = mock(PrintStream.class);
+
+        Main main = new Main(System.in, printStream);
+        main.startShell(args);
+
+        ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+
+        verify(printStream).println(argument.capture());
+        assertTrue(argument.getValue().matches("Neo4j Driver \\d+\\.\\d+\\.\\d+.*"));
     }
 }

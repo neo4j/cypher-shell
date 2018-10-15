@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A fake StatementResult with fake records and fake values
@@ -54,6 +55,12 @@ class FakeStatementResult implements StatementResult {
     @Override
     public Record peek() {
         throw new Util.NotImplementedYetException("Not implemented yet");
+    }
+
+    @Override
+    public Stream<Record> stream()
+    {
+        return records.stream();
     }
 
     @Override

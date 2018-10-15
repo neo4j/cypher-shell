@@ -90,6 +90,8 @@ public class CliArgHelper {
 
         cliArgs.setVersion(ns.getBoolean("version"));
 
+        cliArgs.setDriverVersion(ns.getBoolean("driver-version"));
+
         return cliArgs;
     }
 
@@ -167,6 +169,11 @@ public class CliArgHelper {
 
         parser.addArgument("-v", "--version")
                 .help("print version of cypher-shell and exit")
+                .action(new StoreTrueArgumentAction());
+
+        parser.addArgument("--driver-version")
+                .help("print version of the Neo4j Driver used and exit")
+                .dest("driver-version")
                 .action(new StoreTrueArgumentAction());
 
         parser.addArgument("cypher")

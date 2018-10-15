@@ -7,6 +7,7 @@ task generateBuildProperties {
     def propFile = new File(outputDir, "build.properties")
     def props = new Properties()
     props.setProperty("version", buildVersion)
+    props.setProperty("driverVersion", neo4jJavaDriverVersion)
     props.store(propFile.newWriter(), null)
   }
 }
@@ -36,7 +37,7 @@ distributions {
 
 dependencies {
     compile "net.sourceforge.argparse4j:argparse4j:$argparse4jVersion"
-    compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaVersion"
+    compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaDriverVersion"
     compileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
     compile "org.fusesource.jansi:jansi:$jansiVersion"
     compile("jline:jline:$jlineVersion") {

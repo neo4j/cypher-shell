@@ -10,4 +10,9 @@ public class BuildTest {
     public void versionIsNumeric() throws Exception {
         assertTrue(Build.version().matches("\\d+\\.\\d+\\.\\d+.*"));
     }
+
+    @Test
+    public void neo4jDriverVersionIsNumeric() throws Exception {
+        assertTrue(Build.driverVersion().matches("\\d+\\.\\d+\\.\\d+.*"));
+    }
 }

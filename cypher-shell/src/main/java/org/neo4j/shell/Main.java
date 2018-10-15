@@ -51,6 +51,11 @@ public class Main {
     void startShell(@Nonnull CliArgs cliArgs) {
         if (cliArgs.getVersion()) {
             out.println("Cypher-Shell " + Build.version());
+        }
+        if (cliArgs.getDriverVersion()) {
+            out.println("Neo4j Driver " + Build.driverVersion());
+        }
+        if (cliArgs.getVersion() || cliArgs.getDriverVersion()) {
             return;
         }
         Logger logger = instantiateLogger(cliArgs);

@@ -17,6 +17,7 @@ public class CliArgs {
     private boolean debugMode;
     private boolean nonInteractive = false;
     private boolean version = false;
+    private boolean driverVersion = false;
 
     /**
      * Set the scheme to the primary value, or if null, the fallback value.
@@ -153,6 +154,14 @@ public class CliArgs {
 
     public void setVersion(boolean version) {
         this.version = version;
+    }
+
+    public boolean getDriverVersion() {
+        return driverVersion;
+    }
+
+    public void setDriverVersion(boolean version) {
+        this.driverVersion = version;
     }
 
     public boolean isStringShell() {
