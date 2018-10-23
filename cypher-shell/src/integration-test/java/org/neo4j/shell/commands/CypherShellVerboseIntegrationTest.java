@@ -207,4 +207,25 @@ public class CypherShellVerboseIntegrationTest {
         assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
         assertEquals(randomLong, shell.getAll().get("bob"));
     }
+
+    @Test
+    public void cypherWithOrder() throws CommandException {
+        // given
+        shell.execute( "CREATE INDEX ON :Person(age)" );
+
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age");
+
+        //then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, times(2)).printOut(captor.capture());
+
+        List<String> result = captor.getAllValues();
+        String actual = result.get(0);
+        if ( actual.contains( "CYPHER 3.5" )) // Sadly best way to have test that relies on 3.5 functionality...
+        {
+            assertThat( actual, containsString( "Ordered by" ) );
+            assertThat( actual, containsString( "n.age ASC" ) );
+        }
+    }
 }
