@@ -39,7 +39,7 @@ class TablePlanFormatter {
 
     private static final Set<String> IGNORED_ARGUMENTS = new LinkedHashSet<>(
             asList( "Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "planner-version", "version", "runtime", "runtime-impl", "runtime-version",
-                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "Order" ) );
+                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "PageCacheHitRatio", "Order" ) );
     public static final Value ZERO_VALUE = Values.value(0);
 
     private int width(@Nonnull String header, @Nonnull Map<String, Integer> columns) {

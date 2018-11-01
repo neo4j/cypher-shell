@@ -4,6 +4,7 @@ import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.summary.Plan;
+import org.neo4j.driver.v1.summary.ProfiledPlan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
@@ -204,9 +205,15 @@ public interface OutputFormatter {
             result.put(key, value);
         }
         result.put("Time", Values.value(summary.resultAvailableAfter(MILLISECONDS)+summary.resultConsumedAfter(MILLISECONDS)));
-        if (summary.hasProfile()) result.put("DbHits", Values.value( summary.profile().dbHits() ));
+        if ( summary.hasProfile() ) result.put( "DbHits", Values.value( collectHits( summary.profile() ) ) );
         if (summary.hasProfile()) result.put("Rows", Values.value( summary.profile().records() ));
         return result;
+    }
+
+    static long collectHits(@Nonnull ProfiledPlan operator ) {
+        long hits = operator.dbHits();
+        hits = operator.children().stream().map( OutputFormatter::collectHits ).reduce(hits, (acc, subHits) -> acc + subHits );
+        return hits;
     }
 
 }
