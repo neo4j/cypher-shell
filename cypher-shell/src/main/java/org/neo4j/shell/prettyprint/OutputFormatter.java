@@ -107,7 +107,7 @@ public interface OutputFormatter {
     @Nonnull default String relationshipAsString(@Nonnull Relationship relationship) {
         List<String> relationshipAsString = new ArrayList<>();
         relationshipAsString.add(COLON + escape(relationship.type()));
-        relationshipAsString.add(mapAsString(relationship.asMap(this::formatValue)));
+        relationshipAsString.add(mapAsStringWithEmpty(relationship.asMap(this::formatValue)));
 
         return "[" + joinWithSpace(relationshipAsString) + "]";
     }
@@ -115,7 +115,7 @@ public interface OutputFormatter {
     @Nonnull default String nodeAsString(@Nonnull final Node node) {
         List<String> nodeAsString = new ArrayList<>();
         nodeAsString.add(collectNodeLabels(node));
-        nodeAsString.add(mapAsString(node.asMap(this::formatValue)));
+        nodeAsString.add(mapAsStringWithEmpty(node.asMap(this::formatValue)));
 
         return "(" + joinWithSpace(nodeAsString) + ")";
     }
@@ -130,10 +130,11 @@ public interface OutputFormatter {
         return list.stream().collect(Collectors.joining(COMMA_SEPARATOR,"[","]"));
     }
 
+    @Nonnull static String mapAsStringWithEmpty(@Nonnull Map<String, Object> map) {
+        return map.isEmpty() ? "" : mapAsString(map);
+    }
+
     @Nonnull static String mapAsString(@Nonnull Map<String, Object> map) {
-        if (map.isEmpty()) {
-            return "";
-        }
         return map.entrySet().stream()
                 .map(e -> escape(e.getKey()) + COLON_SEPARATOR + e.getValue())
                 .collect(Collectors.joining(COMMA_SEPARATOR,"{","}"));
