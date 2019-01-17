@@ -160,8 +160,8 @@ public class PrettyPrinterTest {
 
     @Test
     public void prettyPrintMaps() throws Exception {
-        checkMapForPrettyPrint(map(), "map\n{}");
-        checkMapForPrettyPrint(map("abc", "def"), "map\n{abc: def}");
+        checkMapForPrettyPrint(map(),  String.format("map%n{}"));
+        checkMapForPrettyPrint(map("abc", "def"), String.format("map%n{abc: def}"));
     }
 
     private void checkMapForPrettyPrint(Map<String, String> map, String expectedResult) {
