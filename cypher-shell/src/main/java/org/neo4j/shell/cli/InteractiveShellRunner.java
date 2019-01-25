@@ -1,6 +1,16 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -12,15 +22,8 @@ import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import static java.lang.System.lineSeparator;
 
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
@@ -130,7 +133,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                 continue;
             }
 
-            statementParser.parseMoreText(line + "\n");
+            statementParser.parseMoreText(line + lineSeparator());
 
             if (statementParser.hasStatements()) {
                 return statementParser.consumeStatements();
@@ -165,7 +168,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             // Print a literal newline here to get around us being in the middle of the prompt
             logger.printError(
                     AnsiFormattedText.s().colorRed()
-                            .append("\nInterrupted (Note that Cypher queries must end with a ")
+                            .newLine()
+                            .append("Interrupted (Note that Cypher queries must end with a ")
                             .bold().append("semicolon. ").boldOff()
                             .append("Type ")
                             .bold().append(Exit.COMMAND_NAME).append(" ").boldOff()

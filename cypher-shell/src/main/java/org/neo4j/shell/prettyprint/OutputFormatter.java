@@ -1,5 +1,13 @@
 package org.neo4j.shell.prettyprint;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
@@ -12,14 +20,6 @@ import org.neo4j.driver.v1.types.Point;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
-import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
@@ -30,7 +30,7 @@ public interface OutputFormatter {
     String COLON_SEPARATOR = ": ";
     String COLON = ":";
     String SPACE = " ";
-    String NEWLINE =  System.getProperty("line.separator");
+    String NEWLINE =  System.lineSeparator();
 
     @Nonnull String format(@Nonnull BoltResult result);
 
@@ -71,10 +71,10 @@ public interface OutputFormatter {
     @Nonnull
     default String pointAsString(Point point) {
         StringBuilder stringBuilder = new StringBuilder("point({");
-        stringBuilder.append("srid:" + point.srid() + ",");
+        stringBuilder.append( "srid:" ).append( point.srid() ).append( "," );
         stringBuilder.append(" x:").append(point.x()).append(",");
         stringBuilder.append(" y:").append(point.y());
-        Double z = point.z();
+        double z = point.z();
         if (!Double.isNaN(z)) {
             stringBuilder.append(", z:").append(z);
         }
@@ -101,7 +101,7 @@ public interface OutputFormatter {
             }
         }
 
-        return list.stream().collect(Collectors.joining());
+        return String.join( "", list );
     }
 
     @Nonnull default String relationshipAsString(@Nonnull Relationship relationship) {

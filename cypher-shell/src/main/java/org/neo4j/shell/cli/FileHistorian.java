@@ -3,15 +3,17 @@ package org.neo4j.shell.cli;
 import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.MemoryHistory;
-import org.neo4j.shell.Historian;
-import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nonnull;
 
+import org.neo4j.shell.Historian;
+import org.neo4j.shell.log.Logger;
+
+import static java.lang.String.format;
 import static java.lang.System.getProperty;
 
 /**
@@ -29,7 +31,7 @@ public class FileHistorian implements Historian {
     @Nonnull
     public static Historian setupHistory(@Nonnull final ConsoleReader reader,
                                   @Nonnull final Logger logger,
-                                  @Nonnull final File historyFile) throws IOException {
+                                  @Nonnull final File historyFile) {
         try {
             File dir = historyFile.getParentFile();
             if (!dir.isDirectory() && !dir.mkdir()) {
@@ -43,8 +45,7 @@ public class FileHistorian implements Historian {
 
             return new FileHistorian(history);
         } catch (IOException e) {
-            logger.printError("Could not load history file. Falling back to session-based history.\n"
-                    + e.getMessage());
+            logger.printError(format("Could not load history file. Falling back to session-based history.%n%s", e.getMessage()));
             MemoryHistory history = new MemoryHistory();
             reader.setHistory(history);
             return new FileHistorian(history);
@@ -52,16 +53,13 @@ public class FileHistorian implements Historian {
     }
 
     private static void addShutdownHookToFlushHistory(@Nonnull final Logger logger, final FileHistory history) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    history.flush();
-                } catch (IOException e) {
-                    logger.printError("Failed to save history:\n" + e.getMessage());
-                }
+        Runtime.getRuntime().addShutdownHook( new Thread( () -> {
+            try {
+                history.flush();
+            } catch (IOException e) {
+                logger.printError(format("Failed to save history:%n%s", e.getMessage()));
             }
-        });
+        } ) );
     }
 
     @Nonnull

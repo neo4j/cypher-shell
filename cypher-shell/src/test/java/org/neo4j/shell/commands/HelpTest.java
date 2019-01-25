@@ -5,17 +5,22 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-
+import static java.lang.String.format;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class HelpTest {
 
@@ -61,13 +66,13 @@ public class HelpTest {
         cmd.execute("");
 
         // then
-        verify(logger).printOut("\nAvailable commands:");
+        verify(logger).printOut(format("%nAvailable commands:"));
         verify(logger).printOut("  @|BOLD bob  |@ description for bob");
         verify(logger).printOut("  @|BOLD bobby|@ description for bobby");
-        verify(logger).printOut("\nFor help on a specific command type:");
-        verify(logger).printOut("    :help@|BOLD  command|@\n");
-        verify(logger).printOut("\nFor help on cypher please visit:");
-        verify(logger).printOut("    " + Help.CYPHER_REFCARD_LINK + "\n");
+        verify(logger).printOut(format("%nFor help on a specific command type:"));
+        verify(logger).printOut(format("    :help@|BOLD  command|@%n"));
+        verify(logger).printOut(format("%nFor help on cypher please visit:"));
+        verify(logger).printOut(format("    " + Help.CYPHER_REFCARD_LINK + "%n"));
     }
 
     @Test
@@ -79,8 +84,8 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|BOLD bob|@ usage for bob\n"
-                + "\nhelp for bob\n");
+        verify(logger).printOut(format("%nusage: @|BOLD bob|@ usage for bob%n"
+                + "%nhelp for bob%n"));
     }
 
     @Test
@@ -102,8 +107,8 @@ public class HelpTest {
         cmd.execute("bob");
 
         // then
-        verify(logger).printOut("\nusage: @|BOLD :bob|@ usage for :bob\n"
-                + "\nhelp for :bob\n");
+        verify(logger).printOut(format("%nusage: @|BOLD :bob|@ usage for :bob%n"
+                + "%nhelp for :bob%n"));
     }
 
     private class FakeCommand implements Command {
@@ -144,7 +149,7 @@ public class HelpTest {
         }
 
         @Override
-        public void execute(@Nonnull String args) throws ExitException, CommandException {
+        public void execute(@Nonnull String args) throws ExitException {
 
         }
     }

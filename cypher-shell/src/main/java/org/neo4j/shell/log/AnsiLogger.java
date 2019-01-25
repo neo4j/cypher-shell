@@ -2,14 +2,15 @@ package org.neo4j.shell.log;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
-import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.shell.cli.Format;
-import org.neo4j.shell.exception.AnsiFormattedException;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import javax.annotation.Nonnull;
+
+import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.shell.cli.Format;
+import org.neo4j.shell.exception.AnsiFormattedException;
 
 import static org.fusesource.jansi.internal.CLibrary.STDERR_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
@@ -131,9 +132,9 @@ public class AnsiLogger implements Logger {
                     cause.getMessage() != null && cause.getMessage().contains("Missing username")) {
                 // Username and password was not specified
                 msg = msg.append(cause.getMessage())
-                         .append("\nPlease specify --username, and optionally --password, as argument(s)")
-                         .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
-                         .append("\nSee --help for more info.");
+                         .newLine().append("Please specify --username, and optionally --password, as argument(s)")
+                         .newLine().append("or as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
+                         .newLine().append("See --help for more info.");
             } else {
                 if (cause.getMessage() != null) {
                     msg = msg.append(cause.getMessage());

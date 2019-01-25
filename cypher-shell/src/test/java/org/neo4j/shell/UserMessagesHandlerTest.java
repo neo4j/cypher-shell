@@ -2,6 +2,7 @@ package org.neo4j.shell;
 
 import org.junit.Test;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -15,9 +16,9 @@ public class UserMessagesHandlerTest {
         when(connectionConfig.driverUrl()).thenReturn("bolt://some.place.com:99");
 
         UserMessagesHandler userMessagesHandler = new UserMessagesHandler(connectionConfig, "3.1.0-Beta99");
-        assertEquals("Connected to Neo4j 3.1.0-Beta99 at @|BOLD bolt://some.place.com:99|@ as user @|BOLD bob|@.\n" +
-                        "Type @|BOLD :help|@ for a list of available commands or @|BOLD :exit|@ to exit the shell.\n" +
-                        "Note that Cypher queries must end with a @|BOLD semicolon.|@",
+        assertEquals(format("Connected to Neo4j 3.1.0-Beta99 at @|BOLD bolt://some.place.com:99|@ as user @|BOLD bob|@.%n" +
+                        "Type @|BOLD :help|@ for a list of available commands or @|BOLD :exit|@ to exit the shell.%n" +
+                        "Note that Cypher queries must end with a @|BOLD semicolon.|@"),
                 userMessagesHandler.getWelcomeMessage());
     }
 
@@ -27,6 +28,6 @@ public class UserMessagesHandlerTest {
         when(connectionConfig.driverUrl()).thenReturn("bolt://some.place.com:99");
 
         UserMessagesHandler userMessagesHandler = new UserMessagesHandler(connectionConfig, "3.1.0-Beta99");
-        assertEquals("\nBye!", userMessagesHandler.getExitMessage());
+        assertEquals(format("%nBye!"), userMessagesHandler.getExitMessage());
     }
 }

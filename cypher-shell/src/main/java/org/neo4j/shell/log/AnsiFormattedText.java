@@ -2,13 +2,16 @@ package org.neo4j.shell.log;
 
 import org.fusesource.jansi.Ansi;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import static java.lang.System.lineSeparator;
+import static java.util.Collections.emptyMap;
 
 /**
  * A piece of text which can be rendered with Ansi format codes.
@@ -24,14 +27,14 @@ public class AnsiFormattedText {
     private final LinkedList<AnsiFormattedString> pieces = new LinkedList<>();
     // can be defined, or undefined. null means undefined.
     private String color = null;
+    private static final AnsiFormattedString NEW_LINE = new AnsiFormattedString( null, emptyMap(), lineSeparator() );
 
     /**
      * Return a new map which is a copy of the first map, with the keys/values from the second if they do not override
      * anything already defined in the first map.
      */
     private static <K, V> Map<K, V> mergeMaps(Map<K, V> primary, Map<K, V> secondary) {
-        Map<K, V> result = new HashMap<>();
-        result.putAll(primary);
+        Map<K,V> result = new HashMap<>( primary );
         secondary.forEach(result::putIfAbsent);
         return result;
     }
@@ -129,6 +132,12 @@ public class AnsiFormattedText {
      */
     public AnsiFormattedText append(String s) {
         pieces.add(new AnsiFormattedString(color, attributes, s));
+        return this;
+    }
+
+    public AnsiFormattedText newLine()
+    {
+        pieces.add( NEW_LINE );
         return this;
     }
 

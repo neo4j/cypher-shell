@@ -1,5 +1,11 @@
 package org.neo4j.shell.cli;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -7,11 +13,7 @@ import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
 
-import javax.annotation.Nonnull;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
+import static java.lang.System.lineSeparator;
 
 
 /**
@@ -45,7 +47,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
             bufferedReader
                     .lines()
-                    .forEach(line -> statementParser.parseMoreText(line + "\n"));
+                    .forEach(line -> statementParser.parseMoreText(line + lineSeparator()));
             statements = statementParser.consumeStatements();
         } catch (Throwable e) {
             logger.printError(e);

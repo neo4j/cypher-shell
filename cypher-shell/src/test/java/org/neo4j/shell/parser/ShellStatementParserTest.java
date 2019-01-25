@@ -7,6 +7,8 @@ import org.junit.rules.ExpectedException;
 
 import java.util.List;
 
+import static java.lang.String.format;
+import static java.lang.System.lineSeparator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,9 +25,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void parseEmptyLineDoesNothing() throws Exception {
+    public void parseEmptyLineDoesNothing() {
         // when
-        parser.parseMoreText("\n");
+        parser.parseMoreText(lineSeparator());
 
         // then
         assertFalse(parser.containsText());
@@ -34,7 +36,7 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void parseAShellCommand() throws Exception {
+    public void parseAShellCommand() {
         // when
         parser.parseMoreText("  :help exit bob snob  ");
 
@@ -52,9 +54,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void parseAShellCommandWithNewLine() throws Exception {
+    public void parseAShellCommandWithNewLine() {
         // when
-        parser.parseMoreText(":help exit bob snob\n");
+        parser.parseMoreText(format(":help exit bob snob%n"));
 
         // then
         assertFalse(parser.containsText());
@@ -63,16 +65,16 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals(":help exit bob snob\n", statements.get(0));
+        assertEquals(format(":help exit bob snob%n"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
     }
 
     @Test
-    public void parseIncompleteCypher() throws Exception {
+    public void parseIncompleteCypher() {
         // when
-        parser.parseMoreText("CREATE ()\n");
+        parser.parseMoreText(format("CREATE ()%n"));
 
         // then
         assertTrue(parser.containsText());
@@ -81,9 +83,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void parseCompleteCypher() throws Exception {
+    public void parseCompleteCypher() {
         // when
-        parser.parseMoreText("CREATE (n)\n");
+        parser.parseMoreText(format("CREATE (n)%n"));
         assertTrue(parser.containsText());
         parser.parseMoreText("CREATE ();");
         assertFalse(parser.containsText());
@@ -94,14 +96,14 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("CREATE (n)\nCREATE ();", statements.get(0));
+        assertEquals(format("CREATE (n)%nCREATE ();"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
     }
 
     @Test
-    public void parseMultipleCypherSingleLine() throws Exception {
+    public void parseMultipleCypherSingleLine() {
         // when
         parser.parseMoreText("RETURN 1;RETURN 2;");
 
@@ -120,7 +122,7 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void parseMultipleCypherMultipleLine() throws Exception {
+    public void parseMultipleCypherMultipleLine() {
         // when
         parser.parseMoreText("RETURN 1;");
         parser.parseMoreText("RETURN 2;");
@@ -140,12 +142,12 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void singleQuotedSemicolon() throws Exception {
+    public void singleQuotedSemicolon() {
         // when
-        parser.parseMoreText("hello '\n");
-        parser.parseMoreText(";\n");
-        parser.parseMoreText("'\n");
-        parser.parseMoreText(";\n");
+        parser.parseMoreText(format("hello '%n"));
+        parser.parseMoreText(format(";%n"));
+        parser.parseMoreText(format("'%n"));
+        parser.parseMoreText(format(";%n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -153,7 +155,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("hello '\n;\n'\n;", statements.get(0));
+        assertEquals(format("hello '%n;%n'%n;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -161,12 +163,12 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void backtickQuotedSemicolon() throws Exception {
+    public void backtickQuotedSemicolon() {
         // when
-        parser.parseMoreText("hello `\n");
-        parser.parseMoreText(";\n");
-        parser.parseMoreText("`\n");
-        parser.parseMoreText(";  \n");
+        parser.parseMoreText(format("hello `%n"));
+        parser.parseMoreText(format(";%n"));
+        parser.parseMoreText(format("`%n"));
+        parser.parseMoreText(format(";  %n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -174,7 +176,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("hello `\n;\n`\n;", statements.get(0));
+        assertEquals(format("hello `%n;%n`%n;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -182,12 +184,12 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void doubleQuotedSemicolon() throws Exception {
+    public void doubleQuotedSemicolon() {
         // when
-        parser.parseMoreText("hello \"\n");
-        parser.parseMoreText(";\n");
-        parser.parseMoreText("\"\n");
-        parser.parseMoreText(";   \n");
+        parser.parseMoreText(format("hello \"%n"));
+        parser.parseMoreText(format(";%n"));
+        parser.parseMoreText(format("\"%n"));
+        parser.parseMoreText(format(";   %n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -195,7 +197,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("hello \"\n;\n\"\n;", statements.get(0));
+        assertEquals(format("hello \"%n;%n\"%n;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -203,12 +205,12 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void escapedChars() throws Exception {
+    public void escapedChars() {
         // when
-        parser.parseMoreText("one \\;\n");
-        parser.parseMoreText("\"two \\\"\n");
-        parser.parseMoreText(";\n");
-        parser.parseMoreText("\";\n");
+        parser.parseMoreText(format("one \\;%n"));
+        parser.parseMoreText(format("\"two \\\"%n"));
+        parser.parseMoreText(format(";%n"));
+        parser.parseMoreText(format("\";%n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -216,7 +218,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("one \\;\n\"two \\\"\n;\n\";", statements.get(0));
+        assertEquals(format("one \\;%n\"two \\\"%n;%n\";"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -224,10 +226,10 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void nestedQuoting() throws Exception {
+    public void nestedQuoting() {
         // when
-        parser.parseMoreText("go `tick;'single;\"double;\n");
-        parser.parseMoreText("end`;\n");
+        parser.parseMoreText(format("go `tick;'single;\"double;%n"));
+        parser.parseMoreText(format("end`;%n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -235,7 +237,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("go `tick;'single;\"double;\nend`;", statements.get(0));
+        assertEquals(format("go `tick;'single;\"double;%nend`;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -243,13 +245,13 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void mixCommandAndCypherWithSpacingsAdded() throws Exception {
+    public void mixCommandAndCypherWithSpacingsAdded() {
         // when
-        parser.parseMoreText(" :help me \n");
-        parser.parseMoreText(" cypher me up \n");
-        parser.parseMoreText(" :scotty \n");
-        parser.parseMoreText(" ; \n");
-        parser.parseMoreText(" :do it now! \n");
+        parser.parseMoreText(format(" :help me %n"));
+        parser.parseMoreText(format(" cypher me up %n"));
+        parser.parseMoreText(format(" :scotty %n"));
+        parser.parseMoreText(format(" ; %n"));
+        parser.parseMoreText(format(" :do it now! %n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -257,9 +259,9 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(3, statements.size());
-        assertEquals(" :help me \n", statements.get(0));
-        assertEquals(" cypher me up \n :scotty \n ;", statements.get(1));
-        assertEquals(" :do it now! \n", statements.get(2));
+        assertEquals(format(" :help me %n"), statements.get(0));
+        assertEquals(format(" cypher me up %n :scotty %n ;"), statements.get(1));
+        assertEquals(format(" :do it now! %n"), statements.get(2));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -267,11 +269,11 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void commentHandlingIfSemicolon() throws Exception {
+    public void commentHandlingIfSemicolon() {
         // when
-        parser.parseMoreText(" first // ;\n");
-        parser.parseMoreText("// /* ;\n");
-        parser.parseMoreText(" third ; // actually a semicolon here\n");
+        parser.parseMoreText(format(" first // ;%n"));
+        parser.parseMoreText(format("// /* ;%n"));
+        parser.parseMoreText(format(" third ; // actually a semicolon here%n"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -280,16 +282,16 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals(" first // ;\n// /* ;\n third ;", statements.get(0));
+        assertEquals(format(" first // ;%n// /* ;%n third ;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
     }
 
     @Test
-    public void backslashDeadInBlockQuote() throws Exception {
+    public void backslashDeadInBlockQuote() {
         // when
-        parser.parseMoreText("/* block \\*/\nCREATE ();");
+        parser.parseMoreText(format("/* block \\*/%nCREATE ();"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -297,7 +299,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("/* block \\*/\nCREATE ();", statements.get(0));
+        assertEquals(format("/* block \\*/%nCREATE ();"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -305,7 +307,7 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void commentInQuote() throws Exception {
+    public void commentInQuote() {
         // when
         parser.parseMoreText("` here // comment `;");
 
@@ -323,7 +325,7 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void blockCommentInQuote() throws Exception {
+    public void blockCommentInQuote() {
         // when
         parser.parseMoreText("` here /* comment `;");
 
@@ -341,9 +343,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void quoteInComment() throws Exception {
+    public void quoteInComment() {
         // when
-        parser.parseMoreText("// `;\n;");
+        parser.parseMoreText(format("// `;%n;"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -351,7 +353,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("// `;\n;", statements.get(0));
+        assertEquals(format("// `;%n;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -359,9 +361,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void quoteInBlockomment() throws Exception {
+    public void quoteInBlockomment() {
         // when
-        parser.parseMoreText("/* `;\n;*/\n;");
+        parser.parseMoreText(format("/* `;%n;*/%n;"));
 
         // then
         assertTrue(parser.hasStatements());
@@ -369,7 +371,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("/* `;\n;*/\n;", statements.get(0));
+        assertEquals(format("/* `;%n;*/%n;"), statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -377,9 +379,9 @@ public class ShellStatementParserTest {
     }
 
     @Test
-    public void testReset() throws Exception {
+    public void testReset() {
         // given
-        parser.parseMoreText("/* `;\n;*/\n;");
+        parser.parseMoreText(format("/* `;%n;*/%n;"));
         parser.parseMoreText("bob");
         assertTrue(parser.hasStatements());
         assertTrue(parser.containsText());

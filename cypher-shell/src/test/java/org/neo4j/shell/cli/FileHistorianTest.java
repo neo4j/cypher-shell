@@ -6,14 +6,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.neo4j.shell.Historian;
-import org.neo4j.shell.log.Logger;
 
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.neo4j.shell.Historian;
+import org.neo4j.shell.log.Logger;
+
+import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,7 +56,7 @@ public class FileHistorianTest {
 
         assertNotNull(historian);
 
-        verify(logger).printError(contains("Could not load history file. Falling back to session-based history.\n" +
-                "Failed to create directory for history"));
+        verify(logger).printError(contains(format("Could not load history file. Falling back to session-based history.%n" +
+                "Failed to create directory for history")));
     }
 }

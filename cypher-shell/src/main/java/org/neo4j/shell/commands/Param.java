@@ -1,15 +1,15 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.VariableHolder;
-import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.log.AnsiFormattedText;
-
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+
+import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.AnsiFormattedText;
 
 
 /**
@@ -64,11 +64,11 @@ public class Param implements Command {
     public void execute(@Nonnull final String argString) throws CommandException {
         Matcher lambdaMapMatcher = lambdaMapPattern.matcher(argString);
         if (lambdaMapMatcher.matches()) {
-            throw new CommandException(AnsiFormattedText.from("Incorrect usage.\nusage: ")
+            throw new CommandException(AnsiFormattedText.from("Incorrect usage.").newLine().append( "usage: ")
                     .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
         if (!assignIfValidParameter(argString)) {
-            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
+            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.").newLine().append( "usage: ")
                     .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
         }
     }

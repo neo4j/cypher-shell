@@ -2,11 +2,20 @@ package org.neo4j.shell.prettyprint;
 
 import org.junit.Test;
 import org.mockito.Matchers;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
 import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.summary.*;
+import org.neo4j.driver.v1.summary.ProfiledPlan;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.summary.StatementType;
+import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
@@ -14,12 +23,10 @@ import org.neo4j.driver.v1.util.Function;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
-
+import static java.lang.String.format;
+import static java.lang.System.lineSeparator;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -35,7 +42,7 @@ public class PrettyPrinterTest {
     private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
 
     @Test
-    public void returnStatisticsForEmptyRecords() throws Exception {
+    public void returnStatisticsForEmptyRecords() {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         SummaryCounters summaryCounters = mock(SummaryCounters.class);
@@ -55,7 +62,7 @@ public class PrettyPrinterTest {
     }
 
     @Test
-    public void prettyPrintProfileInformation() throws Exception {
+    public void prettyPrintProfileInformation() {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         ProfiledPlan plan = mock(ProfiledPlan.class);
@@ -81,19 +88,19 @@ public class PrettyPrinterTest {
 
         // then
         String expected =
-                "Plan: \"PROFILE\"\n" +
-                "Statement: \"READ_ONLY\"\n" +
-                "Version: \"3.1\"\n" +
-                "Planner: \"COST\"\n" +
-                "Runtime: \"INTERPRETED\"\n" +
-                "Time: 12\n" +
-                "Rows: 20\n" +
-                "DbHits: 1000";
-        Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
+                format("Plan: \"PROFILE\"%n" +
+                "Statement: \"READ_ONLY\"%n" +
+                "Version: \"3.1\"%n" +
+                "Planner: \"COST\"%n" +
+                "Runtime: \"INTERPRETED\"%n" +
+                "Time: 12%n" +
+                "Rows: 20%n" +
+                "DbHits: 1000");
+        Stream.of(expected.split("%n")).forEach(e -> assertThat(actual, containsString(e)));
     }
 
     @Test
-    public void prettyPrintExplainInformation() throws Exception {
+    public void prettyPrintExplainInformation() {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         ProfiledPlan plan = mock(ProfiledPlan.class);
@@ -118,17 +125,17 @@ public class PrettyPrinterTest {
 
         // then
         String expected =
-                "Plan: \"EXPLAIN\"\n" +
-                "Statement: \"READ_ONLY\"\n" +
-                "Version: \"3.1\"\n" +
-                "Planner: \"COST\"\n" +
-                "Runtime: \"INTERPRETED\"\n" +
-                "Time: 12";
-        Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
+                format("Plan: \"EXPLAIN\"%n" +
+                "Statement: \"READ_ONLY\"%n" +
+                "Version: \"3.1\"%n" +
+                "Planner: \"COST\"%n" +
+                "Runtime: \"INTERPRETED\"%n" +
+                "Time: 12");
+        Stream.of(expected.split(lineSeparator())).forEach(e -> assertThat(actual, containsString(e)));
     }
 
     @Test
-    public void prettyPrintList() throws Exception {
+    public void prettyPrintList() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -142,11 +149,11 @@ public class PrettyPrinterTest {
         when(value2.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.LIST());
 
         when(value1.asList(Matchers.any(Function.class))).thenReturn(asList("val1_1", "val1_2"));
-        when(value2.asList(Matchers.any(Function.class))).thenReturn(asList("val2_1"));
+        when(value2.asList(Matchers.any(Function.class))).thenReturn(singletonList("val2_1"));
 
         when(record1.keys()).thenReturn(asList("col1", "col2"));
         when(record1.values()).thenReturn(asList(value1, value2));
-        when(record2.values()).thenReturn(asList(value2));
+        when(record2.values()).thenReturn(singletonList(value2));
 
         when(result.getRecords()).thenReturn(asList(record1, record2));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
@@ -155,13 +162,13 @@ public class PrettyPrinterTest {
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]"));
+        assertThat(actual, is(format("col1, col2%n[val1_1, val1_2], [val2_1]%n[val2_1]")));
     }
 
     @Test
-    public void prettyPrintMaps() throws Exception {
-        checkMapForPrettyPrint(map(), "map\n{}");
-        checkMapForPrettyPrint(map("abc", "def"), "map\n{abc: def}");
+    public void prettyPrintMaps() {
+        checkMapForPrettyPrint(map(), format("map%n{}"));
+        checkMapForPrettyPrint(map("abc", "def"), format("map%n{abc: def}"));
     }
 
     private void checkMapForPrettyPrint(Map<String, String> map, String expectedResult) {
@@ -175,10 +182,10 @@ public class PrettyPrinterTest {
 
         when(value.asMap((Function<Value, String>) anyObject())).thenReturn(map);
 
-        when(record.keys()).thenReturn(asList("map"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.keys()).thenReturn(singletonList("map"));
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
@@ -189,7 +196,7 @@ public class PrettyPrinterTest {
     }
 
     @Test
-    public void prettyPrintNode() throws Exception {
+    public void prettyPrintNode() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -208,21 +215,21 @@ public class PrettyPrinterTest {
         when(node.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
 
         when(record.keys()).thenReturn(asList("col1", "col2"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("col1, col2\n" +
+        assertThat(actual, is(format("col1, col2%n") +
                 "(:label1:label2 {prop2: prop2_value, prop1: prop1_value})"));
     }
 
     @Test
-    public void prettyPrintRelationships() throws Exception {
+    public void prettyPrintRelationships() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -240,21 +247,21 @@ public class PrettyPrinterTest {
         when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
         when(relationship.asMap(anyObject())).thenReturn(unmodifiableMap(propertiesAsMap));
 
-        when(record.keys()).thenReturn(asList("rel"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.keys()).thenReturn(singletonList("rel"));
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("rel\n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]"));
+        assertThat(actual, is(format("rel%n[:RELATIONSHIP_TYPE {prop2: prop2_value, prop1: prop1_value}]")));
     }
 
     @Test
-    public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
+    public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() {
         BoltResult result = mock(BoltResult.class);
 
         Record record = mock(Record.class);
@@ -289,19 +296,19 @@ public class PrettyPrinterTest {
         when(record.keys()).thenReturn(asList("rel", "node"));
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("rel, node\n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
-                "(:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})"));
+        assertThat(actual, is(format("rel, node%n[:`RELATIONSHIP,TYPE` {prop2: prop2_value, prop1: \"prop1, value\"}], " +
+                "(:`label ``1`:label2 {prop1: \"prop1:value\", `1prop2`: \"\", ä: not-escaped})")));
     }
 
     @Test
-    public void prettyPrintPaths() throws Exception {
+    public void prettyPrintPaths() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -311,25 +318,25 @@ public class PrettyPrinterTest {
         Node start = mock(Node.class);
         HashMap<String, Object> startProperties = new HashMap<>();
         startProperties.put("prop1", "prop1_value");
-        when(start.labels()).thenReturn(asList("start"));
-        when(start.id()).thenReturn(1l);
+        when(start.labels()).thenReturn(singletonList("start"));
+        when(start.id()).thenReturn(1L);
 
         Node middle = mock(Node.class);
-        when(middle.labels()).thenReturn(asList("middle"));
-        when(middle.id()).thenReturn(2l);
+        when(middle.labels()).thenReturn(singletonList("middle"));
+        when(middle.id()).thenReturn(2L);
 
         Node end = mock(Node.class);
         HashMap<String, Object> endProperties = new HashMap<>();
         endProperties.put("prop2", "prop2_value");
-        when(end.labels()).thenReturn(asList("end"));
-        when(end.id()).thenReturn(3l);
+        when(end.labels()).thenReturn(singletonList("end"));
+        when(end.id()).thenReturn(3L);
 
         Path path = mock(Path.class);
         when(path.start()).thenReturn(start);
 
         Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
-        when(relationship.startNodeId()).thenReturn(1l).thenReturn(3l);
+        when(relationship.startNodeId()).thenReturn(1L).thenReturn(3L);
 
 
         Path.Segment segment1 = mock(Path.Segment.class);
@@ -348,23 +355,23 @@ public class PrettyPrinterTest {
         when(start.asMap(anyObject())).thenReturn(unmodifiableMap(startProperties));
         when(end.asMap(anyObject())).thenReturn(unmodifiableMap(endProperties));
 
-        when(record.keys()).thenReturn(asList("path"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.keys()).thenReturn(singletonList("path"));
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("path\n" +
+        assertThat(actual, is(format("path%n") +
                 "(:start {prop1: prop1_value})-[:RELATIONSHIP_TYPE]->" +
                 "(:middle)<-[:RELATIONSHIP_TYPE]-(:end {prop2: prop2_value})"));
     }
 
     @Test
-    public void prettyPrintSingleNodePath() throws Exception {
+    public void prettyPrintSingleNodePath() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -372,19 +379,19 @@ public class PrettyPrinterTest {
         Value value = mock(Value.class);
 
         Node start = mock(Node.class);
-        when(start.labels()).thenReturn(asList("start"));
-        when(start.id()).thenReturn(1l);
+        when(start.labels()).thenReturn( singletonList( "start" ) );
+        when(start.id()).thenReturn(1L);
 
         Node end = mock(Node.class);
-        when(end.labels()).thenReturn(asList("end"));
-        when(end.id()).thenReturn(2l);
+        when(end.labels()).thenReturn( singletonList( "end" ) );
+        when(end.id()).thenReturn(2L);
 
         Path path = mock(Path.class);
         when(path.start()).thenReturn(start);
 
         Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
-        when(relationship.startNodeId()).thenReturn(1l);
+        when(relationship.startNodeId()).thenReturn(1L);
 
 
         Path.Segment segment1 = mock(Path.Segment.class);
@@ -394,23 +401,23 @@ public class PrettyPrinterTest {
 
         when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.PATH());
         when(value.asPath()).thenReturn(path);
-        when(path.iterator()).thenReturn(asList(segment1).iterator());
+        when(path.iterator()).thenReturn(singletonList( segment1 ).iterator());
 
-        when(record.keys()).thenReturn(asList("path"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.keys()).thenReturn(singletonList( "path" ) );
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("path\n(:start)-[:RELATIONSHIP_TYPE]->(:end)"));
+        assertThat(actual, is(format("path%n(:start)-[:RELATIONSHIP_TYPE]->(:end)")));
     }
 
     @Test
-    public void prettyPrintThreeSegmentPath() throws Exception {
+    public void prettyPrintThreeSegmentPath() {
         // given
         BoltResult result = mock(BoltResult.class);
 
@@ -418,27 +425,27 @@ public class PrettyPrinterTest {
         Value value = mock(Value.class);
 
         Node start = mock(Node.class);
-        when(start.labels()).thenReturn(asList("start"));
-        when(start.id()).thenReturn(1l);
+        when(start.labels()).thenReturn(singletonList("start"));
+        when(start.id()).thenReturn(1L);
 
         Node second = mock(Node.class);
-        when(second.labels()).thenReturn(asList("second"));
-        when(second.id()).thenReturn(2l);
+        when(second.labels()).thenReturn(singletonList("second"));
+        when(second.id()).thenReturn(2L);
 
         Node third = mock(Node.class);
-        when(third.labels()).thenReturn(asList("third"));
-        when(third.id()).thenReturn(3l);
+        when(third.labels()).thenReturn(singletonList("third"));
+        when(third.id()).thenReturn(3L);
 
         Node end = mock(Node.class);
-        when(end.labels()).thenReturn(asList("end"));
-        when(end.id()).thenReturn(4l);
+        when(end.labels()).thenReturn(singletonList("end"));
+        when(end.id()).thenReturn(4L);
 
         Path path = mock(Path.class);
         when(path.start()).thenReturn(start);
 
         Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn("RELATIONSHIP_TYPE");
-        when(relationship.startNodeId()).thenReturn(1l).thenReturn(3l).thenReturn(3l);
+        when(relationship.startNodeId()).thenReturn(1L).thenReturn(3L).thenReturn(3L);
 
 
         Path.Segment segment1 = mock(Path.Segment.class);
@@ -460,17 +467,17 @@ public class PrettyPrinterTest {
         when(value.asPath()).thenReturn(path);
         when(path.iterator()).thenReturn(asList(segment1, segment2, segment3).iterator());
 
-        when(record.keys()).thenReturn(asList("path"));
-        when(record.values()).thenReturn(asList(value));
+        when(record.keys()).thenReturn(singletonList("path"));
+        when(record.values()).thenReturn(singletonList(value));
 
-        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getRecords()).thenReturn(singletonList(record));
         when(result.getSummary()).thenReturn(mock(ResultSummary.class));
 
         // when
         String actual = plainPrinter.format(result);
 
         // then
-        assertThat(actual, is("path\n" +
+        assertThat(actual, is(format("path%n") +
                 "(:start)-[:RELATIONSHIP_TYPE]->" +
                 "(:second)<-[:RELATIONSHIP_TYPE]-(:third)-[:RELATIONSHIP_TYPE]->(:end)"));
     }

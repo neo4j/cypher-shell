@@ -103,7 +103,7 @@ public class CliArgHelper {
             PrintWriter printWriter = new PrintWriter(System.err);
             parser.printUsage(printWriter);
             printWriter.println("cypher-shell: error: Failed to parse address: '" + address + "'");
-            printWriter.println("\n  Address should be of the form: [scheme://][username:password@][host][:port]");
+            printWriter.println(format( "%n  Address should be of the form: [scheme://][username:password@][host][:port]"));
             printWriter.flush();
             return null;
         }

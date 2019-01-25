@@ -1,10 +1,12 @@
 package org.neo4j.shell.parser;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+
+import static java.lang.System.lineSeparator;
 
 /**
  * A cypher aware parser which can detect shell commands (:prefixed) or cypher.
@@ -15,7 +17,7 @@ public class ShellStatementParser implements StatementParser {
     private static final char SEMICOLON = ';';
     private static final char BACKSLASH = '\\';
     private static final String LINE_COMMENT_START = "//";
-    private static final String LINE_COMMENT_END = "\n";
+    private static final String LINE_COMMENT_END = lineSeparator();
     private static final String BLOCK_COMMENT_START = "/*";
     private static final String BLOCK_COMMENT_END = "*/";
     private static final char BACKTICK = '`';

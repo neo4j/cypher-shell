@@ -5,9 +5,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
-import org.neo4j.driver.v1.exceptions.AuthenticationException;
-import org.neo4j.driver.v1.exceptions.Neo4jException;
-import org.neo4j.shell.cli.CliArgs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +12,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
+import org.neo4j.driver.v1.exceptions.AuthenticationException;
+import org.neo4j.driver.v1.exceptions.Neo4jException;
+import org.neo4j.shell.cli.CliArgs;
+
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -77,7 +79,7 @@ public class MainTest {
     public void connectMaybeInteractivelyPromptsForBothIfNone() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
-        String inputString = "bob\nsecret\n";
+        String inputString = format("bob%nsecret%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -88,7 +90,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals( out, String.format( "username: bob%npassword: ******%n" ));
+        assertEquals( out, format( "username: bob%npassword: ******%n" ));
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
@@ -98,7 +100,7 @@ public class MainTest {
     public void connectMaybeInteractivelyDoesNotPromptIfNotInteractive() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
-        String inputString = "bob\nsecret\n";
+        String inputString = format("bob%nsecret%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -119,7 +121,7 @@ public class MainTest {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("secret").when(connectionConfig).password();
 
-        String inputString = "bob\n";
+        String inputString = format("bob%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -130,7 +132,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format( "username: bob%n" ));
+        assertEquals(out, format( "username: bob%n" ));
         verify(connectionConfig).setUsername("bob");
         verify(shell, times(2)).connect(connectionConfig);
     }
@@ -140,7 +142,7 @@ public class MainTest {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
 
-        String inputString = "secret\n";
+        String inputString = format("secret%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -151,7 +153,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format("password: ******%n"));
+        assertEquals(out, format("password: ******%n"));
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
     }
@@ -160,7 +162,7 @@ public class MainTest {
     public void connectMaybeInteractivelyPromptsHandlesBang() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
-        String inputString = "bo!b\nsec!ret\n";
+        String inputString = format("bo!b%nsec!ret%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -171,7 +173,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format("username: bo!b%npassword: *******%n"));
+        assertEquals(out, format("username: bo!b%npassword: *******%n"));
         verify(connectionConfig).setUsername("bo!b");
         verify(connectionConfig).setPassword("sec!ret");
         verify(shell, times(2)).connect(connectionConfig);
@@ -203,7 +205,7 @@ public class MainTest {
     public void connectMaybeInteractivelyRepromptsIfUserIsNotProvided() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
-        String inputString = "\nbob\nsecret\n";
+        String inputString = format("%nbob%nsecret%n");
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -214,7 +216,7 @@ public class MainTest {
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n") );
+        assertEquals(out, format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n") );
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);

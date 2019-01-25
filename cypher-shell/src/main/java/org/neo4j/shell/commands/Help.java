@@ -1,13 +1,14 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.log.AnsiFormattedText;
-
-import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nonnull;
 
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.log.AnsiFormattedText;
+import org.neo4j.shell.log.Logger;
+
+import static java.lang.String.format;
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
@@ -51,7 +52,7 @@ public class Help implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return Arrays.asList(":man");
+        return Collections.singletonList( ":man" );
     }
 
     @Override
@@ -75,19 +76,21 @@ public class Help implements Command {
             throw new CommandException(AnsiFormattedText.from("No such command: ").bold().append(name));
         }
 
-        logger.printOut(AnsiFormattedText.from("\nusage: ")
+        logger.printOut(AnsiFormattedText.s().newLine()
+                                         .append("usage: ")
                                          .bold().append(cmd.getName())
                                          .boldOff()
                                          .append(" ")
                                          .append(cmd.getUsage())
-                                         .append("\n\n")
+                                         .newLine()
+                                         .newLine()
                                          .append(cmd.getHelp())
-                                         .append("\n")
+                                         .newLine()
                                          .formattedString());
     }
 
     private void printGeneralHelp() {
-        logger.printOut("\nAvailable commands:");
+        logger.printOut(format("%nAvailable commands:"));
 
         // Get longest command so we can align them nicely
         List<Command> allCommands = commandHelper.getAllCommands();
@@ -96,20 +99,20 @@ public class Help implements Command {
 
         allCommands.stream().forEach(cmd -> logger.printOut(
                 AnsiFormattedText.from("  ")
-                        .bold().append(String.format("%-" + leftColWidth + "s", cmd.getName()))
+                        .bold().append( format( "%-" + leftColWidth + "s", cmd.getName()))
                         .boldOff().append(" " + cmd.getDescription())
                         .formattedString()));
 
-        logger.printOut("\nFor help on a specific command type:");
+        logger.printOut(format("%nFor help on a specific command type:"));
         logger.printOut(AnsiFormattedText.from("    ")
                 .append(COMMAND_NAME)
                 .bold().append(" command")
-                .boldOff().append("\n").formattedString());
+                .boldOff().newLine().formattedString());
 
-        logger.printOut("\nFor help on cypher please visit:");
+        logger.printOut(format("%nFor help on cypher please visit:"));
         logger.printOut(AnsiFormattedText.from("    ")
                                          .append(CYPHER_REFCARD_LINK)
-                .append("\n").formattedString());
+                .newLine().formattedString());
     }
 
     private int longestCmdLength(List<Command> allCommands) {

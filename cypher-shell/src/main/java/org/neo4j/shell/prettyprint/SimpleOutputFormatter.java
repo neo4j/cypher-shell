@@ -1,15 +1,16 @@
 package org.neo4j.shell.prettyprint;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.shell.state.BoltResult;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
+import static java.lang.System.lineSeparator;
 
 public class SimpleOutputFormatter implements OutputFormatter {
 
@@ -19,9 +20,9 @@ public class SimpleOutputFormatter implements OutputFormatter {
         StringBuilder sb = new StringBuilder();
         List<Record> records = result.getRecords();
         if (!records.isEmpty()) {
-            sb.append(records.get(0).keys().stream().collect(Collectors.joining(COMMA_SEPARATOR)));
-            sb.append("\n");
-            sb.append(records.stream().map(this::formatRecord).collect(Collectors.joining("\n")));
+            sb.append( String.join( COMMA_SEPARATOR, records.get( 0 ).keys() ) );
+            sb.append(lineSeparator());
+            sb.append(records.stream().map(this::formatRecord).collect(Collectors.joining(NEWLINE)));
         }
         return sb.toString();
     }

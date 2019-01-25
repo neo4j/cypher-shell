@@ -1,10 +1,12 @@
 package org.neo4j.shell;
 
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.commands.Exit;
 import org.neo4j.shell.commands.Help;
 import org.neo4j.shell.log.AnsiFormattedText;
 
-import javax.annotation.Nonnull;
+import static java.lang.System.lineSeparator;
 
 public class UserMessagesHandler {
     private ConnectionConfig connectionConfig;
@@ -33,17 +35,18 @@ public class UserMessagesHandler {
         }
 
         return welcomeMessage
-                .append(".\nType ")
+                .append(".").append( lineSeparator()).append( "Type ")
                 .bold().append(Help.COMMAND_NAME).boldOff()
                 .append(" for a list of available commands or ")
                 .bold().append(Exit.COMMAND_NAME).boldOff()
                 .append(" to exit the shell.")
-                .append("\nNote that Cypher queries must end with a ")
+                .newLine()
+                .append("Note that Cypher queries must end with a ")
                 .bold().append("semicolon.").boldOff().formattedString();
     }
 
     @Nonnull
     public String getExitMessage() {
-        return AnsiFormattedText.s().append("\nBye!").formattedString();
+        return AnsiFormattedText.s().newLine().append("Bye!").formattedString();
     }
 }

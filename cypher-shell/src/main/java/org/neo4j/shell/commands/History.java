@@ -1,14 +1,15 @@
 package org.neo4j.shell.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-
+import static java.lang.String.format;
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
@@ -74,17 +75,17 @@ public class History implements Command {
     private String printHistory(@Nonnull final List<String> history, final int lineCount) {
         // for alignment, check the string length of history size
         int colWidth = Integer.toString(history.size()).length();
-        String fmt = " %-" + colWidth + "d  %s\n";
+        String fmt = " %-" + colWidth + "d  %s%n";
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
         int count = 0;
 
         for (int i = history.size() - 1; i >= 0 && count < lineCount; i--, count++) {
             String line = history.get(i);
             // Executing old commands with !N actually starts from 1, and not 0, hence increment index by one
-            result = String.format(fmt, i + 1, line) + result;
+            result.insert( 0, format( fmt, i + 1, line ) );
         }
 
-        return result;
+        return result.toString();
     }
 }

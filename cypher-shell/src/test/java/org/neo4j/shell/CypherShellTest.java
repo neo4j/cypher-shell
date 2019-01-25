@@ -4,6 +4,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.io.IOException;
+import java.util.Optional;
+
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -20,10 +24,9 @@ import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.test.OfflineTestShell;
 
-import java.io.IOException;
-import java.util.Optional;
-
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -69,7 +72,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void verifyDelegationOfResetMethod() throws CommandException {
+    public void verifyDelegationOfResetMethod() {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.reset();
@@ -77,7 +80,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void verifyDelegationOfGetServerVersionMethod() throws CommandException {
+    public void verifyDelegationOfGetServerVersionMethod() {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.getServerVersion();
@@ -85,7 +88,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void verifyDelegationOfIsTransactionOpenMethod() throws CommandException {
+    public void verifyDelegationOfIsTransactionOpenMethod() {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.isTransactionOpen();
@@ -138,7 +141,7 @@ public class CypherShellTest {
         BoltResult boltResult = mock(BoltResult.class);
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(boltResult));
-        when(boltResult.getRecords()).thenReturn(asList(recordMock));
+        when(boltResult.getRecords()).thenReturn( singletonList( recordMock ) );
         when(recordMock.get("bo`b")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
@@ -233,7 +236,7 @@ public class CypherShellTest {
     @Test
     public void commandNameShouldBeParsed() {
         assertTrue(offlineTestShell.getCommandExecutable("   :help    ").isPresent());
-        assertTrue(offlineTestShell.getCommandExecutable("   :help    \n").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(format("   :help    %n")).isPresent());
         assertTrue(offlineTestShell.getCommandExecutable("   :help   arg1 arg2 ").isPresent());
     }
 

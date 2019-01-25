@@ -4,6 +4,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.io.ByteArrayInputStream;
+
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
@@ -13,8 +16,7 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
 
-import java.io.ByteArrayInputStream;
-
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.contains;
@@ -43,9 +45,9 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void testSimple() throws Exception {
-        String input = "good1;\n" +
-                "good2;\n";
+    public void testSimple() {
+        String input = format("good1;%n" +
+                "good2;%n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_FAST,
                 cmdExecuter,
@@ -58,12 +60,12 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void testFailFast() throws Exception {
+    public void testFailFast() {
         String input =
-                "good1;\n" +
-                        "bad;\n" +
-                        "good2;\n" +
-                        "bad;\n";
+                format("good1;%n" +
+                        "bad;%n" +
+                        "good2;%n" +
+                        "bad;%n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_FAST, cmdExecuter,
                 logger, statementParser,
@@ -76,12 +78,12 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void testFailAtEnd() throws Exception {
+    public void testFailAtEnd() {
         String input =
-                "good1;\n" +
-                        "bad;\n" +
-                        "good2;\n" +
-                        "bad;\n";
+                format("good1;%n" +
+                        "bad;%n" +
+                        "good2;%n" +
+                        "bad;%n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
@@ -94,17 +96,17 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void runUntilEndExitsImmediatelyOnParseError() throws Exception {
+    public void runUntilEndExitsImmediatelyOnParseError() {
         // given
         StatementParser statementParser = mock(StatementParser.class);
         RuntimeException boom = new RuntimeException("BOOM");
         doThrow(boom).when(statementParser).parseMoreText(anyString());
 
         String input =
-                "good1;\n" +
-                        "bad;\n" +
-                        "good2;\n" +
-                        "bad;\n";
+                format("good1;%n" +
+                        "bad;%n" +
+                        "good2;%n" +
+                        "bad;%n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
@@ -119,13 +121,14 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void runUntilEndExitsImmediatelyOnExitCommand() throws Exception {
+    public void runUntilEndExitsImmediatelyOnExitCommand() throws CommandException
+    {
         // given
         String input =
-                "good1;\n" +
-                        "bad;\n" +
-                        "good2;\n" +
-                        "bad;\n";
+                format("good1;%n" +
+                        "bad;%n" +
+                        "good2;%n" +
+                        "bad;%n");
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_AT_END, cmdExecuter,
                 logger, statementParser,
@@ -143,7 +146,7 @@ public class NonInteractiveShellRunnerTest {
     }
 
     @Test
-    public void nonInteractiveHasNoHistory() throws Exception {
+    public void nonInteractiveHasNoHistory() {
         // given
         NonInteractiveShellRunner runner = new NonInteractiveShellRunner(
                 FailBehavior.FAIL_AT_END, cmdExecuter,

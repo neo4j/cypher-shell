@@ -1,5 +1,11 @@
 package org.neo4j.shell.commands;
 
+import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.TransactionHandler;
@@ -8,12 +14,6 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 /**
  * Utility methods for dealing with commands
@@ -97,7 +97,7 @@ public class CommandHelper {
         }
 
         if (args.length < minCount || args.length > maxCount) {
-            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
+            throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.").newLine().append( "usage: ")
                     .bold().append(commandName).boldOff().append(" ").append(usage));
         }
 

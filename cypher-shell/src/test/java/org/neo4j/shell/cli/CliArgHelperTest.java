@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -90,11 +91,10 @@ public class CliArgHelperTest {
     @Test
     public void parseArgumentsAndQuery() {
         String query = "\"match (n) return n\"";
-        ArrayList<String> strings = new ArrayList<>();
-        strings.addAll(asList("-a 192.168.1.1 -p 123 --format plain".split(" ")));
+        ArrayList<String> strings = new ArrayList<>( asList( "-a 192.168.1.1 -p 123 --format plain".split( " " ) ) );
         strings.add(query);
         assertEquals(Optional.of(query),
-                CliArgHelper.parse(strings.toArray(new String[strings.size()])).getCypher());
+                CliArgHelper.parse(strings.toArray( new String[0] )).getCypher());
     }
 
     @Test
@@ -150,7 +150,7 @@ public class CliArgHelperTest {
         assertTrue("expected error: " + bout.toString(),
                 bout.toString().contains("cypher-shell: error: Failed to parse address"));
         assertTrue("expected error detail: " + bout.toString(),
-                bout.toString().contains("\n  Address should be of the form:"));
+                bout.toString().contains(format("%n  Address should be of the form:")));
     }
 
     @Test
