@@ -96,7 +96,7 @@ public class PrettyPrinterTest {
                 "Time: 12%n" +
                 "Rows: 20%n" +
                 "DbHits: 1000");
-        Stream.of(expected.split("%n")).forEach(e -> assertThat(actual, containsString(e)));
+        Stream.of(expected.split(lineSeparator())).forEach(e -> assertThat(actual, containsString(e)));
     }
 
     @Test
