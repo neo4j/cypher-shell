@@ -16,13 +16,11 @@ import org.neo4j.shell.state.BoltResult;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
-import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -158,6 +156,36 @@ public class PrettyPrinterTest {
 
         // then
         assertThat(actual, is("col1, col2\n[val1_1, val1_2], [val2_1]\n[val2_1]"));
+    }
+
+    @Test
+    public void prettyPrintMaps() throws Exception {
+        checkMapForPrettyPrint(map(), "map\n{}");
+        checkMapForPrettyPrint(map("abc", "def"), "map\n{abc: def}");
+    }
+
+    private void checkMapForPrettyPrint(Map<String, String> map, String expectedResult) {
+        // given
+        BoltResult result = mock(BoltResult.class);
+
+        Record record = mock(Record.class);
+        Value value = mock(Value.class);
+
+        when(value.type()).thenReturn(InternalTypeSystem.TYPE_SYSTEM.MAP());
+
+        when(value.asMap((Function<Value, String>) anyObject())).thenReturn(map);
+
+        when(record.keys()).thenReturn(asList("map"));
+        when(record.values()).thenReturn(asList(value));
+
+        when(result.getRecords()).thenReturn(asList(record));
+        when(result.getSummary()).thenReturn(mock(ResultSummary.class));
+
+        // when
+        String actual = plainPrinter.format(result);
+
+        // then
+        assertThat(actual, is(expectedResult));
     }
 
     @Test
