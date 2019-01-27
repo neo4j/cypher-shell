@@ -69,10 +69,12 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private ConsoleReader setupConsoleReader(@Nonnull Logger logger,
                                              @Nonnull InputStream inputStream) throws IOException {
         ConsoleReader reader = new ConsoleReader(inputStream, logger.getOutputStream());
+
         // Disable expansion of bangs: !
         reader.setExpandEvents(false);
         // Ensure Reader does not handle user input for ctrl+C behaviour
         reader.setHandleUserInterrupt(false);
+        System.out.println( reader.getTerminal().getClass().getCanonicalName());
         return reader;
     }
 
@@ -122,7 +124,13 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Nonnull
     public List<String> readUntilStatement() throws IOException, NoMoreInputException {
         while (true) {
-            String line = reader.readLine(getPrompt().renderedString());
+            String rende = getPrompt().renderedString();
+            String line = reader.readLine( rende );
+            System.out.println("**********************************");
+            System.out.println(rende);
+            System.out.println("----------------------------------");
+            System.out.println(line);
+            System.out.println("**********************************");
             if (line == null) {
                 // User hit CTRL-D, or file ended
                 throw new NoMoreInputException();

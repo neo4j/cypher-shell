@@ -76,11 +76,11 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyPromptsForBothIfNone() throws Exception {
+    public void     connectMaybeInteractivelyPromptsForBothIfNone() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = format("bob%nsecret%n");
-        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);

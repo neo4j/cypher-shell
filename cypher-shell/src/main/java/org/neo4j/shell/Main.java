@@ -1,6 +1,12 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
+
+import java.io.InputStream;
+import java.io.PrintStream;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
@@ -10,11 +16,6 @@ import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.InputStream;
-import java.io.PrintStream;
 
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 
@@ -164,6 +165,7 @@ public class Main {
         // Ensure Reader does not handle user input for ctrl+C behaviour
         consoleReader.setHandleUserInterrupt(false);
         line = consoleReader.readLine(prompt + ": ", mask);
+        System.out.println("THe line is : " + line);
         consoleReader.close();
 
         if (line == null) {

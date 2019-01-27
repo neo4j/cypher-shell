@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -337,14 +338,15 @@ public class InteractiveShellRunnerTest {
     public void multilineEndsOnSemicolonOnNewLine() throws Exception {
         // given
         String inputString = format("%nCREATE (n:Person) RETURN n%n;%n");
-        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes( StandardCharsets.UTF_8 ));
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
 
         // when
         runner.runUntilEnd();
 
         // then
-        verify(cmdExecuter).execute(format("CREATE (n:Person) RETURN n%n;"));
+        String format = format( "CREATE (n:Person) RETURN n%n;" );
+        verify(cmdExecuter).execute( format );
     }
 
     @Test
