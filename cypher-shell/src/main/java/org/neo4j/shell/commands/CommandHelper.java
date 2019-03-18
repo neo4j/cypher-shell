@@ -1,5 +1,11 @@
 package org.neo4j.shell.commands;
 
+import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.TransactionHandler;
@@ -9,17 +15,11 @@ import org.neo4j.shell.exception.DuplicateCommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
 /**
  * Utility methods for dealing with commands
  */
 public class CommandHelper {
-    private final TreeMap<String, Command> commands = new TreeMap<>();
+    private final TreeMap<String, Command> commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
         registerAllCommands(logger, historian, cypherShell, cypherShell);
