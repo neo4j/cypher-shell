@@ -1,17 +1,24 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.summary.Plan;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.Plan;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
@@ -105,7 +112,7 @@ class TablePlanFormatter {
     private String serialize(@Nonnull String key, @Nonnull Value v) {
         switch (key) {
             case "ColumnsLeft":
-                return "keep columns" + String.join(SEPARATOR, v.asList(Value::asString));
+                return removeGeneratedNames(v.asString());
             case "LegacyExpression":
                 return removeGeneratedNames(v.asString());
             case "Expression":
