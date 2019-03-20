@@ -1,30 +1,27 @@
 package org.neo4j.shell.commands;
 
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
-
-import java.util.List;
-import java.util.Optional;
-
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assume.assumeTrue;
+import static org.mockito.Mockito.*;
+import static org.neo4j.shell.Versions.majorVersion;
 
 public class CypherShellVerboseIntegrationTest {
     @Rule
@@ -232,6 +229,9 @@ public class CypherShellVerboseIntegrationTest {
 
     @Test
     public void cypherWithExplainAndRulePlanner() throws CommandException {
+        //given (there is no rule planner in neo4j 4.0)
+        assumeTrue( majorVersion( shell.getServerVersion() ) < 4 );
+
         //when
         shell.execute("CYPHER planner=rule EXPLAIN MATCH (e:E) WHERE e.bucket='Live' and e.id = 23253473 RETURN count(e)");
 
@@ -241,7 +241,6 @@ public class CypherShellVerboseIntegrationTest {
 
         List<String> result = captor.getAllValues();
         String actual = result.get(0);
-        //      This assertion checks everything except for time and cypher
         assertThat(actual, containsString("\"EXPLAIN\""));
         assertThat(actual, containsString("\"READ_ONLY\""));
         assertThat(actual, containsString("\"RULE\""));
