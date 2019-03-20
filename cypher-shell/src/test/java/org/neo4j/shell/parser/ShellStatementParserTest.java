@@ -275,12 +275,12 @@ public class ShellStatementParserTest {
 
         // then
         assertTrue(parser.hasStatements());
-        assertTrue(parser.containsText());
+        assertFalse(parser.containsText());
 
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals(" first // ;\n// /* ;\n third ;", statements.get(0));
+        assertEquals(" first  third ;", statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -297,7 +297,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("/* block \\*/\nCREATE ();", statements.get(0));
+        assertEquals("\nCREATE ();", statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -351,7 +351,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("// `;\n;", statements.get(0));
+        assertEquals(";", statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -369,7 +369,7 @@ public class ShellStatementParserTest {
         List<String> statements = parser.consumeStatements();
 
         assertEquals(1, statements.size());
-        assertEquals("/* `;\n;*/\n;", statements.get(0));
+        assertEquals("\n;", statements.get(0));
 
         assertFalse(parser.hasStatements());
         assertEquals(0, parser.consumeStatements().size());
@@ -389,6 +389,29 @@ public class ShellStatementParserTest {
         
         // then
         assertFalse(parser.hasStatements());
+        assertFalse(parser.containsText());
+    }
+
+    @Test
+    public void commentsBeforeBegin() throws Exception {
+        // when
+        parser.parseMoreText("//comment \n");
+        parser.parseMoreText(":begin\n");
+        parser.parseMoreText("RETURN 42;\n");
+        parser.parseMoreText(":end\n");
+
+        // then
+        assertTrue(parser.hasStatements());
+
+        List<String> statements = parser.consumeStatements();
+
+        assertEquals(3, statements.size());
+        assertEquals(":begin\n", statements.get(0));
+        assertEquals("RETURN 42;", statements.get(1));
+        assertEquals(":end\n", statements.get(2));
+
+        assertFalse(parser.hasStatements());
+        assertEquals(0, parser.consumeStatements().size());
         assertFalse(parser.containsText());
     }
 }

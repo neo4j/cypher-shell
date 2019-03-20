@@ -1,17 +1,17 @@
 package org.neo4j.shell.parser;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 
 /**
  * A cypher aware parser which can detect shell commands (:prefixed) or cypher.
  */
 public class ShellStatementParser implements StatementParser {
 
-    private static final Pattern shellCmdPattern = Pattern.compile("^\\s*:.+\\s*$");
+    private static final Pattern SHELL_CMD_PATTERN = Pattern.compile("^\\s*:.+\\s*$");
     private static final char SEMICOLON = ';';
     private static final char BACKSLASH = '\\';
     private static final String LINE_COMMENT_START = "//";
@@ -21,10 +21,11 @@ public class ShellStatementParser implements StatementParser {
     private static final char BACKTICK = '`';
     private static final char DOUBLE_QUOTE = '"';
     private static final char SINGLE_QUOTE = '\'';
+    private static final int NO_COMMENT = -1;
     private Optional<String> awaitedRightDelimiter;
     private StringBuilder statement;
     private ArrayList<String> parsedStatements;
-
+    private int commentStart = NO_COMMENT;
 
     public ShellStatementParser() {
         parsedStatements = new ArrayList<>();
@@ -41,7 +42,7 @@ public class ShellStatementParser implements StatementParser {
     @Override
     public void parseMoreText(@Nonnull String line) {
         // See if it could possibly be a shell command, only valid if not in a current statement
-        if (statementNotStarted() && shellCmdPattern.matcher(line).find()) {
+        if ( statementNotStarted() && SHELL_CMD_PATTERN.matcher(line).find()) {
             parsedStatements.add(line);
             return;
         }
@@ -126,9 +127,16 @@ public class ShellStatementParser implements StatementParser {
      */
     private boolean handleComments(char prev, char current) {
         if (inComment()) {
+            if ( commentStart == NO_COMMENT ) {
+                //find the position of //.. or /*...
+                //i.e. currentPos - 1 - 2
+                commentStart = statement.length() - 3;
+            }
             if (isRightDelimiter(prev, current)) {
                 // Then end it
                 awaitedRightDelimiter = Optional.empty();
+                statement.delete( commentStart, statement.length() );
+                commentStart = NO_COMMENT;
                 return true;
             }
             // Didn't end the comment, continue
