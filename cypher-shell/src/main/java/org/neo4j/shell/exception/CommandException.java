@@ -13,6 +13,10 @@ public class CommandException extends AnsiFormattedException {
         super(msg);
     }
 
+    public CommandException(@Nullable String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
     public CommandException(@Nonnull AnsiFormattedText append) {
         super(append);
     }

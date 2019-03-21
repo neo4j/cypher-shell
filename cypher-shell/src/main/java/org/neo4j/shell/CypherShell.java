@@ -1,6 +1,9 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.v1.Record;
+import org.neo4j.cypher.internal.evaluator.EvaluationException;
+import org.neo4j.cypher.internal.evaluator.Evaluator;
+import org.neo4j.cypher.internal.evaluator.ExpressionEvaluator;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -33,7 +36,8 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     private final LinePrinter linePrinter;
     private final BoltStateHandler boltStateHandler;
     private final PrettyPrinter prettyPrinter;
-    protected CommandHelper commandHelper;
+    private CommandHelper commandHelper;
+    private ExpressionEvaluator evaluator = Evaluator.expressionEvaluator();
 
     public CypherShell(@Nonnull LinePrinter linePrinter, @Nonnull PrettyConfig prettyConfig) {
         this(linePrinter, new BoltStateHandler(), new PrettyPrinter(prettyConfig));
@@ -52,7 +56,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param text to trim
      * @return text without trailing semicolons
      */
-    static String stripTrailingSemicolons(@Nonnull String text) {
+    private static String stripTrailingSemicolons(@Nonnull String text) {
         int end = text.length();
         while (end > 0 && text.substring(0, end).endsWith(";")) {
             end -= 1;
@@ -83,7 +87,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      *
      * @param cypher non-empty cypher text to executeLine
      */
-    protected void executeCypher(@Nonnull final String cypher) throws CommandException {
+    private void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, allParameterValues());
         result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
     }
@@ -94,7 +98,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Nonnull
-    protected Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
+    private Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         Matcher m = cmdNamePattern.matcher(line);
         if (commandHelper == null || !m.matches()) {
             return Optional.empty();
@@ -112,7 +116,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return Optional.of(() -> cmd.execute(stripTrailingSemicolons(args)));
     }
 
-    protected void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
+    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
         cmdExe.execute();
     }
 
@@ -157,24 +161,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     @Nonnull
     public Optional<Object> setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        final Record records = evaluateParamOnServer(name, valueString);
-        String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
-        final Object value = records.get(parameterName).asObject();
-        queryParams.put(parameterName, new ParamValue(valueString, value));
-        return Optional.ofNullable(value);
-    }
 
-    private Record evaluateParamOnServer(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        String cypher = "RETURN " + valueString + " as " + name;
-        final Optional<BoltResult> resultOpt = boltStateHandler.runCypher(cypher, allParameterValues());
-        if (!resultOpt.isPresent()) {
-            throw new CommandException("Failed to set value of parameter");
+        try {
+            String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
+            Object value = evaluator.evaluate(valueString, Object.class);
+            queryParams.put(parameterName, new ParamValue(valueString, value));
+            return Optional.ofNullable(value);
+        } catch (EvaluationException e) {
+           throw new CommandException(e.getMessage(), e);
         }
-        List<Record> records = resultOpt.get().getRecords();
-        if (records.size() != 1) {
-            throw new CommandException("Failed to set value of parameter");
-        }
-        return records.get(0);
     }
 
     @Override
@@ -193,7 +188,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return queryParams;
     }
 
-    public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
+    void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
     }
 
@@ -202,13 +197,8 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         boltStateHandler.reset();
     }
 
-    protected void addRuntimeHookToResetShell() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                reset();
-            }
-        });
+    private void addRuntimeHookToResetShell() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::reset));
     }
 
 }
