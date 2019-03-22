@@ -69,12 +69,12 @@ _show_java_help() {
 build_classpath() {
   APP_HOME="$(cd "$(dirname "$0")" && pwd)"
   # First try in sub directory
-  JARPATH="$(find "${APP_HOME}" -name "cypher-shell-all.jar" )"
+  JARPATH="$(find "${APP_HOME}" -name "cypher-shell.jar" )"
 
   # Then try installation directory (prefix/bin and prefix/share/cypher-shell/lib)
   if [[ -z "${JARPATH}" ]]; then
     APP_HOME="${APP_HOME}/../share/cypher-shell"
-    JARPATH="$(find "${APP_HOME}" -name "cypher-shell-all.jar" )"
+    JARPATH="$(find "${APP_HOME}" -name "cypher-shell.jar" )"
   fi
 }
 
