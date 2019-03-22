@@ -12,7 +12,7 @@ task generateBuildProperties {
   }
 }
 
-processResources.dependsOn generateBuildProperties
+processResources.finalizedBy generateBuildProperties
 
 jar {
   manifest {
