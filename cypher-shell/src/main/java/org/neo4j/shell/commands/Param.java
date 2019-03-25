@@ -1,6 +1,6 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
 
@@ -24,10 +24,10 @@ public class Param implements Command {
     private static final Pattern lambdaMapPattern = Pattern.compile("^\\s*(?<key>[\\p{L}_][\\p{L}0-9_]*):\\s*=>\\s*(?<value>.+)$");
 
     public static final String COMMAND_NAME = ":param";
-    private final VariableHolder variableHolder;
+    private final ParameterMap parameterMap;
 
-    public Param(@Nonnull final VariableHolder variableHolder) {
-        this.variableHolder = variableHolder;
+    public Param(@Nonnull final ParameterMap parameterMap) {
+        this.parameterMap = parameterMap;
     }
 
     @Nonnull
@@ -84,7 +84,7 @@ public class Param implements Command {
                                                    BiPredicate<String, Matcher> matchingFunction) throws CommandException {
         Matcher matcher = pattern.matcher(argString);
         if (matchingFunction.test(argString, matcher)) {
-            variableHolder.set(matcher.group("key"), matcher.group("value"));
+            parameterMap.setParameter(matcher.group("key"), matcher.group("value"));
             return true;
         } else {
             return false;

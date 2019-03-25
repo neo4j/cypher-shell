@@ -1,6 +1,6 @@
 package org.neo4j.shell.commands;
 
-import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
@@ -22,12 +22,12 @@ import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 public class Params implements Command {
     public static final String COMMAND_NAME = ":params";
     private final Logger logger;
-    private final VariableHolder variableHolder;
+    private final ParameterMap parameterMap;
     private static final Pattern backtickPattern = Pattern.compile("^\\s*(?<key>(`([^`])*`)+?)\\s*");
 
-    public Params(@Nonnull Logger logger, @Nonnull VariableHolder variableHolder) {
+    public Params(@Nonnull Logger logger, @Nonnull ParameterMap parameterMap) {
         this.logger = logger;
-        this.variableHolder = variableHolder;
+        this.parameterMap = parameterMap;
     }
 
     @Nonnull
@@ -78,10 +78,10 @@ public class Params implements Command {
 
     private void listParam(@Nonnull String name) throws CommandException {
         String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
-        if (!this.variableHolder.getAllAsUserInput().containsKey(parameterName)) {
+        if (!this.parameterMap.getAllAsUserInput().containsKey(parameterName)) {
             throw new CommandException("Unknown parameter: " + name);
         }
-        listParam(name.length(), name, this.variableHolder.getAllAsUserInput().get(parameterName).getValueAsString());
+        listParam(name.length(), name, this.parameterMap.getAllAsUserInput().get(parameterName).getValueAsString());
     }
 
     private void listParam(int leftColWidth, @Nonnull String key, @Nonnull Object value) {
@@ -89,10 +89,10 @@ public class Params implements Command {
     }
 
     private void listAllParams() {
-        List<String> keys = variableHolder.getAllAsUserInput().keySet().stream().sorted().collect(Collectors.toList());
+        List<String> keys = parameterMap.getAllAsUserInput().keySet().stream().sorted().collect(Collectors.toList());
 
         int leftColWidth = keys.stream().map((s) -> escape(s).length()).reduce(0, Math::max);
 
-        keys.forEach(key -> listParam(leftColWidth, escape(key), variableHolder.getAllAsUserInput().get(key).getValueAsString()));
+        keys.forEach(key -> listParam(leftColWidth, escape(key), parameterMap.getAllAsUserInput().get(key).getValueAsString()));
     }
 }

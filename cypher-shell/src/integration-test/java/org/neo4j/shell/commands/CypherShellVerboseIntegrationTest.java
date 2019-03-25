@@ -167,12 +167,12 @@ public class CypherShellVerboseIntegrationTest {
 
     @Test
     public void paramsAndListVariables() throws CommandException {
-        assertTrue(shell.getAll().isEmpty());
+        assertTrue(shell.allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
-        shell.set("string", stringInput);
-        Optional result = shell.set("bob", String.valueOf(randomLong));
+        shell.setParameter("string", stringInput);
+        Optional result = shell.setParameter("bob", String.valueOf(randomLong));
         assertTrue(result.isPresent());
         assertEquals(randomLong, result.get());
 
@@ -184,16 +184,16 @@ public class CypherShellVerboseIntegrationTest {
         List<String> queryResult = captor.getAllValues();
         assertThat(queryResult.get(0), containsString("| { bob }"));
         assertThat(queryResult.get(0), containsString("| " + randomLong + " | " + stringInput + " |"));
-        assertEquals(randomLong, shell.getAll().get("bob"));
-        assertEquals("randomString", shell.getAll().get("string"));
+        assertEquals(randomLong, shell.allParameterValues().get("bob"));
+        assertEquals("randomString", shell.allParameterValues().get("string"));
     }
 
     @Test
     public void paramsAndListVariablesWithSpecialCharacters() throws CommandException {
-        assertTrue(shell.getAll().isEmpty());
+        assertTrue(shell.allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
-        Optional result = shell.set("`bob`", String.valueOf(randomLong));
+        Optional result = shell.setParameter("`bob`", String.valueOf(randomLong));
         assertTrue(result.isPresent());
         assertEquals(randomLong, result.get());
 
@@ -205,6 +205,6 @@ public class CypherShellVerboseIntegrationTest {
         List<String> queryResult = captor.getAllValues();
         assertThat(queryResult.get(0), containsString("| { `bob` }"));
         assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
-        assertEquals(randomLong, shell.getAll().get("bob"));
+        assertEquals(randomLong, shell.allParameterValues().get("bob"));
     }
 }

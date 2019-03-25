@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 
 import static junit.framework.TestCase.assertEquals;
@@ -18,7 +18,7 @@ public class ParamTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private VariableHolder mockShell = mock(VariableHolder.class);
+    private ParameterMap mockShell = mock( ParameterMap.class);
     private Command cmd;
 
     @Before
@@ -48,49 +48,49 @@ public class ParamTest {
     public void setParam() throws CommandException {
         cmd.execute("bob   9");
 
-        verify(mockShell).set("bob", "9");
+        verify(mockShell).setParameter("bob", "9");
     }
 
     @Test
     public void setLambdasAsParam() throws CommandException {
         cmd.execute("bob => 9");
 
-        verify(mockShell).set("bob", "9");
+        verify(mockShell).setParameter("bob", "9");
     }
 
     @Test
     public void setLambdasAsParamWithBackticks() throws CommandException {
         cmd.execute("`bob` => 9");
 
-        verify(mockShell).set("`bob`", "9");
+        verify(mockShell).setParameter("`bob`", "9");
     }
 
     @Test
     public void setSpecialCharacterParameter() throws CommandException {
         cmd.execute("bØb   9");
 
-        verify(mockShell).set("bØb", "9");
+        verify(mockShell).setParameter("bØb", "9");
     }
 
     @Test
     public void setSpecialCharacterParameterForLambdaExpressions() throws CommandException {
         cmd.execute("`first=>Name` => \"Bruce\"");
 
-        verify(mockShell).set("`first=>Name`", "\"Bruce\"");
+        verify(mockShell).setParameter("`first=>Name`", "\"Bruce\"");
     }
 
     @Test
     public void setParamWithSpecialCharacters() throws CommandException {
         cmd.execute("`bob#`   9");
 
-        verify(mockShell).set("`bob#`", "9");
+        verify(mockShell).setParameter("`bob#`", "9");
     }
 
     @Test
     public void setParamWithOddNoOfBackTicks() throws CommandException {
         cmd.execute(" `bo `` sömething ```   9");
 
-        verify(mockShell).set("`bo `` sömething ```", "9");
+        verify(mockShell).setParameter("`bo `` sömething ```", "9");
     }
 
     @Test
@@ -146,34 +146,34 @@ public class ParamTest {
     @Test
     public void shouldNotSplitOnSpace() throws CommandException {
         cmd.execute("bob 'one two'");
-        verify(mockShell).set("bob", "'one two'");
+        verify(mockShell).setParameter("bob", "'one two'");
     }
 
     @Test
     public void shouldAcceptUnicodeAlphaNumeric() throws CommandException {
         cmd.execute("böb 'one two'");
-        verify(mockShell).set("böb", "'one two'");
+        verify(mockShell).setParameter("böb", "'one two'");
     }
 
     @Test
     public void shouldAcceptColonFormOfParams() throws CommandException {
         cmd.execute("bob: one");
-        verify(mockShell).set("bob", "one");
+        verify(mockShell).setParameter("bob", "one");
     }
 
     @Test
     public void shouldAcceptForTwoColonsFormOfParams() throws CommandException {
         cmd.execute("`bob:`: one");
-        verify(mockShell).set("`bob:`", "one");
+        verify(mockShell).setParameter("`bob:`", "one");
 
         cmd.execute("`t:om` two");
-        verify(mockShell).set("`t:om`", "two");
+        verify(mockShell).setParameter("`t:om`", "two");
     }
 
     @Test
     public void shouldNotExecuteEscapedCypher() throws CommandException {
         cmd.execute("bob \"RETURN 5 as bob\"");
-        verify(mockShell).set("bob", "\"RETURN 5 as bob\"");
+        verify(mockShell).setParameter("bob", "\"RETURN 5 as bob\"");
     }
 
     @Test
