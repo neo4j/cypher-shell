@@ -71,7 +71,7 @@ ext {
 
     argparse4jVersion = '0.7.0'
     junitVersion = '4.12'
-    evaluatorVersion = '4.0.0-SNAPSHOT'
+    evaluatorVersion = '3.5.4'
     neo4jJavaDriverVersion = '1.7.0'
     findbugsVersion = '3.0.0'
     jansiVersion = '1.13'
