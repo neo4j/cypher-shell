@@ -4,12 +4,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.state.ParamValue;
 
-import java.util.AbstractMap;
 import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -31,7 +30,7 @@ public class ParamsTest {
     public void setup() throws CommandException {
         vars = new HashMap<>();
         logger = mock(Logger.class);
-        VariableHolder shell = mock(VariableHolder.class);
+        ParameterMap shell = mock( ParameterMap.class);
         when(shell.getAllAsUserInput()).thenReturn(vars);
         cmd = new Params(logger, shell);
     }

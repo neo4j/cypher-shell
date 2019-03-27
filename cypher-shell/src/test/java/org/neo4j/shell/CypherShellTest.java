@@ -117,7 +117,7 @@ public class CypherShellTest {
 
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenThrow(new CommandException("not connected"));
 
-        shell.set("bob", "99");
+        shell.setParameter("bob", "99");
     }
 
     @Test
@@ -142,11 +142,11 @@ public class CypherShellTest {
         when(recordMock.get("bo`b")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.getAll().isEmpty());
+        assertTrue(offlineTestShell.allParameterValues().isEmpty());
 
-        Optional result = offlineTestShell.set("`bo``b`", "99");
+        Optional result = offlineTestShell.setParameter("`bo``b`", "99");
         assertEquals("99", result.get());
-        assertEquals("99", offlineTestShell.getAll().get("bo`b"));
+        assertEquals("99", offlineTestShell.allParameterValues().get("bo`b"));
     }
 
     @Test
@@ -160,11 +160,11 @@ public class CypherShellTest {
         when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.getAll().isEmpty());
+        assertTrue(offlineTestShell.allParameterValues().isEmpty());
 
-        Optional result = offlineTestShell.set("`bob`", "99");
+        Optional result = offlineTestShell.setParameter("`bob`", "99");
         assertEquals("99", result.get());
-        assertEquals("99", offlineTestShell.getAll().get("bob"));
+        assertEquals("99", offlineTestShell.allParameterValues().get("bob"));
     }
 
     @Test
@@ -279,6 +279,6 @@ public class CypherShellTest {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         // when
-        shell.set("bob", "99");
+        shell.setParameter("bob", "99");
     }
 }

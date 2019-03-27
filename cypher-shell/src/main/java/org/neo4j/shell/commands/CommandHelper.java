@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.TransactionHandler;
-import org.neo4j.shell.VariableHolder;
+import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
@@ -26,15 +26,15 @@ public class CommandHelper {
     }
 
     private void registerAllCommands(Logger logger, Historian historian,
-                                     TransactionHandler transactionHandler, VariableHolder variableHolder) {
+                                     TransactionHandler transactionHandler, ParameterMap parameterMap) {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));
         registerCommand(new History(logger, historian));
         registerCommand(new Begin(transactionHandler));
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));
-        registerCommand(new Param(variableHolder));
-        registerCommand(new Params(logger, variableHolder));
+        registerCommand(new Param(parameterMap));
+        registerCommand(new Params(logger, parameterMap));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {
