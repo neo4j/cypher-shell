@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.v1.Record;
 import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.cypher.internal.evaluator.Evaluator;
 import org.neo4j.cypher.internal.evaluator.ExpressionEvaluator;
@@ -56,7 +55,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param text to trim
      * @return text without trailing semicolons
      */
-    private static String stripTrailingSemicolons(@Nonnull String text) {
+    protected static String stripTrailingSemicolons(@Nonnull String text) {
         int end = text.length();
         while (end > 0 && text.substring(0, end).endsWith(";")) {
             end -= 1;
@@ -98,7 +97,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Nonnull
-    private Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
+    protected Optional<CommandExecutable> getCommandExecutable(@Nonnull final String line) {
         Matcher m = cmdNamePattern.matcher(line);
         if (commandHelper == null || !m.matches()) {
             return Optional.empty();
@@ -116,7 +115,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return Optional.of(() -> cmd.execute(stripTrailingSemicolons(args)));
     }
 
-    private void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
+    protected void executeCmd(@Nonnull final CommandExecutable cmdExe) throws ExitException, CommandException {
         cmdExe.execute();
     }
 
@@ -160,13 +159,12 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     @Override
     @Nonnull
-    public Optional<Object> setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-
+    public Object setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         try {
             String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
             Object value = evaluator.evaluate(valueString, Object.class);
             queryParams.put(parameterName, new ParamValue(valueString, value));
-            return Optional.ofNullable(value);
+            return value;
         } catch (EvaluationException e) {
            throw new CommandException(e.getMessage(), e);
         }
@@ -197,7 +195,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         boltStateHandler.reset();
     }
 
-    private void addRuntimeHookToResetShell() {
+    protected void addRuntimeHookToResetShell() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::reset));
     }
 

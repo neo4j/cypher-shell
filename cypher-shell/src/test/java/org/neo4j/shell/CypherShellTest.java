@@ -108,16 +108,13 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setWhenOfflineShouldThrow() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("not connected");
-
+    public void setWhenOfflineShouldWork() throws CommandException {
         CypherShell shell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
         when(mockedBoltStateHandler.isConnected()).thenReturn(false);
-
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenThrow(new CommandException("not connected"));
 
-        shell.setParameter("bob", "99");
+        Object result = shell.setParameter("bob", "99");
+        assertEquals(99L, result);
     }
 
     @Test
@@ -143,9 +140,9 @@ public class CypherShellTest {
 
         assertTrue(offlineTestShell.allParameterValues().isEmpty());
 
-        Optional result = offlineTestShell.setParameter("`bo``b`", "99");
-        assertEquals("99", result.get());
-        assertEquals("99", offlineTestShell.allParameterValues().get("bo`b"));
+        Object result = offlineTestShell.setParameter("`bo``b`", "99");
+        assertEquals(99L, result);
+        assertEquals(99L, offlineTestShell.allParameterValues().get("bo`b"));
     }
 
     @Test
@@ -161,9 +158,9 @@ public class CypherShellTest {
 
         assertTrue(offlineTestShell.allParameterValues().isEmpty());
 
-        Optional result = offlineTestShell.setParameter("`bob`", "99");
-        assertEquals("99", result.get());
-        assertEquals("99", offlineTestShell.allParameterValues().get("bob"));
+        Object result = offlineTestShell.setParameter("`bob`", "99");
+        assertEquals(99L, result);
+        assertEquals(99L, offlineTestShell.allParameterValues().get("bob"));
     }
 
     @Test
@@ -267,17 +264,13 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setWithSomeBoltError() throws CommandException {
-        // then
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Failed to set value of parameter");
-
+    public void setParameterDoesNotTriggerByBoltError() throws CommandException {
         // given
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.empty());
-
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         // when
-        shell.setParameter("bob", "99");
+        Object result = shell.setParameter("bob", "99");
+        assertEquals(99L, result);
     }
 }

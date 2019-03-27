@@ -5,7 +5,6 @@ import org.neo4j.shell.state.ParamValue;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * An object which keeps named parameters and allows them them to be set/unset.
@@ -14,8 +13,9 @@ public interface ParameterMap {
     /**
      * @param name of variable to set value for
      * @param valueString to interpret the value from
+     * @return the evaluated value
      */
-    Optional setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException;
+    Object setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException;
 
     /**
      * @return map of all currently set variables and their values
