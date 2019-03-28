@@ -1,2 +1,2 @@
 cypher-shell/build/install/cypher-shell/cypher-shell            usr/bin
-cypher-shell/build/install/cypher-shell/cypher-shell-all.jar    usr/share/cypher-shell/lib
+cypher-shell/build/install/cypher-shell/cypher-shell.jar    usr/share/cypher-shell/lib

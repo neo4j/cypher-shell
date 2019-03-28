@@ -26,7 +26,7 @@ rpmversion := $(versionnumber)-$(release)
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
-jarfile := cypher-shell-all.jar
+jarfile := cypher-shell.jar
 rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 
