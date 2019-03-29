@@ -306,7 +306,7 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void cutContent()
+    public void truncateContent()
     {
         // GIVEN
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
@@ -321,9 +321,9 @@ public class TableOutputFormatterTest {
                 "+------+\n" +
                 "| \"a\"  |\n" +
                 "| \"bb\" |\n" +
-                "| \"ccc |\n" +
-                "| \"ddd |\n" +
-                "| \"eee |\n" +
+                "| \"cc… |\n" +
+                "| \"dd… |\n" +
+                "| \"ee… |\n" +
                 "+------+\n"));
     }
 

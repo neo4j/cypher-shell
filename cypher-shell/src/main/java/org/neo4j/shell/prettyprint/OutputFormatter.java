@@ -163,7 +163,7 @@ public interface OutputFormatter {
     }
 
     @Nonnull static String rightPad(@Nonnull String str, int width) {
-        return rightPad(str,width,' ');
+        return rightPad(str, width, ' ');
     }
     @Nonnull static String rightPad(@Nonnull String str, int width, char c) {
         int actualSize = str.length();

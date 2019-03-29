@@ -110,10 +110,18 @@ public class TableOutputFormatter implements OutputFormatter {
             String txt = row[i];
             if (txt != null) {
                 if (txt.length() > length) {
-                    row[i] = txt.substring(length);
-                    remainder = true;
-                } else row[i] = null;
-                sb.append(OutputFormatter.rightPad(txt, length));
+                    if (wrap) {
+                        sb.append(txt, 0, length);
+                        row[i] = txt.substring(length);
+                        remainder = true;
+                    } else {
+                        sb.append(txt, 0, length - 1);
+                        sb.append("…");
+                    }
+                } else {
+                    row[i] = null;
+                    sb.append(OutputFormatter.rightPad(txt, length));
+                }
             } else {
                 sb.append(OutputFormatter.repeat(' ', length));
             }
