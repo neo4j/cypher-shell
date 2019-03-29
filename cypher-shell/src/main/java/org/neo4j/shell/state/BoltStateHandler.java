@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -175,9 +174,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
             return Optional.empty();
         }
 
-        // calling list() is what actually executes cypher on the server
-        List<Record> list = statementResult.list();
-        return Optional.of(new BoltResult(list, statementResult));
+        return Optional.of(new StatementBoltResult(statementResult));
     }
 
     /**
@@ -232,8 +229,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            List<Record> list = sr.list();
-            return new BoltResult(list, sr);
+            return new ListBoltResult(sr.list(), sr.consume(), sr.keys());
         });
 
         clearTransactionStatements();

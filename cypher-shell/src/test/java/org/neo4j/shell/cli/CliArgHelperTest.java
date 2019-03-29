@@ -39,6 +39,22 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void testNumSampleRows() {
+        assertEquals("sample-rows 200", 200, CliArgHelper.parse("--sample-rows 200".split(" ")).getNumSampleRows());
+        assertNull("invalid sample-rows", CliArgHelper.parse("--sample-rows 0".split(" ")));
+        assertNull("invalid sample-rows", CliArgHelper.parse("--sample-rows -1".split(" ")));
+        assertNull("invalid sample-rows", CliArgHelper.parse("--sample-rows foo".split(" ")));
+    }
+
+    @Test
+    public void testWrap() {
+        assertTrue("wrap true", CliArgHelper.parse("--wrap true".split(" ")).getWrap());
+        assertFalse("wrap false", CliArgHelper.parse("--wrap false".split(" ")).getWrap());
+        assertTrue("default wrap", CliArgHelper.parse().getWrap());
+        assertNull("invalid wrap",CliArgHelper.parse("--wrap foo".split(" ")));
+    }
+
+    @Test
     public void testDebugIsNotDefault() {
         assertFalse("Debug should not be the default mode",
                 CliArgHelper.parse(asArray()).getDebugMode());

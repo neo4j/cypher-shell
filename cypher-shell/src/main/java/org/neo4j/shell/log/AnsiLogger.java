@@ -23,6 +23,8 @@ public class AnsiLogger implements Logger {
     private final PrintStream err;
     private final boolean debug;
     private Format format;
+    private int numSampleRows;
+    private boolean wrap = true;
 
     public AnsiLogger(final boolean debug) {
         this(debug, Format.VERBOSE, System.out, System.err);
@@ -64,6 +66,26 @@ public class AnsiLogger implements Logger {
      */
     private static boolean isOutputInteractive() {
         return 1 == isatty(STDOUT_FILENO) && 1 == isatty(STDERR_FILENO);
+    }
+
+    @Override
+    public int getNumSampleRows() {
+        return numSampleRows;
+    }
+
+    @Override
+    public void setNumSampleRows(int numSampleRows) {
+        this.numSampleRows = numSampleRows;
+    }
+
+    @Override
+    public boolean getWrap() {
+        return wrap;
+    }
+
+    @Override
+    public void setWrap(boolean wrap) {
+        this.wrap = wrap;
     }
 
     @Nonnull

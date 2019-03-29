@@ -34,7 +34,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     protected CommandHelper commandHelper;
 
     public CypherShell(@Nonnull Logger logger) {
-        this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat()));
+        this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat(), logger.getWrap(), logger.getNumSampleRows()));
     }
 
     protected CypherShell(@Nonnull Logger logger,
@@ -83,7 +83,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, allParameterValues());
-        result.ifPresent(boltResult -> logger.printOut(prettyPrinter.format(boltResult)));
+        result.ifPresent(boltResult -> prettyPrinter.format(boltResult, logger::printOut));
     }
 
     @Override
@@ -138,7 +138,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public Optional<List<BoltResult>> commitTransaction() throws CommandException {
         Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
-        results.ifPresent(boltResult -> boltResult.forEach(result -> logger.printOut(prettyPrinter.format(result))));
+        results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, logger::printOut)));
         return results;
     }
 

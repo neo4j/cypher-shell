@@ -27,24 +27,26 @@ import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
+import org.neo4j.shell.state.ListBoltResult;
 
 import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class TableOutputFormatterTest {
 
-    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE);
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE, true, 100);
 
     @Test
-    public void prettyPrintPlanInformation() throws Exception {
+    public void prettyPrintPlanInformation() {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
         ProfiledPlan plan = mock(ProfiledPlan.class);
@@ -61,9 +63,7 @@ public class TableOutputFormatterTest {
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
-        BoltResult result = mock(BoltResult.class);
-        when(result.getRecords()).thenReturn(Collections.emptyList());
-        when(result.getSummary()).thenReturn(resultSummary);
+        BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
 
         // when
         String actual = verbosePrinter.format(result);
@@ -76,20 +76,16 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void prettyPrintPoint() throws Exception {
+    public void prettyPrintPoint() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
         List<String> keys = asList("p1", "p2");
-
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
 
         Value point2d = new PointValue(new InternalPoint2D(4326, 42.78, 56.7));
         Value point3d = new PointValue(new InternalPoint3D(4326, 1.7, 26.79, 34.23));
         Record record = new InternalRecord(keys, new Value[]{point2d, point3d});
 
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| point({srid:4326, x:42.78, y:56.7}) |"));
@@ -97,71 +93,57 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void prettyPrintDuration() throws Exception {
+    public void prettyPrintDuration() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
         List<String> keys = asList("d");
-
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
 
         Value duration = new DurationValue(new InternalIsoDuration(1, 2, 3, 4));
         Record record = new InternalRecord(keys, new Value[]{duration});
 
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| P1M2DT3.000000004S |"));
     }
 
     @Test
-    public void prettyPrintDurationWithNoTrailingZeroes() throws Exception {
+    public void prettyPrintDurationWithNoTrailingZeroes() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
         List<String> keys = asList("d");
-
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
 
         Value duration = new DurationValue(new InternalIsoDuration(1, 2, 3, 0));
         Record record = new InternalRecord(keys, new Value[]{duration});
 
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| P1M2DT3S |"));
     }
 
     @Test
-    public void prettyPrintNode() throws Exception {
+    public void prettyPrintNode() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
-
         List<String> labels = asList("label1", "label2");
         Map<String, Value> propertiesAsMap = new HashMap<>();
         propertiesAsMap.put("prop1", Values.value("prop1_value"));
         propertiesAsMap.put("prop2", Values.value("prop2_value"));
         List<String> keys = asList("col1", "col2");
 
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
-
         Value value = new NodeValue(new InternalNode(1, labels, propertiesAsMap));
         Record record = new InternalRecord(keys, new Value[]{value});
 
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| (:label1:label2 {prop2: \"prop2_value\", prop1: \"prop1_value\"}) |"));
     }
 
     @Test
-    public void prettyPrintRelationships() throws Exception {
+    public void prettyPrintRelationships() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
         List<String> keys = asList("rel");
 
         Map<String, Value> propertiesAsMap = new HashMap<>();
@@ -173,20 +155,16 @@ public class TableOutputFormatterTest {
 
         Record record = new InternalRecord(keys, new Value[]{relationship});
 
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
-
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| [:RELATIONSHIP_TYPE {prop2: \"prop2_value\", prop1: \"prop1_value\"}] |"));
     }
 
     @Test
-    public void prettyPrintPath() throws Exception {
+    public void prettyPrintPath() {
         // given
-        StatementResult statementResult = mock(StatementResult.class);
         List<String> keys = asList("path");
 
         Node n1 = mock(Node.class);
@@ -232,24 +210,22 @@ public class TableOutputFormatterTest {
         Value value = new PathValue(internalPath);
 
         Record record = new InternalRecord(keys, new Value[]{value});
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
 
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
 
         // then
         assertThat(actual, containsString("| (:L1)<-[:R1]-(:L2)-[:R2]->(:L3) |"));
     }
 
     @Test
-    public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() throws Exception {
+    public void printRelationshipsAndNodesWithEscapingForSpecialCharacters() {
+        // given
         Record record = mock(Record.class);
         Map<String, Value> propertiesAsMap = new HashMap<>();
         propertiesAsMap.put("prop1", Values.value("prop1, value"));
         propertiesAsMap.put("prop2", Values.value(1));
         Value relVal = new RelationshipValue(new InternalRelationship(1, 1, 2, "RELATIONSHIP,TYPE", propertiesAsMap));
-
 
         List<String> labels = asList("label `1", "label2");
         Map<String, Value> nodeProperties = new HashMap<>();
@@ -265,19 +241,17 @@ public class TableOutputFormatterTest {
         recordMap.put("node", nodeVal);
         List<String> keys = asList("rel", "node");
         when(record.keys()).thenReturn(keys);
-        when(record.get(eq("rel"))).thenReturn(relVal);
-        when(record.get(eq("node"))).thenReturn(nodeVal);
+        when(record.size()).thenReturn(2);
+        when(record.get(0)).thenReturn(relVal);
+        when(record.get(1)).thenReturn(nodeVal);
 
         when(record.<Value>asMap(anyObject())).thenReturn(recordMap);
 
         when(record.values()).thenReturn(asList(relVal, nodeVal));
 
-        StatementResult statementResult = mock(StatementResult.class);
-        when(statementResult.summary()).thenReturn(mock(ResultSummary.class));
-        when(statementResult.keys()).thenReturn(keys);
-
         // when
-        String actual = verbosePrinter.format(new BoltResult(asList(record), statementResult));
+        String actual = verbosePrinter.format(new ListBoltResult(asList(record), mock(ResultSummary.class)));
+
         // then
         assertThat(actual, containsString("| [:`RELATIONSHIP,TYPE` {prop2: 1, prop1: \"prop1, value\"}] |"));
         assertThat(actual, containsString("| (:`label ``1`:label2 {`1prop1`: \"\\\"\\\"\", " +
@@ -285,7 +259,7 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void basicTable() throws Exception {
+    public void basicTable() {
         // GIVEN
         StatementResult result = mockResult(asList("c1", "c2"), "a", 42);
         // WHEN
@@ -296,7 +270,7 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void twoRows() throws Exception {
+    public void twoRows() {
         // GIVEN
         StatementResult result = mockResult(asList("c1", "c2"), "a", 42, "b", 43);
         // WHEN
@@ -307,7 +281,54 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void formatCollections() throws Exception {
+    public void wrapContent()
+    {
+        // GIVEN
+        StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
+        // WHEN
+        StringBuilder sb = new StringBuilder();
+        new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
+        String table = sb.toString();
+        // THEN
+        assertThat(table, is(
+                "+------+\n" +
+                "| c1   |\n" +
+                "+------+\n" +
+                "| \"a\"  |\n" +
+                "| \"bb\" |\n" +
+                "| \"ccc |\n" +
+                "| \"    |\n" +
+                "| \"ddd |\n" +
+                "| d\"   |\n" +
+                "| \"eee |\n" +
+                "| ee\"  |\n" +
+                "+------+\n"));
+    }
+
+    @Test
+    public void cutContent()
+    {
+        // GIVEN
+        StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
+        // WHEN
+        StringBuilder sb = new StringBuilder();
+        new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
+        String table = sb.toString();
+        // THEN
+        assertThat(table, is(
+                "+------+\n" +
+                "| c1   |\n" +
+                "+------+\n" +
+                "| \"a\"  |\n" +
+                "| \"bb\" |\n" +
+                "| \"ccc |\n" +
+                "| \"ddd |\n" +
+                "| \"eee |\n" +
+                "+------+\n"));
+    }
+
+    @Test
+    public void formatCollections() {
         // GIVEN
         StatementResult result = mockResult(asList("a", "b", "c"), singletonMap("a", 42), asList(12, 13),
                 singletonMap("a", asList(14, 15)));
@@ -318,7 +339,7 @@ public class TableOutputFormatterTest {
     }
 
     @Test
-    public void formatEntities() throws Exception {
+    public void formatEntities() {
         // GIVEN
         Map<String, Value> properties = singletonMap("name", Values.value("Mark"));
         Map<String, Value> relProperties = singletonMap("since", Values.value(2016));
@@ -335,9 +356,9 @@ public class TableOutputFormatterTest {
     }
 
     private String formatResult(StatementResult result) {
-        // calling list() is what actually executes cypher on the server
-        List<Record> list = result.list();
-        return new TableOutputFormatter().format(new BoltResult(list, result));
+        ToStringLinePrinter printer = new ToStringLinePrinter();
+        new TableOutputFormatter(true, 1000).format(new ListBoltResult(result.list(), result.summary()), printer);
+        return printer.result();
     }
 
     private StatementResult mockResult(List<String> cols, Object... data) {

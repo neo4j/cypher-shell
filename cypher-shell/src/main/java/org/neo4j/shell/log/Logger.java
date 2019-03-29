@@ -92,4 +92,12 @@ public interface Logger {
             printOut(text);
         }
     }
+
+    boolean getWrap();
+
+    void setWrap(boolean wrap);
+
+    int getNumSampleRows();
+
+    void setNumSampleRows(int numSampleRows);
 }

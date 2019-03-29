@@ -93,6 +93,8 @@ public class Main {
         if (cliArgs.isStringShell() && Format.AUTO.equals(cliArgs.getFormat())) {
             logger.setFormat(Format.PLAIN);
         }
+        logger.setWrap(cliArgs.getWrap());
+        logger.setNumSampleRows(cliArgs.getNumSampleRows());
         return logger;
     }
 
