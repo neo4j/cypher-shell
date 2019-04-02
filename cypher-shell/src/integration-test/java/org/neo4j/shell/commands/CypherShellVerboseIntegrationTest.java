@@ -195,7 +195,7 @@ public class CypherShellVerboseIntegrationTest {
     public void cypherWithOrder() throws CommandException {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeTrue(minorVersion(serverVersion) >= 5 || majorVersion(serverVersion) == 4);
+        assumeTrue(minorVersion(serverVersion) == 6 || majorVersion(serverVersion) == 4);
 
         shell.execute( "CREATE INDEX ON :Person(age)" );
 

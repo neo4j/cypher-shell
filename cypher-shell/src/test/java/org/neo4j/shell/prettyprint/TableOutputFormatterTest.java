@@ -39,6 +39,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class TableOutputFormatterTest {
@@ -290,19 +291,20 @@ public class TableOutputFormatterTest {
         new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
-        assertThat(table, is(
-                "+------+\n" +
-                "| c1   |\n" +
-                "+------+\n" +
-                "| \"a\"  |\n" +
-                "| \"bb\" |\n" +
-                "| \"ccc |\n" +
-                "| \"    |\n" +
-                "| \"ddd |\n" +
-                "| d\"   |\n" +
-                "| \"eee |\n" +
-                "| ee\"  |\n" +
-                "+------+\n"));
+        assertThat(table, is(String.join(NEWLINE,
+                "+------+",
+                "| c1   |",
+                "+------+",
+                "| \"a\"  |",
+                "| \"bb\" |",
+                "| \"ccc |",
+                "| \"    |",
+                "| \"ddd |",
+                "| d\"   |",
+                "| \"eee |",
+                "| ee\"  |",
+                "+------+",
+                "")));
     }
 
     @Test
@@ -315,16 +317,17 @@ public class TableOutputFormatterTest {
         new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
-        assertThat(table, is(
-                "+------+\n" +
-                "| c1   |\n" +
-                "+------+\n" +
-                "| \"a\"  |\n" +
-                "| \"bb\" |\n" +
-                "| \"cc… |\n" +
-                "| \"dd… |\n" +
-                "| \"ee… |\n" +
-                "+------+\n"));
+        assertThat(table, is(String.join(NEWLINE,
+                "+------+",
+                "| c1   |",
+                "+------+",
+                "| \"a\"  |",
+                "| \"bb\" |",
+                "| \"cc… |",
+                "| \"dd… |",
+                "| \"ee… |",
+                "+------+",
+                "")));
     }
 
     @Test
