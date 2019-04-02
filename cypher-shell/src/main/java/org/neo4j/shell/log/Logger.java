@@ -1,11 +1,12 @@
 package org.neo4j.shell.log;
 
 import org.neo4j.shell.cli.Format;
+import org.neo4j.shell.prettyprint.LinePrinter;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
 
-public interface Logger {
+public interface Logger extends LinePrinter {
     /**
      * @return the output stream
      */
@@ -32,13 +33,6 @@ public interface Logger {
      * @param text to print to the error stream
      */
     void printError(@Nonnull String text);
-
-    /**
-     * Print the designated text to configured output stream.
-     *
-     * @param text to print to the output stream
-     */
-    void printOut(@Nonnull String text);
 
     /**
      * @return the current format of the logger

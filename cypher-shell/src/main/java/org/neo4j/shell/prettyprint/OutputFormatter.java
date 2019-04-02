@@ -13,11 +13,7 @@ import org.neo4j.driver.v1.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -26,15 +22,18 @@ import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
 public interface OutputFormatter {
 
+    enum Capablities {info, plan, result, footer, statistics}
+
     String COMMA_SEPARATOR = ", ";
     String COLON_SEPARATOR = ": ";
     String COLON = ":";
     String SPACE = " ";
     String NEWLINE =  System.getProperty("line.separator");
 
-    @Nonnull String format(@Nonnull BoltResult result);
+    void format(@Nonnull BoltResult result, @Nonnull LinePrinter linePrinter);
 
-    @Nonnull default String formatValue(@Nonnull final Value value) {
+    @Nonnull default String formatValue(final Value value) {
+        if (value == null) return "";
         TypeRepresentation type = (TypeRepresentation) value.type();
         switch (type.constructor()) {
             case LIST:
@@ -101,7 +100,7 @@ public interface OutputFormatter {
             }
         }
 
-        return list.stream().collect(Collectors.joining());
+        return String.join("", list);
     }
 
     @Nonnull default String relationshipAsString(@Nonnull Relationship relationship) {
@@ -164,7 +163,7 @@ public interface OutputFormatter {
     }
 
     @Nonnull static String rightPad(@Nonnull String str, int width) {
-        return rightPad(str,width,' ');
+        return rightPad(str, width, ' ');
     }
     @Nonnull static String rightPad(@Nonnull String str, int width, char c) {
         int actualSize = str.length();
@@ -187,6 +186,7 @@ public interface OutputFormatter {
         return "";
     }
 
+    Set<Capablities> capabilities();
 
     List<String> INFO = asList("Version", "Planner", "Runtime");
 

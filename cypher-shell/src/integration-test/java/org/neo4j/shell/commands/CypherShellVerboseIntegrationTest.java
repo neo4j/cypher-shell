@@ -5,29 +5,28 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentCaptor;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
-import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.prettyprint.PrettyConfig;
 
-import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.mockito.Mockito.*;
 import static org.neo4j.shell.Versions.majorVersion;
+import static org.neo4j.shell.Versions.minorVersion;
 
 public class CypherShellVerboseIntegrationTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private Logger logger = mock(Logger.class);
+    private StringLinePrinter linePrinter = new StringLinePrinter();
     private Command rollbackCommand;
     private Command commitCommand;
     private Command beginCommand;
@@ -35,9 +34,8 @@ public class CypherShellVerboseIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        doReturn(Format.VERBOSE).when(logger).getFormat();
-
-        shell = new CypherShell(logger);
+        linePrinter.clear();
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000));
         rollbackCommand = new Rollback(shell);
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
@@ -56,11 +54,7 @@ public class CypherShellVerboseIntegrationTest {
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
 
         //then
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(1)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(0), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat(linePrinter.output(), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test
@@ -69,13 +63,10 @@ public class CypherShellVerboseIntegrationTest {
         shell.execute("CREATE (jane :TestPerson {name: \"Jane Smith\"}) RETURN jane");
 
         //then
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(1)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(0), containsString("| jane "));
-        assertThat(result.get(0), containsString("| (:TestPerson {name: \"Jane Smith\"}) |" ));
-        assertThat(result.get(0), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
+        String output = linePrinter.output();
+        assertThat(output, containsString("| jane "));
+        assertThat(output, containsString("| (:TestPerson {name: \"Jane Smith\"}) |" ));
+        assertThat(output, containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
     }
 
     @Test
@@ -95,18 +86,16 @@ public class CypherShellVerboseIntegrationTest {
 
         //when
         beginCommand.execute("");
-        shell.execute("CREATE (:Random)");
+        shell.execute("CREATE (:NotCreated)");
         rollbackCommand.execute("");
 
         //then
-        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
+        shell.execute("MATCH (n) RETURN n");
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(2)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(1), containsString("| n "));
-        assertThat(result.get(1), containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
+        String output = linePrinter.output();
+        assertThat(output, containsString("| n "));
+        assertThat(output, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
+        assertThat(output, not(containsString(":NotCreated")));
     }
 
     @Test
@@ -119,47 +108,48 @@ public class CypherShellVerboseIntegrationTest {
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
         shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(3)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(2), containsString("| (:TestPerson {name: \"Jane Smith\"}) |" +
-                "\n| (:TestPerson {name: \"Jane Smith\"}) |"));
+        String result = linePrinter.output();
+        assertThat(result, containsString(
+                "| (:TestPerson {name: \"Jane Smith\"}) |\n" +
+                "| (:TestPerson {name: \"Jane Smith\"}) |"));
     }
 
     @Test
     public void resetInTxScenario() throws CommandException {
         //when
         beginCommand.execute("");
-        shell.execute("CREATE (:Random)");
+        shell.execute("CREATE (:NotCreated)");
         shell.reset();
 
         //then
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
+        shell.execute("MATCH (n) RETURN n");
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(2)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(1), containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
+        String result = linePrinter.output();
+        assertThat(result, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
+        assertThat(result, not(containsString(":NotCreated")));
     }
 
     @Test
     public void commitScenario() throws CommandException {
         beginCommand.execute("");
         shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
+        assertThat(linePrinter.output(), equalTo(""));
+        // Here ^^ we assert that nothing is printed before commit on explicit transactions. This was
+        // existing behaviour on typing this comment, but it could we worth thinking that through if
+        // we change explicit transaction queries to stream results.
+
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        assertThat(linePrinter.output(), equalTo(""));
+
         shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
+        assertThat(linePrinter.output(), equalTo(""));
+
         commitCommand.execute("");
 
         //then
-
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(3)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        assertThat(result.get(2),
+        String result = linePrinter.output();
+        assertThat(result,
                 containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
     }
 
@@ -170,18 +160,16 @@ public class CypherShellVerboseIntegrationTest {
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
         shell.setParameter("string", stringInput);
-        Optional result = shell.setParameter("bob", String.valueOf(randomLong));
-        assertTrue(result.isPresent());
-        assertEquals(randomLong, result.get());
+
+        Optional<Object> bob = shell.setParameter("bob", String.valueOf(randomLong));
+        assertTrue(bob.isPresent());
+        assertEquals(randomLong, bob.get());
 
         shell.execute("RETURN { bob }, $string");
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger).printOut(captor.capture());
-
-        List<String> queryResult = captor.getAllValues();
-        assertThat(queryResult.get(0), containsString("| { bob }"));
-        assertThat(queryResult.get(0), containsString("| " + randomLong + " | " + stringInput + " |"));
+        String result = linePrinter.output();
+        assertThat(result, containsString("| { bob }"));
+        assertThat(result, containsString("| " + randomLong + " | " + stringInput + " |"));
         assertEquals(randomLong, shell.allParameterValues().get("bob"));
         assertEquals("randomString", shell.allParameterValues().get("string"));
     }
@@ -191,40 +179,33 @@ public class CypherShellVerboseIntegrationTest {
         assertTrue(shell.allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
-        Optional result = shell.setParameter("`bob`", String.valueOf(randomLong));
-        assertTrue(result.isPresent());
-        assertEquals(randomLong, result.get());
+        Optional<Object> bob = shell.setParameter("`bob`", String.valueOf(randomLong));
+        assertTrue(bob.isPresent());
+        assertEquals(randomLong, bob.get());
 
         shell.execute("RETURN { `bob` }");
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger).printOut(captor.capture());
-
-        List<String> queryResult = captor.getAllValues();
-        assertThat(queryResult.get(0), containsString("| { `bob` }"));
-        assertThat(queryResult.get(0), containsString("\n| " + randomLong+ " |\n"));
+        String result = linePrinter.output();
+        assertThat(result, containsString("| { `bob` }"));
+        assertThat(result, containsString("\n| " + randomLong+ " |\n"));
         assertEquals(randomLong, shell.allParameterValues().get("bob"));
     }
 
     @Test
     public void cypherWithOrder() throws CommandException {
         // given
+        String serverVersion = shell.getServerVersion();
+        assumeTrue(minorVersion(serverVersion) == 6 || majorVersion(serverVersion) == 4);
+
         shell.execute( "CREATE INDEX ON :Person(age)" );
 
         //when
         shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age");
 
         //then
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(2)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        String actual = result.get(0);
-        if ( actual.contains( "CYPHER 3.5" )) // Sadly best way to have test that relies on 3.5 functionality...
-        {
-            assertThat( actual, containsString( "Ordered by" ) );
-            assertThat( actual, containsString( "n.age ASC" ) );
-        }
+        String actual = linePrinter.output();
+        assertThat( actual, containsString( "Ordered by" ) );
+        assertThat( actual, containsString( "n.age ASC" ) );
     }
 
     @Test
@@ -236,11 +217,7 @@ public class CypherShellVerboseIntegrationTest {
         shell.execute("CYPHER planner=rule EXPLAIN MATCH (e:E) WHERE e.bucket='Live' and e.id = 23253473 RETURN count(e)");
 
         //then
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(logger, times(1)).printOut(captor.capture());
-
-        List<String> result = captor.getAllValues();
-        String actual = result.get(0);
+        String actual = linePrinter.output();
         assertThat(actual, containsString("\"EXPLAIN\""));
         assertThat(actual, containsString("\"READ_ONLY\""));
         assertThat(actual, containsString("\"RULE\""));

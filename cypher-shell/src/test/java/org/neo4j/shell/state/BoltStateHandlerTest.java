@@ -179,9 +179,6 @@ public class BoltStateHandlerTest {
         Session sessionMock = mock(Session.class);
         Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
 
-        BoltResult boltResultMock1 = mock(BoltResult.class);
-        BoltResult boltResultMock2 = mock(BoltResult.class);
-
         Record record1 = mock(Record.class);
         Record record2 = mock(Record.class);
         Record record3 = mock(Record.class);
@@ -190,8 +187,8 @@ public class BoltStateHandlerTest {
         Value str1Val = mock(Value.class);
         Value str2Val = mock(Value.class);
 
-        when(boltResultMock1.getRecords()).thenReturn(asList(record1, record2));
-        when(boltResultMock2.getRecords()).thenReturn(asList(record3));
+        BoltResult boltResult1 = new ListBoltResult(asList(record1, record2), mock(ResultSummary.class));
+        BoltResult boltResult2 = new ListBoltResult(asList(record3), mock(ResultSummary.class));
 
         when(str1Val.toString()).thenReturn("str1");
         when(str2Val.toString()).thenReturn("str2");
@@ -203,7 +200,7 @@ public class BoltStateHandlerTest {
 
         when(record3.get(0)).thenReturn(str1Val);
         when(record3.get(1)).thenReturn(str2Val);
-        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(boltResultMock1, boltResultMock2));
+        when(sessionMock.writeTransaction(anyObject())).thenReturn(asList(boltResult1, boltResult2));
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
         boltStateHandler.connect();

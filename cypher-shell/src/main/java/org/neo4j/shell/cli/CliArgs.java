@@ -5,9 +5,14 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 public class CliArgs {
-    private String scheme = "bolt://";
-    private String host = "localhost";
-    private int port = 7687;
+    private static final String DEFAULT_SCHEME = "bolt://";
+    private static final String DEFAULT_HOST = "localhost";
+    private static final int DEFAULT_PORT = 7687;
+    static final int DEFAULT_NUM_SAMPLE_ROWS = 1000;
+
+    private String scheme = DEFAULT_SCHEME;
+    private String host = DEFAULT_HOST;
+    private int port = DEFAULT_PORT;
     private String username = "";
     private String password = "";
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
@@ -18,6 +23,8 @@ public class CliArgs {
     private boolean nonInteractive = false;
     private boolean version = false;
     private boolean driverVersion = false;
+    private int numSampleRows = DEFAULT_NUM_SAMPLE_ROWS;
+    private boolean wrap = true;
 
     /**
      * Set the scheme to the primary value, or if null, the fallback value.
@@ -106,7 +113,6 @@ public class CliArgs {
         return host;
     }
 
-    @Nonnull
     public int getPort() {
         return port;
     }
@@ -166,5 +172,23 @@ public class CliArgs {
 
     public boolean isStringShell() {
         return cypher.isPresent();
+    }
+
+    public boolean getWrap() {
+        return wrap;
+    }
+
+    public void setWrap(boolean wrap) {
+        this.wrap = wrap;
+    }
+
+    public int getNumSampleRows() {
+        return numSampleRows;
+    }
+
+    public void setNumSampleRows(Integer numSampleRows) {
+        if (numSampleRows != null && numSampleRows > 0) {
+            this.numSampleRows = numSampleRows;
+        }
     }
 }

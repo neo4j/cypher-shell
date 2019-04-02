@@ -57,7 +57,7 @@ public class AnsiLoggerTest {
 
     @Test
     public void printExceptionWithDebug() throws Exception {
-        logger = new AnsiLogger(true, Format.VERBOSE, out, err);
+        Logger logger = new AnsiLogger(true, Format.VERBOSE, out, err);
         logger.printError(new Throwable("bam"));
         verify(err).println(contains("java.lang.Throwable: bam"));
         verify(err).println(contains("at org.neo4j.shell.log.AnsiLoggerTest.printExceptionWithDebug"));

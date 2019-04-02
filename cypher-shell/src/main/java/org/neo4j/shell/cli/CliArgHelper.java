@@ -5,11 +5,7 @@ import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
 import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.impl.type.BooleanArgumentType;
-import net.sourceforge.argparse4j.inf.ArgumentGroup;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
-import net.sourceforge.argparse4j.inf.Namespace;
+import net.sourceforge.argparse4j.inf.*;
 
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
@@ -87,6 +83,10 @@ public class CliArgHelper {
         cliArgs.setDebugMode(ns.getBoolean("debug"));
 
         cliArgs.setNonInteractive(ns.getBoolean("force-non-interactive"));
+
+        cliArgs.setWrap(ns.getBoolean("wrap"));
+
+        cliArgs.setNumSampleRows(ns.getInt("sample-rows"));
 
         cliArgs.setVersion(ns.getBoolean("version"));
 
@@ -167,6 +167,17 @@ public class CliArgHelper {
                 .dest("force-non-interactive")
               .action(new StoreTrueArgumentAction());
 
+        parser.addArgument("--sample-rows")
+                .help("number of rows sampled to compute table widths (only for format=VERBOSE)")
+                .type(new PositiveIntegerType())
+                .dest("sample-rows")
+                .setDefault(CliArgs.DEFAULT_NUM_SAMPLE_ROWS);
+
+        parser.addArgument("--wrap")
+                .help("wrap table colum values if column is too narrow (only for format=VERBOSE)")
+                .type(new BooleanArgumentType())
+                .setDefault(true);
+
         parser.addArgument("-v", "--version")
                 .help("print version of cypher-shell and exit")
                 .action(new StoreTrueArgumentAction());
@@ -183,5 +194,16 @@ public class CliArgHelper {
         return parser;
     }
 
-
+    private static class PositiveIntegerType implements ArgumentType<Integer> {
+        @Override
+        public Integer convert(ArgumentParser parser, Argument arg, String value) throws ArgumentParserException {
+            try {
+                int result = Integer.parseInt(value);
+                if (result < 1) throw new NumberFormatException(value);
+                return result;
+            } catch (NumberFormatException nfe) {
+                throw new ArgumentParserException("Invalid value: "+value, parser);
+            }
+        }
+    }
 }

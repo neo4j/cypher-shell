@@ -10,6 +10,7 @@ import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,7 +59,8 @@ public class Main {
         if (cliArgs.getVersion() || cliArgs.getDriverVersion()) {
             return;
         }
-        Logger logger = instantiateLogger(cliArgs);
+        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
+        PrettyConfig prettyConfig = new PrettyConfig(cliArgs);
         ConnectionConfig connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
@@ -68,7 +70,7 @@ public class Main {
                 cliArgs.getEncryption());
 
         try {
-            CypherShell shell = new CypherShell(logger);
+            CypherShell shell = new CypherShell(logger, prettyConfig);
             // Can only prompt for password if input has not been redirected
             connectMaybeInteractively(shell, connectionConfig, isInputInteractive());
 
@@ -85,15 +87,6 @@ public class Main {
             logger.printError(e);
             System.exit(1);
         }
-    }
-
-    private Logger instantiateLogger(@Nonnull CliArgs cliArgs) {
-        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
-        logger.setFormat(cliArgs.getFormat());
-        if (cliArgs.isStringShell() && Format.AUTO.equals(cliArgs.getFormat())) {
-            logger.setFormat(Format.PLAIN);
-        }
-        return logger;
     }
 
     /**

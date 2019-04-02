@@ -59,6 +59,21 @@ public class CliArgsTest {
     }
 
     @Test
+    public void getNumSampleRows() throws Exception {
+        assertEquals(1000, CliArgs.DEFAULT_NUM_SAMPLE_ROWS);
+        assertEquals(CliArgs.DEFAULT_NUM_SAMPLE_ROWS, cliArgs.getNumSampleRows());
+
+        cliArgs.setNumSampleRows(null);
+        assertEquals(CliArgs.DEFAULT_NUM_SAMPLE_ROWS, cliArgs.getNumSampleRows());
+
+        cliArgs.setNumSampleRows(0);
+        assertEquals(CliArgs.DEFAULT_NUM_SAMPLE_ROWS, cliArgs.getNumSampleRows());
+
+        cliArgs.setNumSampleRows(120);
+        assertEquals(120, cliArgs.getNumSampleRows());
+    }
+
+    @Test
     public void setFormat() throws Exception {
         // default
         assertEquals(Format.AUTO, cliArgs.getFormat());

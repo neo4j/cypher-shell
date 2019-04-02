@@ -1,12 +1,14 @@
 package org.neo4j.shell;
 
+import org.neo4j.driver.v1.Record;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
-import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.CypherVariablesFormatter;
+import org.neo4j.shell.prettyprint.LinePrinter;
+import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
@@ -28,19 +30,19 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     protected final Map<String, ParamValue> queryParams = new HashMap<>();
-    private final Logger logger;
+    private final LinePrinter linePrinter;
     private final BoltStateHandler boltStateHandler;
     private final PrettyPrinter prettyPrinter;
     protected CommandHelper commandHelper;
 
-    public CypherShell(@Nonnull Logger logger) {
-        this(logger, new BoltStateHandler(), new PrettyPrinter(logger.getFormat()));
+    public CypherShell(@Nonnull LinePrinter linePrinter, @Nonnull PrettyConfig prettyConfig) {
+        this(linePrinter, new BoltStateHandler(), new PrettyPrinter(prettyConfig));
     }
 
-    protected CypherShell(@Nonnull Logger logger,
+    protected CypherShell(@Nonnull LinePrinter linePrinter,
                           @Nonnull BoltStateHandler boltStateHandler,
                           @Nonnull PrettyPrinter prettyPrinter) {
-        this.logger = logger;
+        this.linePrinter = linePrinter;
         this.boltStateHandler = boltStateHandler;
         this.prettyPrinter = prettyPrinter;
         addRuntimeHookToResetShell();
@@ -83,7 +85,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     protected void executeCypher(@Nonnull final String cypher) throws CommandException {
         final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, allParameterValues());
-        result.ifPresent(boltResult -> logger.printOut(prettyPrinter.format(boltResult)));
+        result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
     }
 
     @Override
@@ -138,7 +140,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public Optional<List<BoltResult>> commitTransaction() throws CommandException {
         Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
-        results.ifPresent(boltResult -> boltResult.forEach(result -> logger.printOut(prettyPrinter.format(result))));
+        results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, linePrinter)));
         return results;
     }
 
@@ -154,21 +156,25 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     @Override
     @Nonnull
-    public Optional setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        final BoltResult result = setParamsAndValidate(name, valueString);
+    public Optional<Object> setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
+        final Record records = evaluateParamOnServer(name, valueString);
         String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
-        final Object value = result.getRecords().get(0).get(parameterName).asObject();
+        final Object value = records.get(parameterName).asObject();
         queryParams.put(parameterName, new ParamValue(valueString, value));
         return Optional.ofNullable(value);
     }
 
-    private BoltResult setParamsAndValidate(@Nonnull String name, @Nonnull String valueString) throws CommandException {
+    private Record evaluateParamOnServer(@Nonnull String name, @Nonnull String valueString) throws CommandException {
         String cypher = "RETURN " + valueString + " as " + name;
-        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, allParameterValues());
-        if (!result.isPresent() || result.get().getRecords().isEmpty()) {
+        final Optional<BoltResult> resultOpt = boltStateHandler.runCypher(cypher, allParameterValues());
+        if (!resultOpt.isPresent()) {
             throw new CommandException("Failed to set value of parameter");
         }
-        return result.get();
+        List<Record> records = resultOpt.get().getRecords();
+        if (records.size() != 1) {
+            throw new CommandException("Failed to set value of parameter");
+        }
+        return records.get(0);
     }
 
     @Override
