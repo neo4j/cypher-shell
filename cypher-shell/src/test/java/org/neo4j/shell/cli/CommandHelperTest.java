@@ -9,6 +9,7 @@ import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
+import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +43,7 @@ public class CommandHelperTest {
     {
         // Given
         AnsiLogger logger = new AnsiLogger( false );
-        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell( logger ) );
+        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell(logger, PrettyConfig.DEFAULT) );
 
         // When
         Command begin = commandHelper.getCommand( ":BEGIN" );

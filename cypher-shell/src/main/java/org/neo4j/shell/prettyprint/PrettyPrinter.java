@@ -14,9 +14,9 @@ public class PrettyPrinter {
     private final StatisticsCollector statisticsCollector;
     private final OutputFormatter outputFormatter;
 
-    public PrettyPrinter(@Nonnull Format format, boolean wrap, int numSampleRows) {
-        this.statisticsCollector = new StatisticsCollector(format);
-        this.outputFormatter = format == Format.VERBOSE ? new TableOutputFormatter(wrap, numSampleRows) : new SimpleOutputFormatter();
+    public PrettyPrinter(@Nonnull PrettyConfig prettyConfig) {
+        this.statisticsCollector = new StatisticsCollector(prettyConfig.format);
+        this.outputFormatter = selectFormatter(prettyConfig);
     }
 
     public void format(@Nonnull final BoltResult result, LinePrinter linePrinter) {
@@ -35,5 +35,13 @@ public class PrettyPrinter {
         StringBuilder sb = new StringBuilder();
         format(result, line -> {if (line!=null && !line.trim().isEmpty()) sb.append(line).append(OutputFormatter.NEWLINE);});
         return sb.toString();
+    }
+
+    private OutputFormatter selectFormatter(PrettyConfig prettyConfig) {
+        if (prettyConfig.format == Format.VERBOSE) {
+            return new TableOutputFormatter(prettyConfig.wrap, prettyConfig.numSampleRows);
+        } else {
+            return new SimpleOutputFormatter();
+        }
     }
 }

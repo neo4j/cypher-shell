@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class TableOutputFormatterTest {
 
-    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE, true, 100);
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(new PrettyConfig(Format.VERBOSE, true, 100));
 
     @Test
     public void prettyPrintPlanInformation() {

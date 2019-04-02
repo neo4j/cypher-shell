@@ -1,11 +1,12 @@
 package org.neo4j.shell.log;
 
 import org.neo4j.shell.cli.Format;
+import org.neo4j.shell.prettyprint.LinePrinter;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
 
-public interface Logger {
+public interface Logger extends LinePrinter {
     /**
      * @return the output stream
      */
@@ -92,12 +93,4 @@ public interface Logger {
             printOut(text);
         }
     }
-
-    boolean getWrap();
-
-    void setWrap(boolean wrap);
-
-    int getNumSampleRows();
-
-    void setNumSampleRows(int numSampleRows);
 }

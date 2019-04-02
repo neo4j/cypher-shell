@@ -36,8 +36,8 @@ import static org.neo4j.driver.internal.util.Iterables.map;
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class PrettyPrinterTest {
 
-    private final PrettyPrinter plainPrinter = new PrettyPrinter(Format.PLAIN, false, 100);
-    private final PrettyPrinter verbosePrinter = new PrettyPrinter(Format.VERBOSE, true, 100);
+    private final PrettyPrinter plainPrinter = new PrettyPrinter(new PrettyConfig(Format.PLAIN, false, 100));
+    private final PrettyPrinter verbosePrinter = new PrettyPrinter(new PrettyConfig(Format.VERBOSE, true, 100));
 
     @Test
     public void returnStatisticsForEmptyRecords() {

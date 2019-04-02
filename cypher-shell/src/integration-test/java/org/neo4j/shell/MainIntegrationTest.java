@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,8 +33,7 @@ public class MainIntegrationTest {
         cliArgs.setPassword( "", "" );
 
         Logger logger = new AnsiLogger(cliArgs.getDebugMode());
-        logger.setFormat(cliArgs.getFormat());
-
+        PrettyConfig prettyConfig = new PrettyConfig(cliArgs);
         ConnectionConfig connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
@@ -42,7 +42,7 @@ public class MainIntegrationTest {
                 cliArgs.getPassword(),
                 cliArgs.getEncryption());
 
-        CypherShell shell = new CypherShell(logger);
+        CypherShell shell = new CypherShell(logger, prettyConfig);
 
         // when
         assertEquals("", connectionConfig.username());
