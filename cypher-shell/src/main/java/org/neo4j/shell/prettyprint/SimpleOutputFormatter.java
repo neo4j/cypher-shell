@@ -19,10 +19,10 @@ public class SimpleOutputFormatter implements OutputFormatter {
         Iterator<Record> records = result.iterate();
         if (records.hasNext()) {
             Record firstRow = records.next();
-            output.println(String.join(COMMA_SEPARATOR, firstRow.keys()));
-            output.println(formatRecord(firstRow));
+            output.printOut(String.join(COMMA_SEPARATOR, firstRow.keys()));
+            output.printOut(formatRecord(firstRow));
             while (records.hasNext()) {
-                output.println(formatRecord(records.next()));
+                output.printOut(formatRecord(records.next()));
             }
         }
     }

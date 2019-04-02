@@ -35,13 +35,6 @@ public interface Logger extends LinePrinter {
     void printError(@Nonnull String text);
 
     /**
-     * Print the designated text to configured output stream.
-     *
-     * @param text to print to the output stream
-     */
-    void printOut(@Nonnull String text);
-
-    /**
      * @return the current format of the logger
      */
     @Nonnull

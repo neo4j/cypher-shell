@@ -59,17 +59,17 @@ public class TableOutputFormatter implements OutputFormatter {
         int lineWidth = totalWidth - 2;
         String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
 
-        output.println(dashes);
-        output.println(headerLine);
-        output.println(dashes);
+        output.printOut(dashes);
+        output.printOut(headerLine);
+        output.printOut(dashes);
 
         for (Record record : topRecords) {
-            output.println(formatRecord(builder, columnSizes, record));
+            output.printOut(formatRecord(builder, columnSizes, record));
         }
         while (records.hasNext()) {
-            output.println(formatRecord(builder, columnSizes, records.next()));
+            output.printOut(formatRecord(builder, columnSizes, records.next()));
         }
-        output.println(dashes);
+        output.printOut(dashes);
     }
 
     private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data) {

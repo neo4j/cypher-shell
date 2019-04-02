@@ -286,9 +286,9 @@ public class TableOutputFormatterTest {
         // GIVEN
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
-        StringBuilder sb = new StringBuilder();
-        new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
-        String table = sb.toString();
+        ToStringLinePrinter printer = new ToStringLinePrinter();
+        new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        String table = printer.result();
         // THEN
         assertThat(table, is(
                 "+------+\n" +
@@ -311,9 +311,9 @@ public class TableOutputFormatterTest {
         // GIVEN
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
-        StringBuilder sb = new StringBuilder();
-        new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), (s) -> sb.append(s).append("\n"));
-        String table = sb.toString();
+        ToStringLinePrinter printer = new ToStringLinePrinter();
+        new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        String table = printer.result();
         // THEN
         assertThat(table, is(
                 "+------+\n" +

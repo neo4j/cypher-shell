@@ -8,7 +8,7 @@ public class StringLinePrinter implements LinePrinter {
     private StringBuilder sb = new StringBuilder();
 
     @Override
-    public void println(String line) {
+    public void printOut(String line) {
         sb.append(line).append(OutputFormatter.NEWLINE);
     }
 

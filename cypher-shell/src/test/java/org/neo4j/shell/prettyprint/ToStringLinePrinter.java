@@ -11,7 +11,7 @@ public class ToStringLinePrinter implements LinePrinter {
     }
 
     @Override
-    public void println(String line) {
+    public void printOut(String line) {
         sb.append(line);
         sb.append(OutputFormatter.NEWLINE);
     }

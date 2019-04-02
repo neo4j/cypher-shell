@@ -176,7 +176,7 @@ public class CypherShellTest {
 
         when(boltStateHandler.isConnected()).thenReturn(true);
         when(boltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.of(result));
-        doAnswer((a) -> { ((LinePrinter)a.getArguments()[1]).println("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
+        doAnswer((a) -> { ((LinePrinter)a.getArguments()[1]).printOut("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
         when(mockedDriver.session()).thenReturn(session);
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
@@ -190,7 +190,7 @@ public class CypherShellTest {
 
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
 
-        doAnswer((a) -> { ((LinePrinter)a.getArguments()[1]).println("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
+        doAnswer((a) -> { ((LinePrinter)a.getArguments()[1]).printOut("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
         when(boltStateHandler.commitTransaction()).thenReturn(Optional.of(asList(result)));
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);

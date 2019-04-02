@@ -109,11 +109,6 @@ public class AnsiLogger implements Logger {
         out.println(Ansi.ansi().render(msg).toString());
     }
 
-    @Override
-    public void println(String line) {
-        printOut(line);
-    }
-
     /**
      * Interpret the cause of a Bolt exception and translate it into a sensible error message.
      */

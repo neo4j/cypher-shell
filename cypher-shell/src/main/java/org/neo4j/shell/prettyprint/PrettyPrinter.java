@@ -24,10 +24,10 @@ public class PrettyPrinter {
 
         if (capabilities.contains(OutputFormatter.Capablities.result)) outputFormatter.format(result, linePrinter);
 
-        if (capabilities.contains(OutputFormatter.Capablities.info)) linePrinter.println(outputFormatter.formatInfo(result.getSummary()));
-        if (capabilities.contains(OutputFormatter.Capablities.plan)) linePrinter.println(outputFormatter.formatPlan(result.getSummary()));
-        if (capabilities.contains(OutputFormatter.Capablities.footer)) linePrinter.println(outputFormatter.formatFooter(result));
-        if (capabilities.contains(OutputFormatter.Capablities.statistics)) linePrinter.println(statisticsCollector.collect(result.getSummary()));
+        if (capabilities.contains(OutputFormatter.Capablities.info)) linePrinter.printOut(outputFormatter.formatInfo(result.getSummary()));
+        if (capabilities.contains(OutputFormatter.Capablities.plan)) linePrinter.printOut(outputFormatter.formatPlan(result.getSummary()));
+        if (capabilities.contains(OutputFormatter.Capablities.footer)) linePrinter.printOut(outputFormatter.formatFooter(result));
+        if (capabilities.contains(OutputFormatter.Capablities.statistics)) linePrinter.printOut(statisticsCollector.collect(result.getSummary()));
     }
 
     // Helper for testing
