@@ -1,8 +1,8 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;

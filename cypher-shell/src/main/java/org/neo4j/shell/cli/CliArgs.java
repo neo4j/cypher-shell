@@ -4,6 +4,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+
 public class CliArgs {
     private static final String DEFAULT_SCHEME = "bolt://";
     private static final String DEFAULT_HOST = "localhost";
@@ -15,6 +17,7 @@ public class CliArgs {
     private int port = DEFAULT_PORT;
     private String username = "";
     private String password = "";
+    private String databaseName = ABSENT_DB_NAME;
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
     private Format format = Format.AUTO;
     private Optional<String> cypher = Optional.empty();
@@ -59,6 +62,13 @@ public class CliArgs {
      */
     public void setPassword(@Nullable String primary, @Nonnull String fallback) {
         password = primary == null ? fallback : primary;
+    }
+
+    /**
+     * Set the database to connect to.
+     */
+    public void setDatabase(@Nullable String databaseName) {
+        this.databaseName = databaseName;
     }
 
     /**
@@ -125,6 +135,11 @@ public class CliArgs {
     @Nonnull
     public String getPassword() {
         return password;
+    }
+
+    @Nonnull
+    public String getDatabase() {
+        return databaseName;
     }
 
     @Nonnull

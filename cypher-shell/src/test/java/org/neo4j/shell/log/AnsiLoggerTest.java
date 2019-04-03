@@ -2,7 +2,7 @@ package org.neo4j.shell.log;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 

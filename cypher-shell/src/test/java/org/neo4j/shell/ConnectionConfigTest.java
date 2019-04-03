@@ -1,16 +1,17 @@
 package org.neo4j.shell;
 
 import org.junit.Test;
-import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.Config;
 import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
 public class ConnectionConfigTest {
     private Logger logger = mock(Logger.class);
     private ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 1, "bob",
-            "pass", false);
+            "pass", false, ABSENT_DB_NAME);
 
     @Test
     public void scheme() throws Exception {
@@ -45,8 +46,8 @@ public class ConnectionConfigTest {
     @Test
     public void encryption() {
         assertEquals(Config.EncryptionLevel.REQUIRED,
-                new ConnectionConfig("bolt://", "", -1, "", "", true).encryption());
+                new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME).encryption());
         assertEquals(Config.EncryptionLevel.NONE,
-                new ConnectionConfig("bolt://", "", -1, "", "", false).encryption());
+                new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME).encryption());
     }
 }

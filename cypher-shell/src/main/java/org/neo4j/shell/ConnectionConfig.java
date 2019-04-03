@@ -1,6 +1,6 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.Config;
 
 import javax.annotation.Nonnull;
 
@@ -11,15 +11,18 @@ public class ConnectionConfig {
     private final Config.EncryptionLevel encryption;
     private String username;
     private String password;
+    private String database;
 
     public ConnectionConfig(@Nonnull String scheme, @Nonnull String host, int port,
-                            @Nonnull String username, @Nonnull String password, boolean encryption) {
+                            @Nonnull String username, @Nonnull String password, boolean encryption,
+                            @Nonnull String database) {
         this.host = host;
         this.port = port;
         this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
         this.password = fallbackToEnvVariable(password, "NEO4J_PASSWORD");
         this.encryption = encryption ? Config.EncryptionLevel.REQUIRED : Config.EncryptionLevel.NONE;
         this.scheme = scheme;
+        this.database = database;
     }
 
     /**
@@ -66,6 +69,11 @@ public class ConnectionConfig {
     @Nonnull
     public Config.EncryptionLevel encryption() {
         return encryption;
+    }
+
+    @Nonnull
+    public String database() {
+        return database;
     }
 
     public void setUsername(@Nonnull String username) {

@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.exception.CommandException;

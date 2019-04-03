@@ -40,7 +40,8 @@ public class MainIntegrationTest {
                 cliArgs.getPort(),
                 cliArgs.getUsername(),
                 cliArgs.getPassword(),
-                cliArgs.getEncryption());
+                cliArgs.getEncryption(),
+                cliArgs.getDatabase());
 
         CypherShell shell = new CypherShell(logger, prettyConfig);
 

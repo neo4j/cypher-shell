@@ -5,8 +5,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.exceptions.ClientException;
+import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
@@ -57,8 +59,10 @@ public class InteractiveShellRunnerTest {
     private File historyFile;
     private StatementParser statementParser;
     private TransactionHandler txHandler;
+    private DatabaseManager databaseManager;
     private ClientException badLineError;
     private UserMessagesHandler userMessagesHandler;
+    private ConnectionConfig connectionConfig;
 
     @Before
     public void setup() throws Exception {
@@ -66,11 +70,15 @@ public class InteractiveShellRunnerTest {
         logger = mock(Logger.class);
         cmdExecuter = mock(StatementExecuter.class);
         txHandler = mock(TransactionHandler.class);
+        databaseManager = mock(DatabaseManager.class);
+        connectionConfig = mock(ConnectionConfig.class);
         historyFile = temp.newFile();
         badLineError = new ClientException("Found a bad line");
         userMessagesHandler = mock(UserMessagesHandler.class);
+        when(databaseManager.getActiveDatabase()).thenReturn("mydb");
         when(userMessagesHandler.getWelcomeMessage()).thenReturn("Welcome to cypher-shell!");
         when(userMessagesHandler.getExitMessage()).thenReturn("Exit message");
+        when(connectionConfig.username()).thenReturn("myusername");
 
         doThrow(badLineError).when(cmdExecuter).execute(contains("bad"));
         doReturn(System.out).when(logger).getOutputStream();
@@ -80,8 +88,8 @@ public class InteractiveShellRunnerTest {
     public void testSimple() throws Exception {
         String input = "good1;\n" +
                 "good2;\n";
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser,
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler, connectionConfig);
         runner.runUntilEnd();
 
         verify(cmdExecuter).execute("good1;");
@@ -96,8 +104,8 @@ public class InteractiveShellRunnerTest {
                 "good2;\n" +
                 "bad2;\n" +
                 "good3;\n";
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser,
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler, connectionConfig);
 
         int code = runner.runUntilEnd();
 
@@ -121,8 +129,8 @@ public class InteractiveShellRunnerTest {
                 "exit;\n" +
                 "bad2;\n" +
                 "good3;\n";
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser,
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler, connectionConfig);
 
         doThrow(new ExitException(1234)).when(cmdExecuter).execute(contains("exit;"));
 
@@ -147,8 +155,8 @@ public class InteractiveShellRunnerTest {
         String cmd2 = ":help exit";
         String input = cmd1 + "\n" + cmd2 + "\n";
 
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser,
-                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser,
+                new ByteArrayInputStream(input.getBytes()), historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.runUntilEnd();
@@ -177,7 +185,8 @@ public class InteractiveShellRunnerTest {
 
         // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
         InputStream inputStream = new ByteArrayInputStream(":set var \"String with !bang\"\n".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream, historyFile,
+                userMessagesHandler, connectionConfig);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -193,7 +202,8 @@ public class InteractiveShellRunnerTest {
 
         // Bangs need escaping in JLine by default, just like in bash, but we have disabled that
         InputStream inputStream = new ByteArrayInputStream(":set var \"String with \\!bang\"\n".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream, historyFile,
+                userMessagesHandler, connectionConfig);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -209,7 +219,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.readUntilStatement();
@@ -223,7 +234,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.readUntilStatement();
@@ -234,7 +246,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "     \nCREATE (n:Person) RETURN n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         List<String> statements = runner.readUntilStatement();
@@ -248,21 +261,22 @@ public class InteractiveShellRunnerTest {
     public void testPrompt() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(false);
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals("neo4j> ", prompt.plainString());
+        assertEquals("myusername@mydb> ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("neo4j> ", prompt.plainString());
+        assertEquals("myusername@mydb> ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
@@ -276,21 +290,22 @@ public class InteractiveShellRunnerTest {
     public void testPromptInTx() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, statementParser, inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream, historyFile,
+                userMessagesHandler, connectionConfig);
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(true);
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals("neo4j# ", prompt.plainString());
+        assertEquals("myusername@mydb# ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("neo4j# ", prompt.plainString());
+        assertEquals("myusername@mydb# ", prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
@@ -305,7 +320,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "  \\   \nCREATE (n:Person) RETURN n\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.runUntilEnd();
@@ -319,8 +335,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n\n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
-                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger,
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.runUntilEnd();
@@ -335,7 +351,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n\n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.runUntilEnd();
@@ -349,7 +366,8 @@ public class InteractiveShellRunnerTest {
         // given
         String inputString = "\nCREATE (n:Person) RETURN n;\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger, new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, new ShellStatementParser(), inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.runUntilEnd();
@@ -362,8 +380,8 @@ public class InteractiveShellRunnerTest {
     public void testSignalHandleOutsideExecution() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, logger,
-                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger,
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler, connectionConfig);
 
         // when
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
@@ -382,8 +400,8 @@ public class InteractiveShellRunnerTest {
         BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
         FakeInterruptableShell fakeShell = spy(new FakeInterruptableShell(logger, boltStateHandler));
         InputStream inputStream = new ByteArrayInputStream("RETURN 1;\n".getBytes());
-        InteractiveShellRunner runner = new InteractiveShellRunner(fakeShell, fakeShell, logger,
-                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler);
+        InteractiveShellRunner runner = new InteractiveShellRunner(fakeShell, fakeShell, fakeShell, logger,
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler, connectionConfig);
 
         // during
         Thread t = new Thread(runner::runUntilEnd);

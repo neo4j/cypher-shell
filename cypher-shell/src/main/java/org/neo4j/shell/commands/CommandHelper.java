@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.ParameterMap;
@@ -22,14 +23,15 @@ public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
-        registerAllCommands(logger, historian, cypherShell, cypherShell);
+        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell);
     }
 
-    private void registerAllCommands(Logger logger, Historian historian,
+    private void registerAllCommands(Logger logger, Historian historian, DatabaseManager databaseManager,
                                      TransactionHandler transactionHandler, ParameterMap parameterMap) {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));
         registerCommand(new History(logger, historian));
+        registerCommand(new Use(databaseManager));
         registerCommand(new Begin(transactionHandler));
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));

@@ -1,11 +1,15 @@
 package org.neo4j.shell.test.bolt;
 
-import org.neo4j.driver.v1.AccessMode;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.exceptions.Neo4jException;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Metrics;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionParametersTemplate;
+import org.neo4j.driver.async.AsyncSession;
+import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.driver.reactive.RxSession;
 
 import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
 
 public class FakeDriver implements Driver {
     @Override
@@ -19,27 +23,7 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public Session session(AccessMode mode) {
-        return new FakeSession();
-    }
-
-    @Override
-    public Session session(String bookmark) {
-        return new FakeSession();
-    }
-
-    @Override
-    public Session session(AccessMode mode, String bookmark) {
-        return new FakeSession();
-    }
-
-    @Override
-    public Session session(Iterable<String> bookmarks) {
-        return new FakeSession();
-    }
-
-    @Override
-    public Session session(AccessMode mode, Iterable<String> bookmarks) {
+    public Session session(Consumer<SessionParametersTemplate> templateConsumer) {
         return new FakeSession();
     }
 
@@ -49,6 +33,36 @@ public class FakeDriver implements Driver {
 
     @Override
     public CompletionStage<Void> closeAsync() {
+        return null;
+    }
+
+    @Override
+    public Metrics metrics()
+    {
+        return null;
+    }
+
+    @Override
+    public RxSession rxSession()
+    {
+        return null;
+    }
+
+    @Override
+    public RxSession rxSession(Consumer<SessionParametersTemplate> templateConsumer)
+    {
+        return null;
+    }
+
+    @Override
+    public AsyncSession asyncSession()
+    {
+        return null;
+    }
+
+    @Override
+    public AsyncSession asyncSession(Consumer<SessionParametersTemplate> templateConsumer)
+    {
         return null;
     }
 }

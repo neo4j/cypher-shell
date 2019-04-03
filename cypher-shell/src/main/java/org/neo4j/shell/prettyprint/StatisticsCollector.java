@@ -1,7 +1,7 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.summary.SummaryCounters;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.driver.summary.SummaryCounters;
 import org.neo4j.shell.cli.Format;
 
 import javax.annotation.Nonnull;

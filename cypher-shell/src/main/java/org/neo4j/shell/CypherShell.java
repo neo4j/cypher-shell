@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements StatementExecuter, Connector, TransactionHandler, ParameterMap {
+public class CypherShell implements StatementExecuter, Connector, TransactionHandler, ParameterMap, DatabaseManager {
     // Final space to catch newline
     protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
     protected final Map<String, ParamValue> queryParams = new HashMap<>();
@@ -199,4 +199,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         Runtime.getRuntime().addShutdownHook(new Thread(this::reset));
     }
 
+    @Override
+    public void setActiveDatabase(String databaseName) throws CommandException
+    {
+        boltStateHandler.setActiveDatabase(databaseName);
+    }
+
+    @Override
+    public String getActiveDatabase()
+    {
+        return boltStateHandler.getActiveDatabase();
+    }
 }
