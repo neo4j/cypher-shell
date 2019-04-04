@@ -36,15 +36,4 @@ public class CypherShellFailureIntegrationTest {
 
         shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "", true, ABSENT_DB_NAME));
     }
-
-    @Test
-    public void switchingDatabaseInOpenTransactionShouldFail() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("There is an open transaction.");
-
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "", true, ABSENT_DB_NAME));
-
-        shell.beginTransaction();
-        shell.setActiveDatabase("another_database");
-    }
 }
