@@ -250,10 +250,13 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        Config config = Config.build()
-                              .withLogging(NullLogging.NULL_LOGGING)
-                              .withEncryptionLevel(connectionConfig.encryption()).toConfig();
-        return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
+        Config.ConfigBuilder configBuilder = Config.build().withLogging(NullLogging.NULL_LOGGING);
+        if (connectionConfig.encryption()) {
+            configBuilder = configBuilder.withEncryption();
+        } else {
+            configBuilder = configBuilder.withoutEncryption();
+        }
+        return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.toConfig());
     }
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {

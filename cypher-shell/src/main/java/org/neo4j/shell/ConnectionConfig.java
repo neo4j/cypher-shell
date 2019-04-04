@@ -8,7 +8,7 @@ public class ConnectionConfig {
     private final String scheme;
     private final String host;
     private final int port;
-    private final Config.EncryptionLevel encryption;
+    private final boolean encryption;
     private String username;
     private String password;
     private String database;
@@ -20,7 +20,7 @@ public class ConnectionConfig {
         this.port = port;
         this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
         this.password = fallbackToEnvVariable(password, "NEO4J_PASSWORD");
-        this.encryption = encryption ? Config.EncryptionLevel.REQUIRED : Config.EncryptionLevel.NONE;
+        this.encryption = encryption;
         this.scheme = scheme;
         this.database = database;
     }
@@ -67,7 +67,7 @@ public class ConnectionConfig {
     }
 
     @Nonnull
-    public Config.EncryptionLevel encryption() {
+    public boolean encryption() {
         return encryption;
     }
 

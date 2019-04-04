@@ -45,9 +45,9 @@ public class ConnectionConfigTest {
 
     @Test
     public void encryption() {
-        assertEquals(Config.EncryptionLevel.REQUIRED,
+        assertEquals(true,
                 new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME).encryption());
-        assertEquals(Config.EncryptionLevel.NONE,
+        assertEquals(false,
                 new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME).encryption());
     }
 }
