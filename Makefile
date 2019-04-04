@@ -27,12 +27,14 @@ rpmversion := $(versionnumber)-$(release)
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile := cypher-shell.jar
-rpmfile := cypher-shell-$(rpmversion).noarch.rpm
+rpm8file := cypher-shell-java8-$(rpmversion).noarch.rpm
+rpm11file := cypher-shell-java11-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
-rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
+rpm8_artifacts:=$(patsubst %,out/rpm8/BUILD/%,${artifacts})
+rpm11_artifacts:=$(patsubst %,out/rpm11/BUILD/%,${artifacts})
 deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
 deb_files:=$(wildcard packaging/debian/*)
 deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
@@ -122,35 +124,65 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
-out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
+out/rpm8/SPECS/cypher-shell.spec: packaging/rpm8/cypher-shell.spec
 	mkdir -p $(dir $@)
 	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
-out/rpm/BUILD/%: %
+out/rpm8/BUILD/%: %
 	mkdir -p $(dir $@)
 	cp $< $@
 
-out/%.rpm: out/rpm/RPMS/noarch/%.rpm
+out/%.rpm: out/rpm8/RPMS/noarch/%.rpm
 	mkdir -p $(dir $@)
 	cp $< $@
 
-tmp/rpm-test/%.rpm: out/rpm/RPMS/noarch/%.rpm
+tmp/rpm8-test/%.rpm: out/rpm8/RPMS/noarch/%.rpm
 	mkdir -p $(dir $@)
 	cp $< $@
 
-tmp/rpm-test/Dockerfile: packaging/test/rpm/Dockerfile
+tmp/rpm8-test/Dockerfile: packaging/test/rpm/Dockerfile
 	mkdir -p $(dir $@)
-	RPMFILE=$(rpmfile) envsubst '$${RPMFILE}' < $< > $@
+	RPMFILE=$(rpm8file) envsubst '$${RPMFILE}' < $< > $@
 
-out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
+out/rpm8/RPMS/noarch/$(rpm8file): out/rpm8/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm8/BUILD/Makefile out/rpm8/BUILD/cypher-shell.1.md
+	rpmbuild --define "_topdir $(CURDIR)/out/rpm8" -bb --clean $<
 
-.PHONY: rpm
-rpm: out/$(rpmfile) ## Build the RPM package
+.PHONY: rpm8
+rpm8: out/$(rpm8file) ## Build the RPM package
+
+out/rpm11/SPECS/cypher-shell.spec: packaging/rpm11/cypher-shell.spec
+	mkdir -p $(dir $@)
+	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
+
+out/rpm11/BUILD/%: %
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/%.rpm: out/rpm11/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/rpm11-test/%.rpm: out/rpm11/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/rpm11-test/Dockerfile: packaging/test/rpm/Dockerfile
+	mkdir -p $(dir $@)
+	RPMFILE=$(rpm11file) envsubst '$${RPMFILE}' < $< > $@
+
+out/rpm11/RPMS/noarch/$(rpm11file): out/rpm11/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm11/BUILD/Makefile out/rpm11/BUILD/cypher-shell.1.md
+	rpmbuild --define "_topdir $(CURDIR)/out/rpm11" -bb --clean $<
+
+.PHONY: rpm11
+rpm11: out/$(rpm11file) ## Build the RPM package
 
 DOCKERUUIDRPM := $(shell uuidgen)
-.PHONY: rpm-test
-rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM package (requires Docker)
+.PHONY: rpm8-test
+rpm8-test: tmp/rpm8-test/$(rpm8file) tmp/rpm8-test/Dockerfile ## Test the RPM java 8 package (requires Docker)
+	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
+
+.PHONY: rpm11-test
+rpm11-test: tmp/rpm11-test/$(rpm11file) tmp/rpm11-test/Dockerfile ## Test the RPM java 11 package (requires Docker)
 	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
 
 out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
