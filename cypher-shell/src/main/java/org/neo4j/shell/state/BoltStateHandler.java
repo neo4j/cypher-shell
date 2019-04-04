@@ -151,6 +151,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         StatementResult run = session.run("RETURN 1");
         this.version = run.summary().server().version();
+        // It would be nice if we could also get the actual database name here, in the case where we used ABSENT_DB_NAME
         run.consume();
     }
 

@@ -25,6 +25,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
  * along the way.
@@ -32,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     static final String INTERRUPT_SIGNAL = "INT";
     private final static String freshPrompt = "> ";
-    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("       ");
+    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("  ");
     private final static String transactionPrompt = "# ";
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -155,10 +158,21 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             return continuationPrompt;
         }
 
+        String databaseName = databaseManager.getActiveDatabase();
+
+        // Substitute empty name for the default default-database-name
+        // For now we just use a hard-coded default name
+        // Ideally we would like to receive the actual name in the ResultSummary when we connect (in BoltStateHandler.reconnect())
+        // (If the user is an admin we could also query for the default database config value with:
+        //   "CALL dbms.listConfig() YIELD name, value WHERE name = "dbms.default_database" RETURN value"
+        //  but that does not work in general)
+        databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
+
         AnsiFormattedText prompt = AnsiFormattedText.s().bold()
                 .append(connectionConfig.username())
                 .append("@")
-                .append(databaseManager.getActiveDatabase())
+                .append(databaseName)
+                .appendNewLine()
                 .append(txHandler.isTransactionOpen()? transactionPrompt : freshPrompt);
         return prompt;
     }

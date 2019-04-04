@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -269,21 +270,21 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals("myusername@mydb> ", prompt.plainString());
+        assertEquals( format("myusername@mydb%n> "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("myusername@mydb> ", prompt.plainString());
+        assertEquals( format("myusername@mydb%n> "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("       ", prompt.plainString());
+        assertEquals("  ", prompt.plainString());
     }
 
     @Test
@@ -298,21 +299,21 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals("myusername@mydb# ", prompt.plainString());
+        assertEquals(format("myusername@mydb%n# "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("myusername@mydb# ", prompt.plainString());
+        assertEquals(format("myusername@mydb%n# "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("       ", prompt.plainString());
+        assertEquals("  ", prompt.plainString());
     }
 
     @Test

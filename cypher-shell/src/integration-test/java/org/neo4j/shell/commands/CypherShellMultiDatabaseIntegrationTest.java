@@ -18,13 +18,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
 import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.SYSTEM_DB_NAME;
 import static org.neo4j.shell.Versions.majorVersion;
 
 public class CypherShellMultiDatabaseIntegrationTest
 {
-    private static final String SYSTEM_DB_NAME = "system";
-    private static final String DEFAULT_DB_NAME = "neo4j";
-
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -62,7 +61,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     @Test
     public void switchingToSystemDatabaseAndBackToDefaultWorks() throws CommandException {
         useCommand.execute(SYSTEM_DB_NAME);
-        useCommand.execute(DEFAULT_DB_NAME);
+        useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
     }
