@@ -124,7 +124,7 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
-out/rpm8/SPECS/cypher-shell.spec: packaging/rpm8/cypher-shell.spec
+out/rpm8/SPECS/cypher-shell.spec: packaging/rpm-java8/cypher-shell.spec
 	mkdir -p $(dir $@)
 	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
@@ -144,13 +144,13 @@ tmp/rpm8-test/Dockerfile: packaging/test/rpm/Dockerfile
 	mkdir -p $(dir $@)
 	RPMFILE=$(rpm8file) envsubst '$${RPMFILE}' < $< > $@
 
-out/rpm8/RPMS/noarch/$(rpm8file): out/rpm8/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm8/BUILD/Makefile out/rpm8/BUILD/cypher-shell.1.md
+out/rpm8/RPMS/noarch/$(rpm8file): out/rpm8/SPECS/cypher-shell.spec $(rpm8_artifacts) out/rpm8/BUILD/Makefile out/rpm8/BUILD/cypher-shell.1.md
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm8" -bb --clean $<
 
 .PHONY: rpm8
 rpm8: out/$(rpm8file) ## Build the RPM package
 
-out/rpm11/SPECS/cypher-shell.spec: packaging/rpm11/cypher-shell.spec
+out/rpm11/SPECS/cypher-shell.spec: packaging/rpm-java11/cypher-shell.spec
 	mkdir -p $(dir $@)
 	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
 
@@ -170,7 +170,7 @@ tmp/rpm11-test/Dockerfile: packaging/test/rpm/Dockerfile
 	mkdir -p $(dir $@)
 	RPMFILE=$(rpm11file) envsubst '$${RPMFILE}' < $< > $@
 
-out/rpm11/RPMS/noarch/$(rpm11file): out/rpm11/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm11/BUILD/Makefile out/rpm11/BUILD/cypher-shell.1.md
+out/rpm11/RPMS/noarch/$(rpm11file): out/rpm11/SPECS/cypher-shell.spec $(rpm11_artifacts) out/rpm11/BUILD/Makefile out/rpm11/BUILD/cypher-shell.1.md
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm11" -bb --clean $<
 
 .PHONY: rpm11
