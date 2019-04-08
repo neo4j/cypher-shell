@@ -1,10 +1,11 @@
 package org.neo4j.shell;
 
 import org.junit.Test;
-import org.neo4j.driver.Config;
 import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
@@ -45,9 +46,7 @@ public class ConnectionConfigTest {
 
     @Test
     public void encryption() {
-        assertEquals(true,
-                new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME).encryption());
-        assertEquals(false,
-                new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME).encryption());
+        assertTrue(new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME).encryption());
+        assertFalse(new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME).encryption());
     }
 }

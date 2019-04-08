@@ -1,6 +1,6 @@
 package org.neo4j.shell.commands;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -49,7 +49,7 @@ public class Use implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
@@ -48,7 +48,7 @@ public class Rollback implements Command {
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     @Override

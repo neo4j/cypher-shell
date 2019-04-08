@@ -11,6 +11,7 @@ import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.fail;
@@ -140,7 +141,7 @@ public class HelpTest {
         @Nonnull
         @Override
         public List<String> getAliases() {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
 
         @Override
