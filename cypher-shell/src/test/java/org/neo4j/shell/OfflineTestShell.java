@@ -1,12 +1,9 @@
-package org.neo4j.shell.test;
+package org.neo4j.shell;
 
 
-import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
-
-import static org.mockito.Mockito.mock;
 
 /**
  * This class initializes a {@link CypherShell} with a fake

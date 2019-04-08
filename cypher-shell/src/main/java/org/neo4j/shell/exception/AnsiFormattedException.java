@@ -16,6 +16,11 @@ public class AnsiFormattedException extends Exception {
         this.message = AnsiFormattedText.from(message);
     }
 
+    public AnsiFormattedException(@Nullable String message, Throwable cause) {
+        super(message, cause);
+        this.message = AnsiFormattedText.from(message);
+    }
+
     public AnsiFormattedException(@Nonnull AnsiFormattedText message) {
         super(message.plainString());
         this.message = message;

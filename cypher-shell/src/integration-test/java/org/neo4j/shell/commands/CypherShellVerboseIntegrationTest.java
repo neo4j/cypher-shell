@@ -12,8 +12,6 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
 
-import java.util.Optional;
-
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -160,10 +158,8 @@ public class CypherShellVerboseIntegrationTest {
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
         shell.setParameter("string", stringInput);
-
-        Optional<Object> bob = shell.setParameter("bob", String.valueOf(randomLong));
-        assertTrue(bob.isPresent());
-        assertEquals(randomLong, bob.get());
+        Object paramValue = shell.setParameter("bob", String.valueOf(randomLong));
+        assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { bob }, $string");
 
@@ -179,9 +175,8 @@ public class CypherShellVerboseIntegrationTest {
         assertTrue(shell.allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
-        Optional<Object> bob = shell.setParameter("`bob`", String.valueOf(randomLong));
-        assertTrue(bob.isPresent());
-        assertEquals(randomLong, bob.get());
+        Object paramValue = shell.setParameter("`bob`", String.valueOf(randomLong));
+        assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { `bob` }");
 
