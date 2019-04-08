@@ -21,7 +21,6 @@ import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.state.ListBoltResult;
-import org.neo4j.shell.test.OfflineTestShell;
 
 import java.io.IOException;
 import java.util.Optional;
