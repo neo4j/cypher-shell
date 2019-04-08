@@ -42,7 +42,7 @@ public class Rollback implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Rolls back and closes the currently open transaction";
+        return "Roll back and closes the currently open transaction";
     }
 
     @Nonnull

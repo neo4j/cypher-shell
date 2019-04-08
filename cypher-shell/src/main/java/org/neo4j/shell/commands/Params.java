@@ -39,7 +39,7 @@ public class Params implements Command {
     @Nonnull
     @Override
     public String getDescription() {
-        return "Prints all currently set query parameters and their values";
+        return "Print all currently set query parameters and their values";
     }
 
     @Nonnull

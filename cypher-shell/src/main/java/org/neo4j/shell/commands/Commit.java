@@ -46,7 +46,7 @@ public class Commit implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Commits and closes the currently open transaction";
+        return "Commit and close the currently open transaction";
     }
 
     @Nonnull

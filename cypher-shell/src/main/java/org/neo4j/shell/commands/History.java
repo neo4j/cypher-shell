@@ -47,7 +47,7 @@ public class History implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Prints a list of the last commands executed.";
+        return "Print a list of the last commands executed.";
     }
 
     @Nonnull
