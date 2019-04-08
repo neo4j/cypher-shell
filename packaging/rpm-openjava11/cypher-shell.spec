@@ -1,4 +1,4 @@
-Name: cypher-shell
+Name: cypher-shell-openjava11
 Provides: cypher-shell
 Version: ${VERSION}
 Release: ${RELEASE}%{?dist}
@@ -8,7 +8,8 @@ License: GPLv3
 URL: https://github.com/neo4j/cypher-shell
 Source0: https://github.com/neo4j/cypher-shell/archive/%{version}.tar.gz
 
-Requires: which, (jre-headless >= 1.8 or jre >= 11)
+Conflicts: cypher-shell-java8, cypher-shell-java11
+Requires: which, jre-11-headless >= 11
 BuildArch: noarch
 Prefix: /usr
 

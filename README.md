@@ -34,13 +34,13 @@ available in your local package manager.
 Then just do
 
 ```
-make debian rpm
+make debian rpm8 rpm11
 ```
 
 To test the packages you need to have Docker installed:
 
 ```
-make debian-test rpm-test
+make debian-test rpm8-test rpm11-test
 ```
 
 To get the versions correct when building packages you can override
