@@ -6,7 +6,7 @@ import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
@@ -19,7 +19,7 @@ public class History implements Command {
 
     private final Logger logger;
     private final Historian historian;
-    private final List<String> aliases = new ArrayList<>();
+    private final List<String> aliases = Collections.emptyList();
 
     public History(@Nonnull final Logger logger, @Nonnull final Historian historian) {
         this.logger = logger;
@@ -47,7 +47,7 @@ public class History implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Prints a list of the last commands executed.";
+        return "Print a list of the last commands executed.";
     }
 
     @Nonnull

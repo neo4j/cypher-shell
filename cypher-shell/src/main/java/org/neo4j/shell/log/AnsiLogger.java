@@ -2,7 +2,7 @@ package org.neo4j.shell.log;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.AnsiFormattedException;
 

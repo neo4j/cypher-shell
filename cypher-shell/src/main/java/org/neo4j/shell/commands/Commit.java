@@ -3,14 +3,10 @@ package org.neo4j.shell.commands;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
-import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.prettyprint.PrettyPrinter;
-import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
@@ -46,13 +42,13 @@ public class Commit implements Command {
     @Nonnull
     @Override
     public String getHelp() {
-        return "Commits and closes the currently open transaction";
+        return "Commit and close the currently open transaction";
     }
 
     @Nonnull
     @Override
     public List<String> getAliases() {
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     @Override

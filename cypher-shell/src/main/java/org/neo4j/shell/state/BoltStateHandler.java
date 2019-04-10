@@ -1,19 +1,20 @@
 package org.neo4j.shell.state;
 
-import org.neo4j.driver.v1.AccessMode;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.exceptions.SessionExpiredException;
+import org.neo4j.driver.AccessMode;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionParametersTemplate;
+import org.neo4j.driver.Statement;
+import org.neo4j.driver.StatementResult;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
+import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
@@ -26,17 +27,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * Handles interactions with the driver
  */
-public class BoltStateHandler implements TransactionHandler, Connector {
+public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
     protected Session session;
     private String version;
     private List<Statement> transactionStatements;
+    private String activeDatabaseName;
 
     public BoltStateHandler() {
         this(GraphDatabase::driver);
@@ -44,6 +47,25 @@ public class BoltStateHandler implements TransactionHandler, Connector {
 
     BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
         this.driverProvider = driverProvider;
+        activeDatabaseName = "";
+    }
+
+    @Override
+    public void setActiveDatabase(String databaseName) throws CommandException
+    {
+        if (isTransactionOpen()) {
+            throw new CommandException("There is an open transaction. You need to close it before you can switch database.");
+        }
+        activeDatabaseName = databaseName;
+        if (isConnected()) {
+            reconnect(false);
+        }
+    }
+
+    @Override
+    public String getActiveDatabase()
+    {
+        return activeDatabaseName;
     }
 
     @Override
@@ -99,6 +121,7 @@ public class BoltStateHandler implements TransactionHandler, Connector {
         final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
 
         try {
+            setActiveDatabase(connectionConfig.database());
             driver = getDriver(connectionConfig, authToken);
             reconnect();
         } catch (Throwable t) {
@@ -112,14 +135,23 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     private void reconnect() {
-        String bookmark = null;
-        if (session != null) {
-            bookmark = session.lastBookmark();
+        reconnect(true);
+    }
+
+    private void reconnect(boolean keepBookmark) {
+        Consumer<SessionParametersTemplate> sessionOptionalArgs = t -> {};
+        if (session != null && keepBookmark) {
+            // Save the last bookmark and close the session
+            final String bookmark = session.lastBookmark();
             session.close();
+            sessionOptionalArgs = t -> t.withBookmarks(bookmark);
         }
-        session = driver.session(AccessMode.WRITE, bookmark);
+        Consumer<SessionParametersTemplate> sessionArgs = t -> t.withDefaultAccessMode(AccessMode.WRITE).withDatabase(activeDatabaseName);
+        session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
+
         StatementResult run = session.run("RETURN 1");
         this.version = run.summary().server().version();
+        // It would be nice if we could also get the actual database name here, in the case where we used ABSENT_DB_NAME
         run.consume();
     }
 
@@ -219,10 +251,13 @@ public class BoltStateHandler implements TransactionHandler, Connector {
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        Config config = Config.build()
-                              .withLogging(NullLogging.NULL_LOGGING)
-                              .withEncryptionLevel(connectionConfig.encryption()).toConfig();
-        return driverProvider.apply(connectionConfig.driverUrl(), authToken, config);
+        Config.ConfigBuilder configBuilder = Config.build().withLogging(NullLogging.NULL_LOGGING);
+        if (connectionConfig.encryption()) {
+            configBuilder = configBuilder.withEncryption();
+        } else {
+            configBuilder = configBuilder.withoutEncryption();
+        }
+        return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.toConfig());
     }
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {

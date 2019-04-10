@@ -4,11 +4,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.cli.StringShellRunner;
@@ -33,6 +33,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class CypherShellTest {
@@ -57,7 +58,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false);
+        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false, ABSENT_DB_NAME);
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
 
         shell.connect(cc);

@@ -1,15 +1,15 @@
 package org.neo4j.shell.prettyprint;
 
 import org.neo4j.driver.internal.types.TypeRepresentation;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.summary.Plan;
-import org.neo4j.driver.v1.summary.ProfiledPlan;
-import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Path;
-import org.neo4j.driver.v1.types.Point;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.summary.Plan;
+import org.neo4j.driver.summary.ProfiledPlan;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Path;
+import org.neo4j.driver.types.Point;
+import org.neo4j.driver.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;

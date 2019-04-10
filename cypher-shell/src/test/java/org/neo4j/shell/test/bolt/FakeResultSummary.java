@@ -1,8 +1,8 @@
 package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.internal.summary.InternalSummaryCounters;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.summary.*;
+import org.neo4j.driver.Statement;
+import org.neo4j.driver.summary.*;
 import org.neo4j.shell.test.Util;
 
 import java.util.List;

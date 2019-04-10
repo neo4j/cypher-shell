@@ -4,18 +4,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.driver.v1.AccessMode;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.exceptions.SessionExpiredException;
-import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.summary.ServerInfo;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Statement;
+import org.neo4j.driver.StatementResult;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.driver.summary.ServerInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -46,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
 public class BoltStateHandlerTest {
     @Rule
@@ -57,7 +56,7 @@ public class BoltStateHandlerTest {
 
     @Before
     public void setup() {
-        when(mockDriver.session(any(), anyString())).thenReturn(new FakeSession());
+        when(mockDriver.session(any())).thenReturn(new FakeSession());
         doReturn(System.out).when(logger).getOutputStream();
     }
 
@@ -73,16 +72,11 @@ public class BoltStateHandlerTest {
             @Override
             public Driver apply(String uri, AuthToken authToken, Config config) {
                 super.apply(uri, authToken, config);
-                return new FakeDriver() {
-                    @Override
-                    public Session session(AccessMode accessMode, String bookmark) {
-                        return new FakeSession();
-                    }
-                };
+                return new FakeDriver();
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("", handler.getServerVersion());
@@ -93,7 +87,7 @@ public class BoltStateHandlerTest {
         Driver driverMock = stubVersionInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
@@ -301,7 +295,7 @@ public class BoltStateHandlerTest {
         BoltResult boltResult = boltStateHandler.runCypher("RETURN 999",
                 new HashMap<>()).get();
 
-        verify(driverMock, times(2)).session(any(), anyString());
+        verify(driverMock, times(2)).session(any());
         verify(sessionMock, times(2)).run(any(Statement.class));
 
         assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
@@ -369,7 +363,7 @@ public class BoltStateHandlerTest {
     public void turnOffEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.NONE, provider.config.encryptionLevel());
     }
@@ -378,7 +372,7 @@ public class BoltStateHandlerTest {
     public void turnOnEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
     }
@@ -394,7 +388,7 @@ public class BoltStateHandlerTest {
 
         when(sessionMock.isOpen()).thenReturn(true);
         when(sessionMock.run("RETURN 1")).thenReturn(versionMock);
-        when(driverMock.session(any(), anyString())).thenReturn(sessionMock);
+        when(driverMock.session(any())).thenReturn(sessionMock);
 
         return driverMock;
     }
@@ -409,7 +403,7 @@ public class BoltStateHandlerTest {
         }
 
         public void connect() throws CommandException {
-            connect(new ConnectionConfig("bolt://", "", 1, "", "", false));
+            connect(new ConnectionConfig("bolt://", "", 1, "", "", false, ABSENT_DB_NAME));
         }
     }
 

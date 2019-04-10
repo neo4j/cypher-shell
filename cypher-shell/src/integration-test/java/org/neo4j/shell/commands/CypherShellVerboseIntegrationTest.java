@@ -17,6 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 import static org.neo4j.shell.Versions.majorVersion;
 import static org.neo4j.shell.Versions.minorVersion;
 
@@ -38,7 +39,7 @@ public class CypherShellVerboseIntegrationTest {
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
 
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME));
     }
 
     @After
@@ -72,7 +73,7 @@ public class CypherShellVerboseIntegrationTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
 
-        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME);
         assertTrue("Shell should already be connected", shell.isConnected());
         shell.connect(config);
     }

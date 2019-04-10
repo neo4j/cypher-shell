@@ -1,6 +1,9 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
+
+import org.neo4j.shell.ConnectionConfig;
+import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -22,42 +25,51 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
  * along the way.
  */
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     static final String INTERRUPT_SIGNAL = "INT";
-    private final static AnsiFormattedText freshPrompt = AnsiFormattedText.s().bold().append("neo4j> ");
-    private final static AnsiFormattedText continuationPrompt = AnsiFormattedText.s().bold().append("       ");
-    private final static AnsiFormattedText transactionPrompt = AnsiFormattedText.s().bold().append("neo4j# ");
+    private final static String FRESH_PROMPT = "> ";
+    private final static AnsiFormattedText CONTINUATION_PROMPT = AnsiFormattedText.s().bold().append("  ");
+    private final static String TRANSACTION_PROMPT = "# ";
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
     private final AtomicBoolean currentlyExecuting;
 
-    private final Logger logger;
-    private final ConsoleReader reader;
-    private final Historian historian;
-    private final StatementParser statementParser;
-    private final TransactionHandler txHandler;
-    private final StatementExecuter executer;
-    private final UserMessagesHandler userMessagesHandler;
+    @Nonnull private final Logger logger;
+    @Nonnull private final ConsoleReader reader;
+    @Nonnull private final Historian historian;
+    @Nonnull private final StatementParser statementParser;
+    @Nonnull private final TransactionHandler txHandler;
+    @Nonnull private final DatabaseManager databaseManager;
+    @Nonnull private final StatementExecuter executer;
+    @Nonnull private final UserMessagesHandler userMessagesHandler;
+    @Nonnull private final ConnectionConfig connectionConfig;
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
                                   @Nonnull TransactionHandler txHandler,
+                                  @Nonnull DatabaseManager databaseManager,
                                   @Nonnull Logger logger,
                                   @Nonnull StatementParser statementParser,
                                   @Nonnull InputStream inputStream,
                                   @Nonnull File historyFile,
-                                  @Nonnull UserMessagesHandler userMessagesHandler) throws IOException {
+                                  @Nonnull UserMessagesHandler userMessagesHandler,
+                                  @Nonnull ConnectionConfig connectionConfig) throws IOException {
         this.userMessagesHandler = userMessagesHandler;
         this.currentlyExecuting = new AtomicBoolean(false);
         this.executer = executer;
         this.txHandler = txHandler;
+        this.databaseManager = databaseManager;
         this.logger = logger;
         this.statementParser = statementParser;
         this.reader = setupConsoleReader(logger, inputStream);
         this.historian = FileHistorian.setupHistory(reader, logger, historyFile);
+        this.connectionConfig = connectionConfig;
 
         // Catch ctrl-c
         Signal.handle(new Signal(INTERRUPT_SIGNAL), this);
@@ -143,12 +155,26 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
      */
     AnsiFormattedText getPrompt() {
         if (statementParser.containsText()) {
-            return continuationPrompt;
+            return CONTINUATION_PROMPT;
         }
-        if (txHandler.isTransactionOpen()) {
-            return transactionPrompt;
-        }
-        return freshPrompt;
+
+        String databaseName = databaseManager.getActiveDatabase();
+
+        // Substitute empty name for the default default-database-name
+        // For now we just use a hard-coded default name
+        // Ideally we would like to receive the actual name in the ResultSummary when we connect (in BoltStateHandler.reconnect())
+        // (If the user is an admin we could also query for the default database config value with:
+        //   "CALL dbms.listConfig() YIELD name, value WHERE name = "dbms.default_database" RETURN value"
+        //  but that does not work in general)
+        databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
+
+        AnsiFormattedText prompt = AnsiFormattedText.s().bold()
+                .append(connectionConfig.username())
+                .append("@")
+                .append(databaseName)
+                .appendNewLine()
+                .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
+        return prompt;
     }
 
     /**

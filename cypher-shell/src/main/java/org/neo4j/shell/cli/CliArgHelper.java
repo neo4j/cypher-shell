@@ -50,6 +50,8 @@ public class CliArgHelper {
 
         CliArgs cliArgs = new CliArgs();
 
+        //---------------------
+        // Connection arguments
         cliArgs.setScheme(addressMatcher.group("scheme"), "bolt://");
         cliArgs.setHost(addressMatcher.group("host"), "localhost");
         // Safe, regex only matches integers
@@ -68,7 +70,10 @@ public class CliArgHelper {
         if (!pass.isEmpty()) {
             cliArgs.setPassword(pass, cliArgs.getPassword());
         }
+        cliArgs.setEncryption(ns.getBoolean("encryption"));
+        cliArgs.setDatabase(ns.getString("database"));
 
+        //----------------
         // Other arguments
         // cypher string might not be given, represented by null
         cliArgs.setCypher(ns.getString("cypher"));
@@ -77,8 +82,6 @@ public class CliArgHelper {
 
         //Set Output format
         cliArgs.setFormat(Format.parse(ns.get("format")));
-
-        cliArgs.setEncryption(ns.getBoolean("encryption"));
 
         cliArgs.setDebugMode(ns.getBoolean("debug"));
 
@@ -135,6 +138,9 @@ public class CliArgHelper {
                         "configuration")
                 .type(new BooleanArgumentType())
                 .setDefault(true);
+        connGroup.addArgument("-d", "--database")
+                .help("database to connect to")
+                .setDefault("");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
         failGroup.addArgument("--fail-fast")

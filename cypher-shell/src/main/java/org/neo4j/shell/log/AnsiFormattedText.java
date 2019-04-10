@@ -133,6 +133,15 @@ public class AnsiFormattedText {
     }
 
     /**
+     * Append a new line
+     * @return this
+     */
+    public AnsiFormattedText appendNewLine() {
+        pieces.add(new AnsiFormattedString(color, attributes, System.lineSeparator()));
+        return this;
+    }
+
+    /**
      * Set formatting to bold. Note that this has no effect on strings already in the text.
      *
      * @return this

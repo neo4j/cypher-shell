@@ -1,18 +1,18 @@
 package org.neo4j.shell.prettyprint;
 
 import org.junit.Test;
+
 import org.neo4j.driver.internal.types.InternalTypeSystem;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.summary.ProfiledPlan;
-import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.summary.StatementType;
-import org.neo4j.driver.v1.summary.SummaryCounters;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Path;
-import org.neo4j.driver.v1.types.Relationship;
-import org.neo4j.driver.v1.util.Function;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.summary.ProfiledPlan;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.driver.summary.StatementType;
+import org.neo4j.driver.summary.SummaryCounters;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Path;
+import org.neo4j.driver.types.Relationship;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.ListBoltResult;
@@ -20,6 +20,7 @@ import org.neo4j.shell.state.ListBoltResult;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;

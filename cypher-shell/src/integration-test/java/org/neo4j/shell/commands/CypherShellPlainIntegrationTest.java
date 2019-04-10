@@ -15,6 +15,7 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 
 public class CypherShellPlainIntegrationTest {
@@ -28,7 +29,7 @@ public class CypherShellPlainIntegrationTest {
     public void setUp() throws Exception {
         linePrinter.clear();
         shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000));
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME));
     }
 
     @After

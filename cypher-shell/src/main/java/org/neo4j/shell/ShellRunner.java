@@ -51,8 +51,8 @@ public interface ShellRunner {
         } else if (shouldBeInteractive(cliArgs)) {
             UserMessagesHandler userMessagesHandler =
                     new UserMessagesHandler(connectionConfig, cypherShell.getServerVersion());
-            return new InteractiveShellRunner(cypherShell, cypherShell, logger, new ShellStatementParser(),
-                    System.in, FileHistorian.getDefaultHistoryFile(), userMessagesHandler);
+            return new InteractiveShellRunner(cypherShell, cypherShell, cypherShell, logger, new ShellStatementParser(),
+                    System.in, FileHistorian.getDefaultHistoryFile(), userMessagesHandler, connectionConfig);
         } else {
             return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell, logger,
                     new ShellStatementParser(), System.in);

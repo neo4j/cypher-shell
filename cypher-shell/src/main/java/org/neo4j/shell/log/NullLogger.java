@@ -1,6 +1,6 @@
 package org.neo4j.shell.log;
 
-import org.neo4j.driver.v1.Logger;
+import org.neo4j.driver.Logger;
 
 public class NullLogger implements Logger
 {
