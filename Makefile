@@ -27,16 +27,12 @@ rpmversion := $(versionnumber)-$(release)
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile := cypher-shell.jar
-rpm-java8file := cypher-shell-java8-$(rpmversion).noarch.rpm
-rpm-java11file := cypher-shell-java11-$(rpmversion).noarch.rpm
-rpm-openjava11file := cypher-shell-openjava11-$(rpmversion).noarch.rpm
+rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
-rpm-java8_artifacts:=$(patsubst %,out/rpm-java8/BUILD/%,${artifacts})
-rpm-java11_artifacts:=$(patsubst %,out/rpm-java11/BUILD/%,${artifacts})
-rpm-openjava11_artifacts:=$(patsubst %,out/rpm-openjava11/BUILD/%,${artifacts})
+rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
 deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
 deb_files:=$(wildcard packaging/debian/*)
 deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
@@ -128,114 +124,37 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
+# ======================= RPM =======================
+
+out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
+	mkdir -p $(dir $@)
+	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
+
+out/rpm/BUILD/%: %
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/%.rpm: out/rpm/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/rpm-test/%.rpm: out/rpm/RPMS/noarch/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/rpm-test/Dockerfile: packaging/test/rpm/Dockerfile
+	mkdir -p $(dir $@)
+	RPMFILE=$(rpmfile) envsubst '$${RPMFILE}' < $< > $@
+
+out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
+	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
+
 .PHONY: rpm
-rpm: rpm-java8 rpm-java11 rpm-openjava11
+rpm: out/$(rpmfile) ## Build the RPM package
 
-# ======================= RPM java 8 =======================
-
-out/rpm-java8/SPECS/cypher-shell.spec: packaging/rpm-java8/cypher-shell.spec
-	mkdir -p $(dir $@)
-	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
-
-out/rpm-java8/BUILD/%: %
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/%.rpm: out/rpm-java8/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-java8-test/%.rpm: out/rpm-java8/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-java8-test/Dockerfile: packaging/test/rpm/Dockerfile
-	mkdir -p $(dir $@)
-	RPMFILE=$(rpm-java8file) envsubst '$${RPMFILE}' < $< > $@
-
-out/rpm-java8/RPMS/noarch/$(rpm-java8file): out/rpm-java8/SPECS/cypher-shell.spec $(rpm-java8_artifacts) out/rpm-java8/BUILD/Makefile out/rpm-java8/BUILD/cypher-shell.1.md
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm-java8" -bb --clean $<
-
-.PHONY: rpm-java8
-rpm-java8: out/$(rpm-java8file) ## Build the RPM package
-
-.PHONY: rpm-java8-test
-rpm-java8-test: tmp/rpm-java8-test/$(rpm-java8file) tmp/rpm-java8-test/Dockerfile ## Test the RPM java 8 package (requires Docker)
+.PHONY: rpm-test
+rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM java 11 (Oracle) package (requires Docker)
 	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
-
-
-# ======================= RPM open java 11 variant (OpenJDK) =======================
-#   We unfortunately need to provide two cypher shell rpm packages because
-#   Oracle and OpenJDK java 11 distros provide incompatible package names:
-#      a) OpenJDK provides jre-11/java-11
-#      b) Oracle provides jre/java/jdk
-
-out/rpm-openjava11/SPECS/cypher-shell.spec: packaging/rpm-openjava11/cypher-shell.spec
-	mkdir -p $(dir $@)
-	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
-
-out/rpm-openjava11/BUILD/%: %
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/%.rpm: out/rpm-openjava11/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-openjava11-test/%.rpm: out/rpm-openjava11/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-openjava11-test/Dockerfile: packaging/test/rpm/Dockerfile
-	mkdir -p $(dir $@)
-	RPMFILE=$(rpm11file) envsubst '$${RPMFILE}' < $< > $@
-
-out/rpm-openjava11/RPMS/noarch/$(rpm-openjava11file): out/rpm-openjava11/SPECS/cypher-shell.spec $(rpm-openjava11_artifacts) out/rpm-openjava11/BUILD/Makefile out/rpm-openjava11/BUILD/cypher-shell.1.md
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm-openjava11" -bb --clean $<
-
-.PHONY: rpm-openjava11
-rpm-openjava11: out/$(rpm-openjava11file) ## Build the RPM package
-
-.PHONY: rpm-openjava11-test
-rpm-openjava11-test: tmp/rpm-openjava11-test/$(rpm-openjava11file) tmp/rpm-openjava11-test/Dockerfile ## Test the RPM java 11 (Oracle) package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
-
-# ======================= RPM java 11 variant (Oracle) =======================
-#   We unfortunately need to provide two cypher shell rpm packages because
-#   Oracle and OpenJDK java 11 distros provide incompatible package names:
-#      a) OpenJDK provides jre-11/java-11
-#      b) Oracle provides jre/java/jdk
-
-out/rpm-java11/SPECS/cypher-shell.spec: packaging/rpm-java11/cypher-shell.spec
-	mkdir -p $(dir $@)
-	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
-
-out/rpm-java11/BUILD/%: %
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/%.rpm: out/rpm-java11/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-java11-test/%.rpm: out/rpm-java11/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-java11-test/Dockerfile: packaging/test/rpm/Dockerfile
-	mkdir -p $(dir $@)
-	RPMFILE=$(rpm11file) envsubst '$${RPMFILE}' < $< > $@
-
-out/rpm-java11/RPMS/noarch/$(rpm-java11file): out/rpm-java11/SPECS/cypher-shell.spec $(rpm-java11_artifacts) out/rpm-java11/BUILD/Makefile out/rpm-java11/BUILD/cypher-shell.1.md
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm-java11" -bb --clean $<
-
-.PHONY: rpm-java11
-rpm-java11: out/$(rpm-java11file) ## Build the RPM package
-
-.PHONY: rpm-java11-test
-rpm-java11-test: tmp/rpm-java11-test/$(rpm-java11file) tmp/rpm-java11-test/Dockerfile ## Test the RPM java 11 (Oracle) package (requires Docker)
-	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
-
 
 
 
