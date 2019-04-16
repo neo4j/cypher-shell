@@ -29,6 +29,7 @@ GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 jarfile := cypher-shell.jar
 rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
+java_adapter_file := neo4j-java-adapter-1.0.0-1.noarch.rpm
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
@@ -124,7 +125,23 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
-# ======================= RPM =======================
+# ======================= RPM JAVA-ADAPTER =======================
+
+.PHONY: java-adapter
+java-adapter: out/$(java_adapter_file) ## Build the RPM package
+
+out/$(java_adapter_file): out/rpm/RPMS/noarch/$(java_adapter_file)
+	mkdir -p $(dir $@)
+	cp $< $@
+
+out/rpm/RPMS/noarch/$(java_adapter_file): out/rpm/SPECS/neo4j-java-adapter.spec
+	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
+
+out/rpm/SPECS/neo4j-java-adapter.spec: packaging/rpm-java-adapter/neo4j-java-adapter.spec
+	mkdir -p $(dir $@)
+	cp $< $@
+
+# ======================= RPM CYPHER-SHELL =======================
 
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
 	mkdir -p $(dir $@)
