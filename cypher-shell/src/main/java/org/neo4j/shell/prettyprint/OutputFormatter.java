@@ -22,7 +22,7 @@ import static org.neo4j.shell.prettyprint.CypherVariablesFormatter.escape;
 
 public interface OutputFormatter {
 
-    enum Capablities {info, plan, result, footer, statistics}
+    enum Capabilities {INFO, PLAN, RESULT, FOOTER, STATISTICS}
 
     String COMMA_SEPARATOR = ", ";
     String COLON_SEPARATOR = ": ";
@@ -186,9 +186,9 @@ public interface OutputFormatter {
         return "";
     }
 
-    Set<Capablities> capabilities();
+    Set<Capabilities> capabilities();
 
-    List<String> INFO = asList("Version", "Planner", "Runtime");
+    List<String> INFO_SUMMARY = asList("Version", "Planner", "Runtime");
 
     @Nonnull
     static Map<String, Value> info(@Nonnull ResultSummary summary) {
@@ -201,7 +201,7 @@ public interface OutputFormatter {
         Map<String, Value> arguments = plan.arguments();
         Value defaultValue = Values.value("");
 
-        for (String key : INFO) {
+        for (String key : INFO_SUMMARY) {
             Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), defaultValue));
             result.put(key, value);
         }
@@ -213,7 +213,7 @@ public interface OutputFormatter {
 
     static long collectHits(@Nonnull ProfiledPlan operator ) {
         long hits = operator.dbHits();
-        hits = operator.children().stream().map( OutputFormatter::collectHits ).reduce(hits, (acc, subHits) -> acc + subHits );
+        hits = operator.children().stream().map( OutputFormatter::collectHits ).reduce(hits, Long::sum);
         return hits;
     }
 

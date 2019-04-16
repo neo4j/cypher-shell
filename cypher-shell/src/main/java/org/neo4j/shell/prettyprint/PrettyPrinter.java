@@ -4,8 +4,9 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 
 import javax.annotation.Nonnull;
-
 import java.util.Set;
+
+import static org.neo4j.shell.prettyprint.OutputFormatter.Capabilities.*;
 
 /**
  * Print the result from neo4j in a intelligible fashion.
@@ -20,14 +21,14 @@ public class PrettyPrinter {
     }
 
     public void format(@Nonnull final BoltResult result, LinePrinter linePrinter) {
-        Set<OutputFormatter.Capablities> capabilities = outputFormatter.capabilities();
+        Set<OutputFormatter.Capabilities> capabilities = outputFormatter.capabilities();
 
-        if (capabilities.contains(OutputFormatter.Capablities.result)) outputFormatter.format(result, linePrinter);
+        if (capabilities.contains(RESULT)) outputFormatter.format(result, linePrinter);
 
-        if (capabilities.contains(OutputFormatter.Capablities.info)) linePrinter.printOut(outputFormatter.formatInfo(result.getSummary()));
-        if (capabilities.contains(OutputFormatter.Capablities.plan)) linePrinter.printOut(outputFormatter.formatPlan(result.getSummary()));
-        if (capabilities.contains(OutputFormatter.Capablities.footer)) linePrinter.printOut(outputFormatter.formatFooter(result));
-        if (capabilities.contains(OutputFormatter.Capablities.statistics)) linePrinter.printOut(statisticsCollector.collect(result.getSummary()));
+        if (capabilities.contains(INFO)) linePrinter.printOut(outputFormatter.formatInfo(result.getSummary()));
+        if (capabilities.contains(PLAN)) linePrinter.printOut(outputFormatter.formatPlan(result.getSummary()));
+        if (capabilities.contains(FOOTER)) linePrinter.printOut(outputFormatter.formatFooter(result));
+        if (capabilities.contains(STATISTICS)) linePrinter.printOut(statisticsCollector.collect(result.getSummary()));
     }
 
     // Helper for testing

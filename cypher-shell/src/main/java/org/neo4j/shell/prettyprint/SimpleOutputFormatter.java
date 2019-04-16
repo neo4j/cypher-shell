@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.neo4j.shell.prettyprint.OutputFormatter.Capabilities.*;
+
 public class SimpleOutputFormatter implements OutputFormatter {
 
     @Override
@@ -44,7 +46,7 @@ public class SimpleOutputFormatter implements OutputFormatter {
     }
 
     @Override
-    public Set<Capablities> capabilities() {
-        return EnumSet.of(Capablities.info, Capablities.statistics, Capablities.result);
+    public Set<Capabilities> capabilities() {
+        return EnumSet.of(INFO, STATISTICS, RESULT);
     }
 }

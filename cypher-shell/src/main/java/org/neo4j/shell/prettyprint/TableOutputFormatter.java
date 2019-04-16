@@ -169,7 +169,7 @@ public class TableOutputFormatter implements OutputFormatter {
     }
 
     @Override
-    public Set<Capablities> capabilities() {
-        return EnumSet.allOf(Capablities.class);
+    public Set<Capabilities> capabilities() {
+        return EnumSet.allOf(Capabilities.class);
     }
 }
