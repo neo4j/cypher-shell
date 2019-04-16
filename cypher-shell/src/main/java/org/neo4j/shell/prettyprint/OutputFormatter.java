@@ -30,7 +30,7 @@ public interface OutputFormatter {
     String SPACE = " ";
     String NEWLINE =  System.getProperty("line.separator");
 
-    void format(@Nonnull BoltResult result, @Nonnull LinePrinter linePrinter);
+    int formatAndCount(@Nonnull BoltResult result, @Nonnull LinePrinter linePrinter);
 
     @Nonnull default String formatValue(final Value value) {
         if (value == null) return "";
@@ -70,10 +70,10 @@ public interface OutputFormatter {
     @Nonnull
     default String pointAsString(Point point) {
         StringBuilder stringBuilder = new StringBuilder("point({");
-        stringBuilder.append("srid:" + point.srid() + ",");
+        stringBuilder.append("srid:").append(point.srid()).append(",");
         stringBuilder.append(" x:").append(point.x()).append(",");
         stringBuilder.append(" y:").append(point.y());
-        Double z = point.z();
+        double z = point.z();
         if (!Double.isNaN(z)) {
             stringBuilder.append(", z:").append(z);
         }
@@ -182,7 +182,7 @@ public interface OutputFormatter {
     @Nonnull default String formatInfo(@Nonnull ResultSummary summary) {
         return "";
     }
-    @Nonnull default String formatFooter(@Nonnull BoltResult result) {
+    @Nonnull default String formatFooter(@Nonnull BoltResult result, int numberOfRows) {
         return "";
     }
 

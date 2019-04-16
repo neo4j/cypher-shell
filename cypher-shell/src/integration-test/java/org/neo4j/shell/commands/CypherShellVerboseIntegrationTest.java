@@ -218,4 +218,14 @@ public class CypherShellVerboseIntegrationTest {
         assertThat(actual, containsString("\"RULE\""));
         assertThat(actual, containsString("\"INTERPRETED\""));
     }
+
+    @Test
+    public void shouldShowTheNumberOfRows() throws CommandException {
+        //when
+        shell.execute("UNWIND [1,2,3] AS row RETURN row");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat(actual, containsString("3 rows available"));
+    }
 }

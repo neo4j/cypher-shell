@@ -23,11 +23,14 @@ public class PrettyPrinter {
     public void format(@Nonnull final BoltResult result, LinePrinter linePrinter) {
         Set<OutputFormatter.Capabilities> capabilities = outputFormatter.capabilities();
 
-        if (capabilities.contains(RESULT)) outputFormatter.format(result, linePrinter);
+        int numberOfRows = 0;
+        if (capabilities.contains(RESULT)) {
+            numberOfRows = outputFormatter.formatAndCount(result, linePrinter);
+        }
 
         if (capabilities.contains(INFO)) linePrinter.printOut(outputFormatter.formatInfo(result.getSummary()));
         if (capabilities.contains(PLAN)) linePrinter.printOut(outputFormatter.formatPlan(result.getSummary()));
-        if (capabilities.contains(FOOTER)) linePrinter.printOut(outputFormatter.formatFooter(result));
+        if (capabilities.contains(FOOTER)) linePrinter.printOut(outputFormatter.formatFooter(result, numberOfRows));
         if (capabilities.contains(STATISTICS)) linePrinter.printOut(statisticsCollector.collect(result.getSummary()));
     }
 

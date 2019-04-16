@@ -17,16 +17,20 @@ import static org.neo4j.shell.prettyprint.OutputFormatter.Capabilities.*;
 public class SimpleOutputFormatter implements OutputFormatter {
 
     @Override
-    public void format(@Nonnull BoltResult result, @Nonnull LinePrinter output) {
+    public int formatAndCount(@Nonnull BoltResult result, @Nonnull LinePrinter output) {
         Iterator<Record> records = result.iterate();
+        int numberOfRows = 0;
         if (records.hasNext()) {
             Record firstRow = records.next();
             output.printOut(String.join(COMMA_SEPARATOR, firstRow.keys()));
             output.printOut(formatRecord(firstRow));
+            numberOfRows++;
             while (records.hasNext()) {
                 output.printOut(formatRecord(records.next()));
+                numberOfRows++;
             }
         }
+        return numberOfRows;
     }
 
     @Nonnull
