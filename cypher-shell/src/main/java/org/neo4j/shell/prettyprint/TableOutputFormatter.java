@@ -72,7 +72,7 @@ public class TableOutputFormatter implements OutputFormatter {
             output.printOut(formatRecord(builder, columnSizes, records.next()));
             numberOfRows++;
         }
-        output.printOut(dashes);
+        output.printOut(String.format("%s%n", dashes));
         return numberOfRows;
     }
 

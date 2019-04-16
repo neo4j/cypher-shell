@@ -290,7 +290,7 @@ public class TableOutputFormatterTest {
                 "| \"eee |",
                 "| ee\"  |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test
@@ -313,7 +313,7 @@ public class TableOutputFormatterTest {
                 "| \"dd… |",
                 "| \"ee… |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test

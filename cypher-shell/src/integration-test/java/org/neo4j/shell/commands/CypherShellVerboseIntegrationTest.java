@@ -228,4 +228,24 @@ public class CypherShellVerboseIntegrationTest {
         String actual = linePrinter.output();
         assertThat(actual, containsString("3 rows available"));
     }
+
+    @Test
+    public void shouldNotContainUnnecessaryNewLines() throws CommandException {
+        //when
+        shell.execute("UNWIND [1,2,3] AS row RETURN row");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat(actual,
+                containsString( String.format(
+                        "+-----+%n" +
+                        "| row |%n" +
+                        "+-----+%n" +
+                        "| 1   |%n" +
+                        "| 2   |%n" +
+                        "| 3   |%n" +
+                        "+-----+%n" +
+                        "%n" +
+                        "3 rows available after")));
+    }
 }

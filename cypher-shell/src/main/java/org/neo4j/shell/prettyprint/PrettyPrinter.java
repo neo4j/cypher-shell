@@ -28,10 +28,10 @@ public class PrettyPrinter {
             numberOfRows = outputFormatter.formatAndCount(result, linePrinter);
         }
 
-        if (capabilities.contains(INFO)) linePrinter.printOut(outputFormatter.formatInfo(result.getSummary()));
-        if (capabilities.contains(PLAN)) linePrinter.printOut(outputFormatter.formatPlan(result.getSummary()));
-        if (capabilities.contains(FOOTER)) linePrinter.printOut(outputFormatter.formatFooter(result, numberOfRows));
-        if (capabilities.contains(STATISTICS)) linePrinter.printOut(statisticsCollector.collect(result.getSummary()));
+        if (capabilities.contains(INFO)) printIfNotEmpty(outputFormatter.formatInfo(result.getSummary()), linePrinter);
+        if (capabilities.contains(PLAN)) printIfNotEmpty(outputFormatter.formatPlan(result.getSummary()), linePrinter);
+        if (capabilities.contains(FOOTER)) printIfNotEmpty(outputFormatter.formatFooter(result, numberOfRows), linePrinter);
+        if (capabilities.contains(STATISTICS)) printIfNotEmpty(statisticsCollector.collect(result.getSummary()), linePrinter);
     }
 
     // Helper for testing
@@ -39,6 +39,12 @@ public class PrettyPrinter {
         StringBuilder sb = new StringBuilder();
         format(result, line -> {if (line!=null && !line.trim().isEmpty()) sb.append(line).append(OutputFormatter.NEWLINE);});
         return sb.toString();
+    }
+
+    private void printIfNotEmpty( String s, LinePrinter linePrinter ) {
+        if (!s.isEmpty()) {
+            linePrinter.printOut( s );
+        }
     }
 
     private OutputFormatter selectFormatter(PrettyConfig prettyConfig) {
