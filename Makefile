@@ -38,7 +38,9 @@ deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts}
 deb_files:=$(wildcard packaging/debian/*)
 deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
-DOCKERUUIDRPM := $(shell uuidgen)
+DOCKERUUIDRPM   := $(shell uuidgen)
+YUMREPO_VOLUMEID := $(shell uuidgen)
+YUMREPO_IMAGEID  := repomaker/$(shell uuidgen | head -c 5)
 
 help: ## Print this help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -141,6 +143,24 @@ out/rpm/SPECS/neo4j-java-adapter.spec: packaging/rpm-java-adapter/neo4j-java-ada
 	mkdir -p $(dir $@)
 	cp $< $@
 
+.PHONY: java-adapter-test
+java-adapter-test: tmp/java-adapter-test/Dockerfile java-adapter-test-rpm-artifacts
+	cd $(<D) && docker build . --rm -t $(YUMREPO_IMAGEID)
+	docker volume create --name $(YUMREPO_VOLUMEID)
+	docker run --rm --volume $(YUMREPO_VOLUMEID):/repo $(YUMREPO_IMAGEID)
+	echo $(YUMREPO_VOLUMEID) > tmp/java-adapter-test/volumeid
+
+java-adapter-test-rpm-artifacts: tmp/java-adapter-test/$(java_adapter_file) tmp/java-adapter-test/$(rpmfile)
+
+tmp/java-adapter-test/%.rpm: out/%.rpm
+	mkdir -p $(dir $@)
+	cp $< $@
+
+tmp/java-adapter-test/Dockerfile: packaging/test/java-adapter/Dockerfile
+	mkdir -p $(dir $@)
+	CYPHER_SHELL_FILE=$(rpmfile) JAVA_ADAPTER_FILE=$(java_adapter_file) envsubst '$${CYPHER_SHELL_FILE} $${JAVA_ADAPTER_FILE}' < $< > $@
+
+
 # ======================= RPM CYPHER-SHELL =======================
 
 out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
@@ -170,7 +190,7 @@ out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts)
 rpm: out/$(rpmfile) ## Build the RPM package
 
 .PHONY: rpm-test
-rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM java 11 (Oracle) package (requires Docker)
+rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM package (requires Docker)
 	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
 
 
