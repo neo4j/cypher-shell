@@ -24,14 +24,14 @@ public class TableOutputFormatter implements OutputFormatter {
     }
 
     @Override
-    public void format(@Nonnull BoltResult result, @Nonnull LinePrinter output) {
+    public int formatAndCount(@Nonnull BoltResult result, @Nonnull LinePrinter output) {
         String[] columns = result.getKeys().toArray(new String[0]);
         if (columns.length == 0) {
-            return;
+            return 0;
         }
 
         Iterator<Record> records = result.iterate();
-        formatResult(columns, records, output);
+        return formatResultAndCountRows(columns, records, output);
     }
 
     private List<Record> take(Iterator<Record> records, int count) {
@@ -42,9 +42,9 @@ public class TableOutputFormatter implements OutputFormatter {
         return topRecords;
     }
 
-    private void formatResult(String[] columns,
-                              Iterator<Record> records,
-                              LinePrinter output) {
+    private int formatResultAndCountRows(String[] columns,
+                                         Iterator<Record> records,
+                                         LinePrinter output) {
 
         List<Record> topRecords = take(records, numSampleRows);
         int[] columnSizes = calculateColumnSizes(columns, topRecords);
@@ -63,13 +63,17 @@ public class TableOutputFormatter implements OutputFormatter {
         output.printOut(headerLine);
         output.printOut(dashes);
 
+        int numberOfRows = 0;
         for (Record record : topRecords) {
             output.printOut(formatRecord(builder, columnSizes, record));
+            numberOfRows++;
         }
         while (records.hasNext()) {
             output.printOut(formatRecord(builder, columnSizes, records.next()));
+            numberOfRows++;
         }
-        output.printOut(dashes);
+        output.printOut(String.format("%s%n", dashes));
+        return numberOfRows;
     }
 
     private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data) {
@@ -136,11 +140,10 @@ public class TableOutputFormatter implements OutputFormatter {
 
     @Override
     @Nonnull
-    public String formatFooter(@Nonnull BoltResult result) {
-        int rows = result.getRecords().size();
+    public String formatFooter(@Nonnull BoltResult result, int numberOfRows) {
         ResultSummary summary = result.getSummary();
         return String.format("%d row%s available after %d ms, " +
-                        "consumed after another %d ms", rows, rows != 1 ? "s" : "",
+                        "consumed after another %d ms", numberOfRows, numberOfRows != 1 ? "s" : "",
                 summary.resultAvailableAfter(MILLISECONDS),
                 summary.resultConsumedAfter(MILLISECONDS));
     }
@@ -155,7 +158,7 @@ public class TableOutputFormatter implements OutputFormatter {
         String[] columns = info.keySet().toArray(new String[0]);
         StringBuilder sb = new StringBuilder();
         Record record = new InternalRecord(asList(columns), info.values().toArray(new Value[0]));
-        formatResult(columns, Collections.singletonList(record).iterator(), sb::append);
+        formatResultAndCountRows(columns, Collections.singletonList(record).iterator(), sb::append);
         return sb.toString();
     }
 
@@ -169,7 +172,7 @@ public class TableOutputFormatter implements OutputFormatter {
     }
 
     @Override
-    public Set<Capablities> capabilities() {
-        return EnumSet.allOf(Capablities.class);
+    public Set<Capabilities> capabilities() {
+        return EnumSet.allOf(Capabilities.class);
     }
 }

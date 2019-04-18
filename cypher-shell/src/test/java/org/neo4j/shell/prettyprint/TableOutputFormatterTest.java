@@ -2,6 +2,7 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+<<<<<<< HEAD
 import org.neo4j.driver.internal.InternalIsoDuration;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
@@ -25,6 +26,7 @@ import org.neo4j.driver.summary.StatementType;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
+
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.ListBoltResult;
@@ -288,7 +290,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -304,7 +306,7 @@ public class TableOutputFormatterTest {
                 "| \"eee |",
                 "| ee\"  |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test
@@ -314,7 +316,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(false, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -327,7 +329,7 @@ public class TableOutputFormatterTest {
                 "| \"dd… |",
                 "| \"ee… |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test
@@ -360,7 +362,7 @@ public class TableOutputFormatterTest {
 
     private String formatResult(StatementResult result) {
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 1000).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 1000).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         return printer.result();
     }
 
