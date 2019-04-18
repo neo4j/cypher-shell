@@ -144,21 +144,39 @@ out/rpm/SPECS/neo4j-java-adapter.spec: packaging/rpm-java-adapter/neo4j-java-ada
 	cp $< $@
 
 .PHONY: java-adapter-test
-java-adapter-test: tmp/java-adapter-test/Dockerfile java-adapter-test-rpm-artifacts
-	cd $(<D) && docker build . --rm -t $(YUMREPO_IMAGEID)
+java-adapter-test: java-adapter-test-yumrepo-build java-adapter-test-run
+
+# this target makes a docker volume that contains a yum repository of cyphershell and the java adapter
+# saves the volume id into a file so this step isn't run again until there's a make clean.
+tmp/java-adapter-test/yum-repo/volumeid: 	tmp/java-adapter-test/yum-repo/Dockerfile \
+											tmp/java-adapter-test/yum-repo/$(java_adapter_file) \
+											tmp/java-adapter-test/yum-repo/$(rpmfile)
+	cd $(@D) && docker build . --rm -t $(YUMREPO_IMAGEID)
 	docker volume create --name $(YUMREPO_VOLUMEID)
 	docker run --rm --volume $(YUMREPO_VOLUMEID):/repo $(YUMREPO_IMAGEID)
-	echo $(YUMREPO_VOLUMEID) > tmp/java-adapter-test/volumeid
+	echo $(YUMREPO_VOLUMEID) > $@
 
-java-adapter-test-rpm-artifacts: tmp/java-adapter-test/$(java_adapter_file) tmp/java-adapter-test/$(rpmfile)
+java-adapter-test-yumrepo-build: tmp/java-adapter-test/yum-repo/volumeid
 
-tmp/java-adapter-test/%.rpm: out/%.rpm
+tmp/java-adapter-test/yum-repo/%.rpm: out/%.rpm
 	mkdir -p $(dir $@)
 	cp $< $@
 
-tmp/java-adapter-test/Dockerfile: packaging/test/java-adapter/Dockerfile
+tmp/java-adapter-test/yum-repo/Dockerfile: packaging/test/java-adapter/YumRepo-Dockerfile
 	mkdir -p $(dir $@)
 	CYPHER_SHELL_FILE=$(rpmfile) JAVA_ADAPTER_FILE=$(java_adapter_file) envsubst '$${CYPHER_SHELL_FILE} $${JAVA_ADAPTER_FILE}' < $< > $@
+
+.PHONY: java-adapter-test-run
+java-adapter-test-run: 	tmp/java-adapter-test/tests/java-11-openjdk \
+						tmp/java-adapter-test/tests/java-1.8.0-openjdk-headless \
+						tmp/java-adapter-test/tests/java-1.8.0-openjdk
+
+tmp/java-adapter-test/tests/%: tmp/java-adapter-test/yum-repo/volumeid
+	mkdir -p $@
+	cp packaging/test/java-adapter/tempneo4j.repo $@/tempneo4j.repo
+	TEST_JAVA=$* envsubst '$${TEST_JAVA}' < packaging/test/java-adapter/Centos7-Dockerfile > $@/Dockerfile
+	echo $(shell cat $<)
+	cd $@ && docker build . -t $(DOCKERUUIDRPM) && docker run --volume $(shell cat $<):/repo --rm $(DOCKERUUIDRPM)
 
 
 # ======================= RPM CYPHER-SHELL =======================
