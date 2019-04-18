@@ -2,23 +2,9 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-import org.neo4j.driver.internal.InternalIsoDuration;
-import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.internal.InternalPath;
-import org.neo4j.driver.internal.InternalPoint2D;
-import org.neo4j.driver.internal.InternalPoint3D;
-import org.neo4j.driver.internal.InternalRecord;
-import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.internal.value.DurationValue;
-import org.neo4j.driver.internal.value.NodeValue;
-import org.neo4j.driver.internal.value.PathValue;
-import org.neo4j.driver.internal.value.PointValue;
-import org.neo4j.driver.internal.value.RelationshipValue;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.internal.*;
+import org.neo4j.driver.internal.value.*;
+import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.summary.ProfiledPlan;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.StatementType;
@@ -288,7 +274,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -304,7 +290,7 @@ public class TableOutputFormatterTest {
                 "| \"eee |",
                 "| ee\"  |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test
@@ -314,7 +300,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(false, 2).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(false, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -327,7 +313,7 @@ public class TableOutputFormatterTest {
                 "| \"dd… |",
                 "| \"ee… |",
                 "+------+",
-                "")));
+                NEWLINE)));
     }
 
     @Test
@@ -360,7 +346,7 @@ public class TableOutputFormatterTest {
 
     private String formatResult(StatementResult result) {
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 1000).format(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 1000).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         return printer.result();
     }
 
