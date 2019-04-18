@@ -2,7 +2,6 @@ package org.neo4j.shell.prettyprint;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-<<<<<<< HEAD
 import org.neo4j.driver.internal.InternalIsoDuration;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.internal.InternalPath;
