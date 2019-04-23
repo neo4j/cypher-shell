@@ -9,5 +9,6 @@ if [ $(yum --assumeno install cypher-shell | grep -c "${javaRegex}" | bc) != "0"
     yum --assumeno install cypher-shell
     exit 1
 else
+    echo "cypher-shell did not appear to download another java as a dependency when ${javaTested} is pre-installed. Success!"
     exit 0
 fi

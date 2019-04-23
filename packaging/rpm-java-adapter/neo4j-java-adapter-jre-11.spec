@@ -1,4 +1,4 @@
-Name:       neo4j-java-adapter
+Name:       neo4j-java-adapter-jre-11
 Version:    1.0.0
 Release:    1%{?dist}
 Summary:    Meta package so that Neo4j can be compatible with java 8 and java 11 in both openjdk and oracle

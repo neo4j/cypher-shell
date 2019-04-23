@@ -23,18 +23,21 @@ else
 endif
 
 rpmversion := $(versionnumber)-$(release)
+java_adapter_version:=1.0.0-1
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
 jarfile := cypher-shell.jar
 rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
-java_adapter_file := neo4j-java-adapter-1.0.0-1.noarch.rpm
+java_adapter_files := neo4j-java-adapter-jre-11-$(java_adapter_version).noarch.rpm \
+	neo4j-java-adapter-jre-11-headless-$(java_adapter_version).noarch.rpm
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
 rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
 deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
+java_adapter_artifacts:=$(patsubst %, out/%, ${java_adapter_files})
 deb_files:=$(wildcard packaging/debian/*)
 deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
@@ -130,33 +133,33 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 # ======================= RPM JAVA-ADAPTER =======================
 
 .PHONY: java-adapter
-java-adapter: out/$(java_adapter_file) ## Build the RPM package
+java-adapter: $(java_adapter_artifacts) ## Build the RPM package
 
-out/$(java_adapter_file): out/rpm/RPMS/noarch/$(java_adapter_file)
+out/neo4j-java-adapter-%.rpm: out/rpm/RPMS/noarch/neo4j-java-adapter-%.rpm
 	mkdir -p $(dir $@)
 	cp $< $@
 
-out/rpm/RPMS/noarch/$(java_adapter_file): out/rpm/SPECS/neo4j-java-adapter.spec
+out/rpm/RPMS/noarch/neo4j-java-adapter-%-$(java_adapter_version).noarch.rpm: out/rpm/SPECS/neo4j-java-adapter-%.spec
 	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
 
-out/rpm/SPECS/neo4j-java-adapter.spec: packaging/rpm-java-adapter/neo4j-java-adapter.spec
+out/rpm/SPECS/neo4j-java-adapter-%.spec: packaging/rpm-java-adapter/neo4j-java-adapter-%.spec
 	mkdir -p $(dir $@)
 	cp $< $@
 
 .PHONY: java-adapter-test
-java-adapter-test: 	tmp/java-adapter-test/tests/java-11-openjdk \
-						tmp/java-adapter-test/tests/java-1.8.0-openjdk-headless \
-						tmp/java-adapter-test/tests/java-1.8.0-openjdk
+java-adapter-test: 		tmp/java-adapter-test/tests/java-11-openjdk \
+						tmp/java-adapter-test/tests/java-11-openjdk-headless \
+						tmp/java-adapter-test/tests/java-1.8.0-openjdk \
+						tmp/java-adapter-test/tests/java-1.8.0-openjdk-headless
 
-tmp/java-adapter-test/tests/%:	out/$(java_adapter_file) \
+tmp/java-adapter-test/tests/%:	$(java_adapter_artifacts) \
 								out/$(rpmfile) \
 								packaging/test/java-adapter/tempneo4j.repo \
 								packaging/test/java-adapter/Dockerfile \
 								packaging/test/java-adapter/entrypoint.sh
 	mkdir -p $@
 	cp $^ $@/
-	CYPHER_SHELL_FILE=$(rpmfile) JAVA_ADAPTER_FILE=$(java_adapter_file) TEST_JAVA=$* \
-		envsubst '$${CYPHER_SHELL_FILE} $${JAVA_ADAPTER_FILE} $${TEST_JAVA}' < packaging/test/java-adapter/Dockerfile > $@/Dockerfile
+	TEST_JAVA=$* envsubst '$${TEST_JAVA}' < packaging/test/java-adapter/Dockerfile > $@/Dockerfile
 	cd $@ && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM)
 
 

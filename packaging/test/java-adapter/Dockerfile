@@ -2,8 +2,9 @@ FROM centos:7
 
 VOLUME /repo
 
-COPY ${CYPHER_SHELL_FILE} /repo/
-COPY ${JAVA_ADAPTER_FILE} /repo/
+#COPY ${CYPHER_SHELL_FILE} /repo/
+#COPY ${JAVA_ADAPTER_FILE} /repo/
+COPY *.rpm /repo/
 COPY tempneo4j.repo /tmp/
 COPY entrypoint.sh /tmp/
 
