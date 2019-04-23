@@ -1,9 +1,0 @@
-FROM centos:7
-
-VOLUME /repo
-
-COPY tempneo4j.repo /etc/yum.repos.d/
-
-RUN yum --assumeyes install ${TEST_JAVA} cypher-shell
-
-ENTRYPOINT ["/usr/bin/cypher-shell"]
