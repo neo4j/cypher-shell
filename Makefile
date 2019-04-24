@@ -133,7 +133,7 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 # ======================= RPM JAVA-ADAPTER =======================
 
 .PHONY: java-adapter
-java-adapter: $(java_adapter_artifacts) ## Build the RPM package
+java-adapter: $(java_adapter_artifacts) ## Build the java adapter package for java 11 compatibility
 
 out/neo4j-java-adapter-%.rpm: out/rpm/RPMS/noarch/neo4j-java-adapter-%.rpm
 	mkdir -p $(dir $@)
