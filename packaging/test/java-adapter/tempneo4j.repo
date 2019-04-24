@@ -1,0 +1,5 @@
+[tempneo4j]
+name=temp neo4j repo
+baseurl=file:///repo
+enabled=1
+gpgcheck=0
