@@ -131,9 +131,15 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	cp $< $@
 
 # ======================= RPM JAVA-ADAPTER =======================
+## Build the java adapter package for java 11 compatibility
+## oracle and openjdk java 11 don't provide the same java package names any more,
+## and rpm might not be advanced enough to support boolean dependencies.
+## To fix that, we have a few empty java packages that provide various standard java package names.
+## This page is helpful for understanding this make code:
+## https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 
 .PHONY: java-adapter
-java-adapter: $(java_adapter_artifacts) ## Build the java adapter package for java 11 compatibility
+java-adapter: $(java_adapter_artifacts)
 
 out/neo4j-java-adapter-%.rpm: out/rpm/RPMS/noarch/neo4j-java-adapter-%.rpm
 	mkdir -p $(dir $@)
