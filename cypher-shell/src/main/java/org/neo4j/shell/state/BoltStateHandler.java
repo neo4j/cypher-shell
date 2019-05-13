@@ -149,7 +149,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         Consumer<SessionParametersTemplate> sessionArgs = t -> t.withDefaultAccessMode(AccessMode.WRITE).withDatabase(activeDatabaseName);
         session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
 
-        StatementResult run = session.run("RETURN 1");
+        String query = activeDatabaseName.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
+        StatementResult run = session.run(query);
         this.version = run.summary().server().version();
         // It would be nice if we could also get the actual database name here, in the case where we used ABSENT_DB_NAME
         run.consume();
