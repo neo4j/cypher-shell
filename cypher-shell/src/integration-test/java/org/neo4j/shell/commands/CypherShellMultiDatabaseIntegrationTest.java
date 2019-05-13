@@ -14,6 +14,7 @@ import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -56,14 +57,32 @@ public class CypherShellMultiDatabaseIntegrationTest
         useCommand.execute(SYSTEM_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
+
+        shell.execute("SHOW DATABASES");
+        assertThat(linePrinter.output(), containsString("neo4j"));
+        assertThat(linePrinter.output(), containsString("system"));
+    }
+
+    @Test
+    public void switchingToSystemDatabaseAndBackToNeo4jWorks() throws CommandException {
+        useCommand.execute(SYSTEM_DB_NAME);
+        useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
+
+        assertThat(linePrinter.output(), is(""));
+
+        shell.execute("RETURN 'toadstool'");
+        assertThat(linePrinter.output(), containsString("toadstool"));
     }
 
     @Test
     public void switchingToSystemDatabaseAndBackToDefaultWorks() throws CommandException {
         useCommand.execute(SYSTEM_DB_NAME);
-        useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
+        useCommand.execute(ABSENT_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
+
+        shell.execute("RETURN 'pottypie'");
+        assertThat(linePrinter.output(), containsString("pottypie"));
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.neo4j.shell.exception.CommandException;
  */
 public interface DatabaseManager
 {
+    String ABSENT_DB_NAME = "";
     String DEFAULT_DEFAULT_DB_NAME = "neo4j";
     String SYSTEM_DB_NAME = "system";
 
