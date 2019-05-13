@@ -57,10 +57,7 @@ public class CypherShellMultiDatabaseIntegrationTest
         useCommand.execute(SYSTEM_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
-
-        shell.execute("SHOW DATABASES");
-        assertThat(linePrinter.output(), containsString("neo4j"));
-        assertThat(linePrinter.output(), containsString("system"));
+        assertOnSystemDB();
     }
 
     @Test
@@ -69,9 +66,7 @@ public class CypherShellMultiDatabaseIntegrationTest
         useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
-
-        shell.execute("RETURN 'toadstool'");
-        assertThat(linePrinter.output(), containsString("toadstool"));
+        assertOnRegularDB();
     }
 
     @Test
@@ -80,9 +75,7 @@ public class CypherShellMultiDatabaseIntegrationTest
         useCommand.execute(ABSENT_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
-
-        shell.execute("RETURN 'pottypie'");
-        assertThat(linePrinter.output(), containsString("pottypie"));
+        assertOnRegularDB();
     }
 
     @Test
@@ -101,6 +94,7 @@ public class CypherShellMultiDatabaseIntegrationTest
         useCommand.execute(SYSTEM_DB_NAME);
 
         assertThat(linePrinter.output(), is(""));
+        assertOnSystemDB();
     }
 
     @Test
@@ -109,5 +103,18 @@ public class CypherShellMultiDatabaseIntegrationTest
         thrown.expectMessage("The database requested does not exist.");
 
         useCommand.execute("this_database_name_does_not_exist_in_test_container");
+    }
+
+    // HELPERS
+
+    private void assertOnRegularDB() throws CommandException {
+        shell.execute("RETURN 'toadstool'");
+        assertThat(linePrinter.output(), containsString("toadstool"));
+    }
+
+    private void assertOnSystemDB() throws CommandException {
+        shell.execute("SHOW DATABASES");
+        assertThat(linePrinter.output(), containsString("neo4j"));
+        assertThat(linePrinter.output(), containsString("system"));
     }
 }
