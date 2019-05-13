@@ -270,21 +270,21 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals( format("myusername@mydb%n> "), prompt.plainString());
+        assertEquals( format("myusername@mydb> "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals( format("myusername@mydb%n> "), prompt.plainString());
+        assertEquals( format("myusername@mydb> "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("  ", prompt.plainString());
+        assertEquals("       ", prompt.plainString());
     }
 
     @Test
@@ -299,21 +299,21 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.getPrompt();
 
         // then
-        assertEquals(format("myusername@mydb%n# "), prompt.plainString());
+        assertEquals(format("myusername@mydb# "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals(format("myusername@mydb%n# "), prompt.plainString());
+        assertEquals(format("myusername@mydb# "), prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
         prompt = runner.getPrompt();
 
         // then
-        assertEquals("  ", prompt.plainString());
+        assertEquals("       ", prompt.plainString());
     }
 
     @Test

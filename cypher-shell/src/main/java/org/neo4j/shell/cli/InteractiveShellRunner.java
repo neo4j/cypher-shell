@@ -35,7 +35,7 @@ import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     static final String INTERRUPT_SIGNAL = "INT";
     private final static String FRESH_PROMPT = "> ";
-    private final static AnsiFormattedText CONTINUATION_PROMPT = AnsiFormattedText.s().bold().append("  ");
+    private final static AnsiFormattedText CONTINUATION_PROMPT = AnsiFormattedText.s().bold().append("       ");
     private final static String TRANSACTION_PROMPT = "# ";
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -172,7 +172,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                 .append(connectionConfig.username())
                 .append("@")
                 .append(databaseName)
-                .appendNewLine()
+//                .appendNewLine()
                 .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
         return prompt;
     }
