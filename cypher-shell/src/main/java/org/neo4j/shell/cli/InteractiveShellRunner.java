@@ -15,6 +15,7 @@ import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.prettyprint.OutputFormatter;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
@@ -35,7 +36,6 @@ import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
 public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     static final String INTERRUPT_SIGNAL = "INT";
     private final static String FRESH_PROMPT = "> ";
-    private final static AnsiFormattedText CONTINUATION_PROMPT = AnsiFormattedText.s().bold().append("       ");
     private final static String TRANSACTION_PROMPT = "# ";
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -50,6 +50,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Nonnull private final StatementExecuter executer;
     @Nonnull private final UserMessagesHandler userMessagesHandler;
     @Nonnull private final ConnectionConfig connectionConfig;
+
+    private AnsiFormattedText continuationPrompt = null;
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
                                   @Nonnull TransactionHandler txHandler,
@@ -131,7 +133,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Nonnull
     public List<String> readUntilStatement() throws IOException, NoMoreInputException {
         while (true) {
-            String line = reader.readLine(getPrompt().renderedString());
+            String line = reader.readLine(updateAndGetPrompt().renderedString());
             if (line == null) {
                 // User hit CTRL-D, or file ended
                 throw new NoMoreInputException();
@@ -153,9 +155,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     /**
      * @return suitable prompt depending on current parsing state
      */
-    AnsiFormattedText getPrompt() {
+    AnsiFormattedText updateAndGetPrompt() {
         if (statementParser.containsText()) {
-            return CONTINUATION_PROMPT;
+            return continuationPrompt;
         }
 
         String databaseName = databaseManager.getActiveDatabase();
@@ -168,13 +170,23 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         //  but that does not work in general)
         databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
 
-        AnsiFormattedText prompt = AnsiFormattedText.s().bold()
+        int promptIndent = connectionConfig.username().length() + 1 + databaseName.length() + 2;
+        AnsiFormattedText prePrompt = AnsiFormattedText.s().bold()
                 .append(connectionConfig.username())
                 .append("@")
-                .append(databaseName)
-//                .appendNewLine()
-                .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
-        return prompt;
+                .append(databaseName);
+
+        if (promptIndent <= 50) {
+            continuationPrompt = AnsiFormattedText.s().bold().append(OutputFormatter.repeat(' ', promptIndent));
+            return prePrompt
+                    .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
+
+        } else {
+            continuationPrompt = AnsiFormattedText.s().bold();
+            return prePrompt
+                    .appendNewLine()
+                    .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
+        }
     }
 
     /**
@@ -220,7 +232,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             statementParser.reset();
 
             // Redraw the prompt now because the error message has changed the terminal text
-            reader.setPrompt(getPrompt().renderedString());
+            reader.setPrompt(updateAndGetPrompt().renderedString());
             reader.redrawLine();
             reader.flush();
         } catch (IOException e) {

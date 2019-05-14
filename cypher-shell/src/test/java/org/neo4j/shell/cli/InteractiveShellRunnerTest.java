@@ -20,6 +20,7 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
+import org.neo4j.shell.prettyprint.OutputFormatter;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
 import sun.misc.Signal;
@@ -267,24 +268,57 @@ public class InteractiveShellRunnerTest {
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(false);
-        AnsiFormattedText prompt = runner.getPrompt();
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals( format("myusername@mydb> "), prompt.plainString());
+        String wantedPrompt = "myusername@mydb> ";
+        assertEquals(wantedPrompt, prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
-        prompt = runner.getPrompt();
+        prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals( format("myusername@mydb> "), prompt.plainString());
+        assertEquals(wantedPrompt, prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
-        prompt = runner.getPrompt();
+        prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals("       ", prompt.plainString());
+        assertEquals(OutputFormatter.repeat(' ', wantedPrompt.length()), prompt.plainString());
+    }
+
+    @Test
+    public void testLongPrompt() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        String dbName = "TheLongestDbNameEverCreatedInAllOfHistoryAndTheUniversePlusSome";
+        when(databaseManager.getActiveDatabase()).thenReturn(dbName);
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
+
+        // when
+        when(txHandler.isTransactionOpen()).thenReturn(false);
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
+
+        // then
+        String wantedPrompt = format("myusername@%s%n> ", dbName);
+        assertEquals(wantedPrompt, prompt.plainString());
+
+        // when
+        statementParser.parseMoreText("  \t \n   "); // whitespace
+        prompt = runner.updateAndGetPrompt();
+
+        // then
+        assertEquals(wantedPrompt, prompt.plainString());
+
+        // when
+        statementParser.parseMoreText("bla bla"); // non whitespace
+        prompt = runner.updateAndGetPrompt();
+
+        // then
+        assertEquals("", prompt.plainString());
     }
 
     @Test
@@ -296,24 +330,25 @@ public class InteractiveShellRunnerTest {
 
         // when
         when(txHandler.isTransactionOpen()).thenReturn(true);
-        AnsiFormattedText prompt = runner.getPrompt();
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals(format("myusername@mydb# "), prompt.plainString());
+        String wantedPrompt = "myusername@mydb# ";
+        assertEquals(wantedPrompt, prompt.plainString());
 
         // when
         statementParser.parseMoreText("  \t \n   "); // whitespace
-        prompt = runner.getPrompt();
+        prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals(format("myusername@mydb# "), prompt.plainString());
+        assertEquals(wantedPrompt, prompt.plainString());
 
         // when
         statementParser.parseMoreText("bla bla"); // non whitespace
-        prompt = runner.getPrompt();
+        prompt = runner.updateAndGetPrompt();
 
         // then
-        assertEquals("       ", prompt.plainString());
+        assertEquals(OutputFormatter.repeat(' ', wantedPrompt.length()), prompt.plainString());
     }
 
     @Test
@@ -446,6 +481,11 @@ public class InteractiveShellRunnerTest {
             super.reset();
             // But also simulate reset by interrupting the thread
             executionThread.get().interrupt();
+        }
+
+        @Override
+        public String getActiveDatabase() {
+            return ABSENT_DB_NAME;
         }
     }
 }
