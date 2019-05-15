@@ -37,6 +37,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     static final String INTERRUPT_SIGNAL = "INT";
     private final static String FRESH_PROMPT = "> ";
     private final static String TRANSACTION_PROMPT = "# ";
+    private final static String USERNAME_DB_DELIMITER = "@";
+    private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
     private final AtomicBoolean currentlyExecuting;
@@ -170,13 +172,17 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         //  but that does not work in general)
         databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
 
-        int promptIndent = connectionConfig.username().length() + 1 + databaseName.length() + 2;
+        int promptIndent = connectionConfig.username().length() +
+                           USERNAME_DB_DELIMITER.length() +
+                           databaseName.length() +
+                           FRESH_PROMPT.length();
+
         AnsiFormattedText prePrompt = AnsiFormattedText.s().bold()
                 .append(connectionConfig.username())
                 .append("@")
                 .append(databaseName);
 
-        if (promptIndent <= 50) {
+        if (promptIndent <= ONELINE_PROMPT_MAX_LENGTH) {
             continuationPrompt = AnsiFormattedText.s().bold().append(OutputFormatter.repeat(' ', promptIndent));
             return prePrompt
                     .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
