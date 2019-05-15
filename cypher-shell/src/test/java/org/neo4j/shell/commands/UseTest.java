@@ -28,12 +28,10 @@ public class UseTest
     }
 
     @Test
-    public void shouldFailIfNoArgs() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
-
+    public void setAbsentDatabaseOnNoArgument() throws CommandException {
         cmd.execute("");
-        fail("Expected error");
+
+        verify(mockShell).setActiveDatabase(DatabaseManager.ABSENT_DB_NAME);
     }
 
     @Test

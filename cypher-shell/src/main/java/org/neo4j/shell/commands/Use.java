@@ -54,7 +54,8 @@ public class Use implements Command {
 
     @Override
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
-        String[] args = simpleArgParse(argString, 1, COMMAND_NAME, getUsage());
-        databaseManager.setActiveDatabase(args[0]);
+        String[] args = simpleArgParse(argString, 0, 1, COMMAND_NAME, getUsage());
+        String databaseName = args.length == 0 ? DatabaseManager.ABSENT_DB_NAME : args[0];
+        databaseManager.setActiveDatabase(databaseName);
     }
 }
