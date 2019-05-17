@@ -206,8 +206,14 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Override
-    public String getActiveDatabase()
+    public String getActiveDatabaseAsSetByUser()
     {
-        return boltStateHandler.getActiveDatabase();
+        return boltStateHandler.getActiveDatabaseAsSetByUser();
+    }
+
+    @Override
+    public String getActualDatabaseAsReportedByServer()
+    {
+        return boltStateHandler.getActualDatabaseAsReportedByServer();
     }
 }

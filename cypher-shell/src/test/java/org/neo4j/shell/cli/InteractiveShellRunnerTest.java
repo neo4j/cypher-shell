@@ -77,7 +77,7 @@ public class InteractiveShellRunnerTest {
         historyFile = temp.newFile();
         badLineError = new ClientException("Found a bad line");
         userMessagesHandler = mock(UserMessagesHandler.class);
-        when(databaseManager.getActiveDatabase()).thenReturn("mydb");
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn("mydb");
         when(userMessagesHandler.getWelcomeMessage()).thenReturn("Welcome to cypher-shell!");
         when(userMessagesHandler.getExitMessage()).thenReturn("Exit message");
         when(connectionConfig.username()).thenReturn("myusername");
@@ -293,8 +293,8 @@ public class InteractiveShellRunnerTest {
     public void testLongPrompt() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        String dbName = "TheLongestDbNameEverCreatedInAllOfHistoryAndTheUniversePlusSome";
-        when(databaseManager.getActiveDatabase()).thenReturn(dbName);
+        String actualDbName = "TheLongestDbNameEverCreatedInAllOfHistoryAndTheUniversePlusSome";
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(actualDbName);
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
                 historyFile, userMessagesHandler, connectionConfig);
 
@@ -303,7 +303,7 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.updateAndGetPrompt();
 
         // then
-        String wantedPrompt = format("myusername@%s%n> ", dbName);
+        String wantedPrompt = format("myusername@%s%n> ", actualDbName);
         assertEquals(wantedPrompt, prompt.plainString());
 
         // when
@@ -484,8 +484,13 @@ public class InteractiveShellRunnerTest {
         }
 
         @Override
-        public String getActiveDatabase() {
+        public String getActiveDatabaseAsSetByUser() {
             return ABSENT_DB_NAME;
+        }
+
+        @Override
+        public String getActualDatabaseAsReportedByServer() {
+            return DEFAULT_DEFAULT_DB_NAME;
         }
     }
 }

@@ -7,6 +7,7 @@ import org.neo4j.driver.SessionParametersTemplate;
 import org.neo4j.driver.async.AsyncSession;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.reactive.RxSession;
+import org.neo4j.driver.types.TypeSystem;
 
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -62,6 +63,12 @@ public class FakeDriver implements Driver {
 
     @Override
     public AsyncSession asyncSession(Consumer<SessionParametersTemplate> templateConsumer)
+    {
+        return null;
+    }
+
+    @Override
+    public TypeSystem defaultTypeSystem()
     {
         return null;
     }

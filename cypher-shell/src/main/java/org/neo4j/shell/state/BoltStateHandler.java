@@ -39,7 +39,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     protected Session session;
     private String version;
     private List<Statement> transactionStatements;
-    private String activeDatabaseName;
+    private String activeDatabaseNameAsSetByUser;
+    private String actualDatabaseNameAsReportedByServer;
 
     public BoltStateHandler() {
         this(GraphDatabase::driver);
@@ -47,7 +48,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
     BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
         this.driverProvider = driverProvider;
-        activeDatabaseName = "";
+        activeDatabaseNameAsSetByUser = ABSENT_DB_NAME;
+        actualDatabaseNameAsReportedByServer = UNRESOLVED_DEFAULT_DB_NAME;
     }
 
     @Override
@@ -56,16 +58,22 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         if (isTransactionOpen()) {
             throw new CommandException("There is an open transaction. You need to close it before you can switch database.");
         }
-        activeDatabaseName = databaseName;
+        activeDatabaseNameAsSetByUser = databaseName;
         if (isConnected()) {
             reconnect(false);
         }
     }
 
     @Override
-    public String getActiveDatabase()
+    public String getActiveDatabaseAsSetByUser()
     {
-        return activeDatabaseName;
+        return activeDatabaseNameAsSetByUser;
+    }
+
+    @Override
+    public String getActualDatabaseAsReportedByServer()
+    {
+        return actualDatabaseNameAsReportedByServer;
     }
 
     @Override
@@ -146,13 +154,18 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             session.close();
             sessionOptionalArgs = t -> t.withBookmarks(bookmark);
         }
-        Consumer<SessionParametersTemplate> sessionArgs = t -> t.withDefaultAccessMode(AccessMode.WRITE).withDatabase(activeDatabaseName);
+        Consumer<SessionParametersTemplate> sessionArgs = t -> {
+            t.withDefaultAccessMode(AccessMode.WRITE);
+            if (!ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser )) {
+                t.withDatabase( activeDatabaseNameAsSetByUser );
+            }
+        };
         session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
 
-        String query = activeDatabaseName.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
+        String query = activeDatabaseNameAsSetByUser.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
         StatementResult run = session.run(query);
         this.version = run.summary().server().version();
-        // It would be nice if we could also get the actual database name here, in the case where we used ABSENT_DB_NAME
+        this.actualDatabaseNameAsReportedByServer = run.summary().database().name();
         run.consume();
     }
 

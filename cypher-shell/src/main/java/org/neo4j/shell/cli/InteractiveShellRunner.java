@@ -26,9 +26,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
-import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
-
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
  * along the way.
@@ -162,15 +159,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             return continuationPrompt;
         }
 
-        String databaseName = databaseManager.getActiveDatabase();
-
-        // Substitute empty name for the default default-database-name
-        // For now we just use a hard-coded default name
-        // Ideally we would like to receive the actual name in the ResultSummary when we connect (in BoltStateHandler.reconnect())
-        // (If the user is an admin we could also query for the default database config value with:
-        //   "CALL dbms.listConfig() YIELD name, value WHERE name = "dbms.default_database" RETURN value"
-        //  but that does not work in general)
-        databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
+        String databaseName = databaseManager.getActualDatabaseAsReportedByServer();
 
         int promptIndent = connectionConfig.username().length() +
                            USERNAME_DB_DELIMITER.length() +
