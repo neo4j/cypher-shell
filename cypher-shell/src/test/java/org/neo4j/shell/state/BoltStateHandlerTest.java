@@ -47,8 +47,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
-import static org.neo4j.shell.state.BoltStateHandler.DISCONNECTED_DB_PROMPT_TEXT;
-import static org.neo4j.shell.state.BoltStateHandler.UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
+import static org.neo4j.shell.cli.InteractiveShellRunner.DISCONNECTED_DB_PROMPT_TEXT;
+import static org.neo4j.shell.cli.InteractiveShellRunner.UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
 
 public class BoltStateHandlerTest {
     @Rule

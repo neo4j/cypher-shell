@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
+
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
  * along the way.
@@ -36,6 +38,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String TRANSACTION_PROMPT = "# ";
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
+    public static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    public static final String DISCONNECTED_DB_PROMPT_TEXT = "[DISCONNECTED]";
+
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
     private final AtomicBoolean currentlyExecuting;
@@ -160,6 +165,16 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         }
 
         String databaseName = databaseManager.getActualDatabaseAsReportedByServer();
+        if (databaseName == null) {
+            // We have failed to get a successful response from the connection ping query
+            // Build the prompt from the db name as set by the user + a suffix indicating that we are in a disconnected state
+            String dbNameSetByUser = databaseManager.getActiveDatabaseAsSetByUser();
+            databaseName = ABSENT_DB_NAME.equals(dbNameSetByUser)? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbNameSetByUser;
+            databaseName += DISCONNECTED_DB_PROMPT_TEXT;
+        } else if (ABSENT_DB_NAME.equals(databaseName)) {
+            // The driver did not give us a database name in the response from the connection ping query
+            databaseName = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
+        }
 
         int promptIndent = connectionConfig.username().length() +
                            USERNAME_DB_DELIMITER.length() +

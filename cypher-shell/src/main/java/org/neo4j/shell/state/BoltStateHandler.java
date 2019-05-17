@@ -35,9 +35,6 @@ import java.util.stream.Collectors;
  * Handles interactions with the driver
  */
 public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
-    static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
-    static final String DISCONNECTED_DB_PROMPT_TEXT = "[DISCONNECTED]";
-
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
     protected Session session;
@@ -53,7 +50,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
         this.driverProvider = driverProvider;
         activeDatabaseNameAsSetByUser = ABSENT_DB_NAME;
-        actualDatabaseNameAsReportedByServer = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
     }
 
     @Override
@@ -161,16 +157,18 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         Consumer<SessionParametersTemplate> sessionArgs = t -> {
             t.withDefaultAccessMode(AccessMode.WRITE);
             if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
-                t.withDatabase( activeDatabaseNameAsSetByUser );
+                t.withDatabase(activeDatabaseNameAsSetByUser);
             }
         };
         session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
 
         String query = activeDatabaseNameAsSetByUser.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
+
+        resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
+
         this.version = run.summary().server().version();
-        DatabaseInfo dbInfo = run.summary().database();
-        this.actualDatabaseNameAsReportedByServer = dbInfo.name() == null ? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbInfo.name();
+        updateActualDbName(run);
     }
 
     @Nonnull
@@ -218,13 +216,30 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
      */
     @Nonnull
     private Optional<BoltResult> getBoltResult(@Nonnull String cypher, @Nonnull Map<String, Object> queryParams) throws SessionExpiredException {
+        resetActualDbName(); // Set this to null first in case run throws an exception
+
         StatementResult statementResult = session.run(new Statement(cypher, queryParams));
 
         if (statementResult == null) {
             return Optional.empty();
         }
 
+        updateActualDbName(statementResult);
+
         return Optional.of(new StatementBoltResult(statementResult));
+    }
+
+    private String getActualDbName(@Nonnull StatementResult statementResult) {
+        DatabaseInfo dbInfo = statementResult.summary().database();
+        return dbInfo.name() == null ? ABSENT_DB_NAME : dbInfo.name();
+    }
+
+    private void updateActualDbName(@Nonnull StatementResult statementResult) {
+        actualDatabaseNameAsReportedByServer = getActualDbName(statementResult);
+    }
+
+    private void resetActualDbName() {
+        actualDatabaseNameAsReportedByServer = null;
     }
 
     /**
@@ -242,9 +257,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         } finally {
             session = null;
             driver = null;
-            String activeDatabaseSetByUser = ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)?
-                                             UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : activeDatabaseNameAsSetByUser;
-            actualDatabaseNameAsReportedByServer = activeDatabaseSetByUser + DISCONNECTED_DB_PROMPT_TEXT;
+            resetActualDbName();
         }
     }
 
@@ -282,10 +295,13 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
+        resetActualDbName(); // Set this to null first in case we get an exception
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            return new ListBoltResult(sr.list(), sr.consume(), sr.keys());
+            BoltResult singleResult = new ListBoltResult(sr.list(), sr.consume(), sr.keys());
+            updateActualDbName(sr);
+            return singleResult;
         });
 
         clearTransactionStatements();
