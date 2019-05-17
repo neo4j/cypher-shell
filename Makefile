@@ -30,9 +30,7 @@ GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 jarfile := cypher-shell.jar
 rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
-java_adapter_files :=	neo4j-java-adapter-jre-11-$(java_adapter_version).noarch.rpm \
-						neo4j-java-adapter-jre-11-headless-$(java_adapter_version).noarch.rpm \
-						neo4j-java-adapter-jre-8-headless-$(java_adapter_version).noarch.rpm
+java_adapter_files :=	neo4j-java-adapter-jre-11-oracle-$(java_adapter_version).noarch.rpm
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
