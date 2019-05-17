@@ -12,6 +12,7 @@ import org.neo4j.driver.Statement;
 import org.neo4j.driver.StatementResult;
 import org.neo4j.driver.Transaction;
 import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -34,6 +35,9 @@ import java.util.stream.Collectors;
  * Handles interactions with the driver
  */
 public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
+    static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    static final String DISCONNECTED_DB_PROMPT_TEXT = "[DISCONNECTED]";
+
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
     protected Session session;
@@ -49,7 +53,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
         this.driverProvider = driverProvider;
         activeDatabaseNameAsSetByUser = ABSENT_DB_NAME;
-        actualDatabaseNameAsReportedByServer = UNRESOLVED_DEFAULT_DB_NAME;
+        actualDatabaseNameAsReportedByServer = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
     }
 
     @Override
@@ -156,7 +160,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
         Consumer<SessionParametersTemplate> sessionArgs = t -> {
             t.withDefaultAccessMode(AccessMode.WRITE);
-            if (!ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser )) {
+            if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
                 t.withDatabase( activeDatabaseNameAsSetByUser );
             }
         };
@@ -165,8 +169,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         String query = activeDatabaseNameAsSetByUser.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
         StatementResult run = session.run(query);
         this.version = run.summary().server().version();
-        this.actualDatabaseNameAsReportedByServer = run.summary().database().name();
-        run.consume();
+        DatabaseInfo dbInfo = run.summary().database();
+        this.actualDatabaseNameAsReportedByServer = dbInfo.name() == null ? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbInfo.name();
     }
 
     @Nonnull
@@ -238,6 +242,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         } finally {
             session = null;
             driver = null;
+            String activeDatabaseSetByUser = ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)?
+                                             UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : activeDatabaseNameAsSetByUser;
+            actualDatabaseNameAsReportedByServer = activeDatabaseSetByUser + DISCONNECTED_DB_PROMPT_TEXT;
         }
     }
 

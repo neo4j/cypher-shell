@@ -45,8 +45,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+import static org.neo4j.shell.state.BoltStateHandler.DISCONNECTED_DB_PROMPT_TEXT;
+import static org.neo4j.shell.state.BoltStateHandler.UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
 
 public class BoltStateHandlerTest {
     @Rule
@@ -357,6 +359,7 @@ public class BoltStateHandlerTest {
 
         // then
         assertFalse(session.isOpen());
+        assertEquals(UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT + DISCONNECTED_DB_PROMPT_TEXT, boltStateHandler.getActualDatabaseAsReportedByServer());
     }
 
     @Test
