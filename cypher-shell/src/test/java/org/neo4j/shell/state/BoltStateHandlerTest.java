@@ -121,7 +121,7 @@ public class BoltStateHandlerTest {
         Driver mockedDriver = stubResultSummaryInAnOpenSession(resultMock, session, "neo4j-version");
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
-        when(resultMock.consume()).thenThrow(originalException);
+        when(resultMock.summary()).thenThrow(originalException);
         doThrow(thrownFromSilentDisconnect).when(session).close();
 
         try {
@@ -255,7 +255,7 @@ public class BoltStateHandlerTest {
         Record recordMock = mock(Record.class);
         Value valueMock = mock(Value.class);
 
-        Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
+        Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, sessionMock, "neo4j-version");
 
         when(resultMock.list()).thenReturn(asList(recordMock));
 
@@ -281,7 +281,7 @@ public class BoltStateHandlerTest {
         Record recordMock = mock(Record.class);
         Value valueMock = mock(Value.class);
 
-        Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
+        Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, sessionMock, "neo4j-version");
 
         when(resultMock.list()).thenReturn(asList(recordMock));
 
@@ -359,7 +359,6 @@ public class BoltStateHandlerTest {
 
         // then
         assertFalse(session.isOpen());
-        assertEquals(UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT + DISCONNECTED_DB_PROMPT_TEXT, boltStateHandler.getActualDatabaseAsReportedByServer());
     }
 
     @Test
