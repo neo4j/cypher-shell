@@ -1,5 +1,4 @@
 Name: cypher-shell
-Provides: cypher-shell
 Version: ${VERSION}
 Release: ${RELEASE}%{?dist}
 Summary: Command line shell for Neo4j
