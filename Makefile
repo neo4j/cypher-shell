@@ -23,7 +23,6 @@ else
 endif
 
 rpmversion := $(versionnumber)-$(release)
-java_adapter_version:=1.0.0-1
 
 GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 
