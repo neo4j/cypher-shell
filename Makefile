@@ -30,15 +30,11 @@ GRADLE = ./gradlew -PbuildVersion=$(buildversion)
 jarfile := cypher-shell.jar
 rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
-java_adapter_files :=	neo4j-java-adapter-jre-11-$(java_adapter_version).noarch.rpm \
-						neo4j-java-adapter-jre-11-headless-$(java_adapter_version).noarch.rpm \
-						neo4j-java-adapter-jre-8-headless-$(java_adapter_version).noarch.rpm
 
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
 rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
 deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
-java_adapter_artifacts:=$(patsubst %, out/%, ${java_adapter_files})
 deb_files:=$(wildcard packaging/debian/*)
 deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
@@ -130,45 +126,6 @@ tmp/temp/cypher-shell/cypher-shell: $(artifacts)
 out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
-
-# ======================= RPM JAVA-ADAPTER =======================
-## Build the java adapter package for java 11 compatibility
-## oracle and openjdk java 11 don't provide the same java package names any more,
-## and rpm might not be advanced enough to support boolean dependencies.
-## To fix that, we have a few empty java packages that provide various standard java package names.
-## This page is helpful for understanding this make code:
-## https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
-
-.PHONY: java-adapter
-java-adapter: $(java_adapter_artifacts)
-
-out/neo4j-java-adapter-%.rpm: out/rpm/RPMS/noarch/neo4j-java-adapter-%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/rpm/RPMS/noarch/neo4j-java-adapter-%-$(java_adapter_version).noarch.rpm: out/rpm/SPECS/neo4j-java-adapter-%.spec
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
-
-out/rpm/SPECS/neo4j-java-adapter-%.spec: packaging/rpm-java-adapter/neo4j-java-adapter-%.spec
-	mkdir -p $(dir $@)
-	cp $< $@
-
-.PHONY: java-adapter-test
-java-adapter-test: 		tmp/java-adapter-test/tests/java-11-openjdk \
-						tmp/java-adapter-test/tests/java-11-openjdk-headless \
-						tmp/java-adapter-test/tests/java-1.8.0-openjdk \
-						tmp/java-adapter-test/tests/java-1.8.0-openjdk-headless
-
-tmp/java-adapter-test/tests/%:	$(java_adapter_artifacts) \
-								out/$(rpmfile) \
-								packaging/test/java-adapter/tempneo4j.repo \
-								packaging/test/java-adapter/Dockerfile \
-								packaging/test/java-adapter/entrypoint.sh
-	mkdir -p $@
-	cp $^ $@/
-	TEST_JAVA=$* envsubst '$${TEST_JAVA}' < packaging/test/java-adapter/Dockerfile > $@/Dockerfile
-	cd $@ && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM)
-
 
 # ======================= RPM CYPHER-SHELL =======================
 
