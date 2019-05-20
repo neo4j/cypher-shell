@@ -2,6 +2,7 @@ package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.DATABASE_NOT_FOUND_ERROR_CODE;
+import static org.neo4j.shell.DatabaseManager.DATABASE_UNAVAILABLE_ERROR_CODE;
 
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
@@ -38,8 +41,10 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String TRANSACTION_PROMPT = "# ";
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
-    public static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
-    public static final String DISCONNECTED_DB_PROMPT_TEXT = "[DISCONNECTED]";
+    private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    private static final String DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT = "[NOT_FOUND]";
+    private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
+    private static final String DEFAULT_ERROR_PROMPT_TEXT = "[DISCONNECTED]"; // This is the default error prompt text if we didn't identify a specific reason
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -56,6 +61,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Nonnull private final ConnectionConfig connectionConfig;
 
     private AnsiFormattedText continuationPrompt = null;
+    private String errorPromptSuffix = "";
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
                                   @Nonnull TransactionHandler txHandler,
@@ -111,6 +117,9 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             } catch (NoMoreInputException e) {
                 // User pressed Ctrl-D and wants to exit
                 running = false;
+            } catch (Neo4jException e) {
+                updateErrorPrompt(e);
+                logger.printError(e);
             } catch (Throwable e) {
                 logger.printError(e);
             } finally {
@@ -119,6 +128,20 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         }
         logger.printIfVerbose(userMessagesHandler.getExitMessage());
         return exitCode;
+    }
+
+    private void updateErrorPrompt(Neo4jException e) {
+        if (DATABASE_NOT_FOUND_ERROR_CODE.equals(e.code())) {
+            errorPromptSuffix = DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT;
+        } else if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(e.code())) {
+            errorPromptSuffix = DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
+        } else if (databaseManager.getActualDatabaseAsReportedByServer() == null) {
+            // If we do not have a resolved database name we got an unknown error on the connection ping query
+            // We indicate this using a default error prompt message
+            errorPromptSuffix = DEFAULT_ERROR_PROMPT_TEXT;
+        } else {
+            errorPromptSuffix = "";
+        }
     }
 
     @Nonnull
@@ -170,21 +193,28 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             // Build the prompt from the db name as set by the user + a suffix indicating that we are in a disconnected state
             String dbNameSetByUser = databaseManager.getActiveDatabaseAsSetByUser();
             databaseName = ABSENT_DB_NAME.equals(dbNameSetByUser)? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbNameSetByUser;
-            databaseName += DISCONNECTED_DB_PROMPT_TEXT;
         } else if (ABSENT_DB_NAME.equals(databaseName)) {
             // The driver did not give us a database name in the response from the connection ping query
             databaseName = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
         }
 
+        String errorSuffix = errorPromptSuffix;
+
         int promptIndent = connectionConfig.username().length() +
                            USERNAME_DB_DELIMITER.length() +
                            databaseName.length() +
+                           errorSuffix.length() +
                            FRESH_PROMPT.length();
 
         AnsiFormattedText prePrompt = AnsiFormattedText.s().bold()
                 .append(connectionConfig.username())
                 .append("@")
                 .append(databaseName);
+
+        // If we encountered an error with the connection ping query we display it in the prompt in RED
+        if (!errorSuffix.isEmpty()) {
+            prePrompt.colorRed().append(errorSuffix).colorDefault();
+        }
 
         if (promptIndent <= ONELINE_PROMPT_MAX_LENGTH) {
             continuationPrompt = AnsiFormattedText.s().bold().append(OutputFormatter.repeat(' ', promptIndent));

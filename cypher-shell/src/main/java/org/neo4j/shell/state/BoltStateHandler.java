@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
-    protected Session session;
+    Session session;
     private String version;
     private List<Statement> transactionStatements;
     private String activeDatabaseNameAsSetByUser;
@@ -216,8 +216,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
      */
     @Nonnull
     private Optional<BoltResult> getBoltResult(@Nonnull String cypher, @Nonnull Map<String, Object> queryParams) throws SessionExpiredException {
-        resetActualDbName(); // Set this to null first in case run throws an exception
-
         StatementResult statementResult = session.run(new Statement(cypher, queryParams));
 
         if (statementResult == null) {
@@ -295,7 +293,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
-        resetActualDbName(); // Set this to null first in case we get an exception
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);

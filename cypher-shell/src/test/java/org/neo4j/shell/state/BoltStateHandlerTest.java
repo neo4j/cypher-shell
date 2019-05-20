@@ -109,7 +109,7 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void exceptionFromRunQueryResetsActualDatabaseNameToUnresolved() throws CommandException {
+    public void exceptionFromRunQueryDoesNotResetActualDatabaseNameToUnresolved() throws CommandException {
         Session sessionMock = mock(Session.class);
         StatementResult resultMock = mock(StatementResult.class);
         Driver driverMock =
@@ -130,7 +130,7 @@ public class BoltStateHandlerTest {
             fail("should fail on runCypher");
         } catch (Exception e) {
             assertThat(e, is(databaseNotFound));
-            assertNull(handler.getActualDatabaseAsReportedByServer());
+            assertEquals("my_default_db", handler.getActualDatabaseAsReportedByServer());
         }
     }
 
