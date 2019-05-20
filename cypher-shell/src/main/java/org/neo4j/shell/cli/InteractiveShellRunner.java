@@ -2,7 +2,6 @@ package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
 
-import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
@@ -44,7 +43,6 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
     private static final String DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT = "[NOT_FOUND]";
     private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
-    private static final String DEFAULT_ERROR_PROMPT_TEXT = "[DISCONNECTED]"; // This is the default error prompt text if we didn't identify a specific reason
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -61,7 +59,6 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     @Nonnull private final ConnectionConfig connectionConfig;
 
     private AnsiFormattedText continuationPrompt = null;
-    private String errorPromptSuffix = "";
 
     public InteractiveShellRunner(@Nonnull StatementExecuter executer,
                                   @Nonnull TransactionHandler txHandler,
@@ -117,9 +114,6 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             } catch (NoMoreInputException e) {
                 // User pressed Ctrl-D and wants to exit
                 running = false;
-            } catch (Neo4jException e) {
-                updateErrorPrompt(e);
-                logger.printError(e);
             } catch (Throwable e) {
                 logger.printError(e);
             } finally {
@@ -128,20 +122,6 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         }
         logger.printIfVerbose(userMessagesHandler.getExitMessage());
         return exitCode;
-    }
-
-    private void updateErrorPrompt(Neo4jException e) {
-        if (DATABASE_NOT_FOUND_ERROR_CODE.equals(e.code())) {
-            errorPromptSuffix = DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT;
-        } else if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(e.code())) {
-            errorPromptSuffix = DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
-        } else if (databaseManager.getActualDatabaseAsReportedByServer() == null) {
-            // If we do not have a resolved database name we got an unknown error on the connection ping query
-            // We indicate this using a default error prompt message
-            errorPromptSuffix = DEFAULT_ERROR_PROMPT_TEXT;
-        } else {
-            errorPromptSuffix = "";
-        }
     }
 
     @Nonnull
@@ -198,7 +178,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             databaseName = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
         }
 
-        String errorSuffix = errorPromptSuffix;
+        String errorSuffix = getErrorPrompt(executer.lastNeo4jErrorCode());
 
         int promptIndent = connectionConfig.username().length() +
                            USERNAME_DB_DELIMITER.length() +
@@ -227,6 +207,19 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                     .appendNewLine()
                     .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
         }
+    }
+
+    private String getErrorPrompt(String errorCode) {
+        // NOTE: errorCode can be null
+        String errorPromptSuffix;
+        if (DATABASE_NOT_FOUND_ERROR_CODE.equals(errorCode)) {
+            errorPromptSuffix = DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT;
+        } else if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(errorCode)) {
+            errorPromptSuffix = DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
+        } else {
+            errorPromptSuffix = "";
+        }
+        return errorPromptSuffix;
     }
 
     /**

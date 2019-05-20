@@ -96,6 +96,7 @@ public class InteractiveShellRunnerTest {
 
         verify(cmdExecuter).execute("good1;");
         verify(cmdExecuter).execute("\ngood2;");
+        verify(cmdExecuter, times(3)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
     }
 
@@ -118,6 +119,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\ngood2;");
         verify(cmdExecuter).execute("\nbad2;");
         verify(cmdExecuter).execute("\ngood3;");
+        verify(cmdExecuter, times(6)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
 
         verify(logger, times(2)).printError(badLineError);
@@ -144,6 +146,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\nbad1;");
         verify(cmdExecuter).execute("\ngood2;");
         verify(cmdExecuter).execute("\nexit;");
+        verify(cmdExecuter, times(4)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
 
         verify(logger).printError(badLineError);
@@ -363,6 +366,7 @@ public class InteractiveShellRunnerTest {
         runner.runUntilEnd();
 
         // then
+        verify(cmdExecuter).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
     }
 
@@ -423,6 +427,7 @@ public class InteractiveShellRunnerTest {
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
 
         // then
+        verify(cmdExecuter).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
         verify(logger).printError("@|RED \nInterrupted (Note that Cypher queries must end with a |@" +
                 "@|RED,BOLD semicolon. |@" +

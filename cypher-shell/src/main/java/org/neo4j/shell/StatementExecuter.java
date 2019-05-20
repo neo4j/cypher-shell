@@ -22,4 +22,9 @@ public interface StatementExecuter {
      * Stops any running statements
      */
     void reset();
+
+    /**
+     * Get the error code from the last executed Cypher statement, or null if the last execution was successful.
+     */
+    String lastNeo4jErrorCode();
 }
