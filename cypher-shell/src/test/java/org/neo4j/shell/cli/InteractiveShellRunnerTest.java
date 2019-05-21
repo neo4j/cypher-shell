@@ -77,7 +77,7 @@ public class InteractiveShellRunnerTest {
         historyFile = temp.newFile();
         badLineError = new ClientException("Found a bad line");
         userMessagesHandler = mock(UserMessagesHandler.class);
-        when(databaseManager.getActiveDatabase()).thenReturn("mydb");
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn("mydb");
         when(userMessagesHandler.getWelcomeMessage()).thenReturn("Welcome to cypher-shell!");
         when(userMessagesHandler.getExitMessage()).thenReturn("Exit message");
         when(connectionConfig.username()).thenReturn("myusername");
@@ -96,6 +96,7 @@ public class InteractiveShellRunnerTest {
 
         verify(cmdExecuter).execute("good1;");
         verify(cmdExecuter).execute("\ngood2;");
+        verify(cmdExecuter, times(3)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
     }
 
@@ -118,6 +119,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\ngood2;");
         verify(cmdExecuter).execute("\nbad2;");
         verify(cmdExecuter).execute("\ngood3;");
+        verify(cmdExecuter, times(6)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
 
         verify(logger, times(2)).printError(badLineError);
@@ -144,6 +146,7 @@ public class InteractiveShellRunnerTest {
         verify(cmdExecuter).execute("\nbad1;");
         verify(cmdExecuter).execute("\ngood2;");
         verify(cmdExecuter).execute("\nexit;");
+        verify(cmdExecuter, times(4)).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
 
         verify(logger).printError(badLineError);
@@ -293,8 +296,8 @@ public class InteractiveShellRunnerTest {
     public void testLongPrompt() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
-        String dbName = "TheLongestDbNameEverCreatedInAllOfHistoryAndTheUniversePlusSome";
-        when(databaseManager.getActiveDatabase()).thenReturn(dbName);
+        String actualDbName = "TheLongestDbNameEverCreatedInAllOfHistoryAndTheUniversePlusSome";
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(actualDbName);
         InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
                 historyFile, userMessagesHandler, connectionConfig);
 
@@ -303,7 +306,7 @@ public class InteractiveShellRunnerTest {
         AnsiFormattedText prompt = runner.updateAndGetPrompt();
 
         // then
-        String wantedPrompt = format("myusername@%s%n> ", dbName);
+        String wantedPrompt = format("myusername@%s%n> ", actualDbName);
         assertEquals(wantedPrompt, prompt.plainString());
 
         // when
@@ -363,6 +366,7 @@ public class InteractiveShellRunnerTest {
         runner.runUntilEnd();
 
         // then
+        verify(cmdExecuter).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
     }
 
@@ -423,6 +427,7 @@ public class InteractiveShellRunnerTest {
         runner.handle(new Signal(InteractiveShellRunner.INTERRUPT_SIGNAL));
 
         // then
+        verify(cmdExecuter).lastNeo4jErrorCode();
         verifyNoMoreInteractions(cmdExecuter);
         verify(logger).printError("@|RED \nInterrupted (Note that Cypher queries must end with a |@" +
                 "@|RED,BOLD semicolon. |@" +
@@ -484,8 +489,13 @@ public class InteractiveShellRunnerTest {
         }
 
         @Override
-        public String getActiveDatabase() {
+        public String getActiveDatabaseAsSetByUser() {
             return ABSENT_DB_NAME;
+        }
+
+        @Override
+        public String getActualDatabaseAsReportedByServer() {
+            return DEFAULT_DEFAULT_DB_NAME;
         }
     }
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.driver.internal.BoltServerAddress;
+import org.neo4j.driver.internal.summary.InternalDatabaseInfo;
 import org.neo4j.driver.internal.summary.InternalResultSummary;
 import org.neo4j.driver.internal.summary.InternalServerInfo;
 import org.neo4j.driver.internal.util.ServerVersion;
@@ -35,6 +36,7 @@ public class OutputFormatterTest
         ResultSummary summary = new InternalResultSummary(
                 new Statement( "PROFILE MATCH (n:LABEL) WHERE 20 < n.age < 35 return n" ),
                 new InternalServerInfo( new BoltServerAddress( "localhost:7687" ), ServerVersion.vInDev ),
+                new InternalDatabaseInfo("neo4j"),
                 StatementType.READ_ONLY,
                 null,
                 plan,

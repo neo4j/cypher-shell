@@ -26,8 +26,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
-import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.DATABASE_NOT_FOUND_ERROR_CODE;
+import static org.neo4j.shell.DatabaseManager.DATABASE_UNAVAILABLE_ERROR_CODE;
 
 /**
  * A shell runner intended for interactive sessions where lines are input one by one and execution should happen
@@ -39,6 +40,10 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String TRANSACTION_PROMPT = "# ";
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
+    private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    private static final String DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT = "[NOT_FOUND]";
+    private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
+
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
     private final AtomicBoolean currentlyExecuting;
@@ -162,25 +167,34 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
             return continuationPrompt;
         }
 
-        String databaseName = databaseManager.getActiveDatabase();
+        String databaseName = databaseManager.getActualDatabaseAsReportedByServer();
+        if (databaseName == null) {
+            // We have failed to get a successful response from the connection ping query
+            // Build the prompt from the db name as set by the user + a suffix indicating that we are in a disconnected state
+            String dbNameSetByUser = databaseManager.getActiveDatabaseAsSetByUser();
+            databaseName = ABSENT_DB_NAME.equals(dbNameSetByUser)? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbNameSetByUser;
+        } else if (ABSENT_DB_NAME.equals(databaseName)) {
+            // The driver did not give us a database name in the response from the connection ping query
+            databaseName = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
+        }
 
-        // Substitute empty name for the default default-database-name
-        // For now we just use a hard-coded default name
-        // Ideally we would like to receive the actual name in the ResultSummary when we connect (in BoltStateHandler.reconnect())
-        // (If the user is an admin we could also query for the default database config value with:
-        //   "CALL dbms.listConfig() YIELD name, value WHERE name = "dbms.default_database" RETURN value"
-        //  but that does not work in general)
-        databaseName = ABSENT_DB_NAME.equals(databaseName) ? DEFAULT_DEFAULT_DB_NAME : databaseName;
+        String errorSuffix = getErrorPrompt(executer.lastNeo4jErrorCode());
 
         int promptIndent = connectionConfig.username().length() +
                            USERNAME_DB_DELIMITER.length() +
                            databaseName.length() +
+                           errorSuffix.length() +
                            FRESH_PROMPT.length();
 
         AnsiFormattedText prePrompt = AnsiFormattedText.s().bold()
                 .append(connectionConfig.username())
                 .append("@")
                 .append(databaseName);
+
+        // If we encountered an error with the connection ping query we display it in the prompt in RED
+        if (!errorSuffix.isEmpty()) {
+            prePrompt.colorRed().append(errorSuffix).colorDefault();
+        }
 
         if (promptIndent <= ONELINE_PROMPT_MAX_LENGTH) {
             continuationPrompt = AnsiFormattedText.s().bold().append(OutputFormatter.repeat(' ', promptIndent));
@@ -193,6 +207,19 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
                     .appendNewLine()
                     .append( txHandler.isTransactionOpen() ? TRANSACTION_PROMPT : FRESH_PROMPT );
         }
+    }
+
+    private String getErrorPrompt(String errorCode) {
+        // NOTE: errorCode can be null
+        String errorPromptSuffix;
+        if (DATABASE_NOT_FOUND_ERROR_CODE.equals(errorCode)) {
+            errorPromptSuffix = DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT;
+        } else if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(errorCode)) {
+            errorPromptSuffix = DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
+        } else {
+            errorPromptSuffix = "";
+        }
+        return errorPromptSuffix;
     }
 
     /**

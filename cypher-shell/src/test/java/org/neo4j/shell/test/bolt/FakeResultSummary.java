@@ -80,4 +80,17 @@ class FakeResultSummary implements ResultSummary {
             }
         };
     }
+
+    @Override
+    public DatabaseInfo database()
+    {
+        return new DatabaseInfo()
+        {
+            @Override
+            public String name()
+            {
+                return null;
+            }
+        };
+    }
 }

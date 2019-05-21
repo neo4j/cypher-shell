@@ -12,6 +12,7 @@ import org.neo4j.driver.Statement;
 import org.neo4j.driver.StatementResult;
 import org.neo4j.driver.Transaction;
 import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -36,10 +37,11 @@ import java.util.stream.Collectors;
 public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
     protected Driver driver;
-    protected Session session;
+    Session session;
     private String version;
     private List<Statement> transactionStatements;
-    private String activeDatabaseName;
+    private String activeDatabaseNameAsSetByUser;
+    private String actualDatabaseNameAsReportedByServer;
 
     public BoltStateHandler() {
         this(GraphDatabase::driver);
@@ -47,7 +49,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
     BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
         this.driverProvider = driverProvider;
-        activeDatabaseName = "";
+        activeDatabaseNameAsSetByUser = ABSENT_DB_NAME;
     }
 
     @Override
@@ -56,16 +58,22 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         if (isTransactionOpen()) {
             throw new CommandException("There is an open transaction. You need to close it before you can switch database.");
         }
-        activeDatabaseName = databaseName;
+        activeDatabaseNameAsSetByUser = databaseName;
         if (isConnected()) {
             reconnect(false);
         }
     }
 
     @Override
-    public String getActiveDatabase()
+    public String getActiveDatabaseAsSetByUser()
     {
-        return activeDatabaseName;
+        return activeDatabaseNameAsSetByUser;
+    }
+
+    @Override
+    public String getActualDatabaseAsReportedByServer()
+    {
+        return actualDatabaseNameAsReportedByServer;
     }
 
     @Override
@@ -146,14 +154,21 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             session.close();
             sessionOptionalArgs = t -> t.withBookmarks(bookmark);
         }
-        Consumer<SessionParametersTemplate> sessionArgs = t -> t.withDefaultAccessMode(AccessMode.WRITE).withDatabase(activeDatabaseName);
+        Consumer<SessionParametersTemplate> sessionArgs = t -> {
+            t.withDefaultAccessMode(AccessMode.WRITE);
+            if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
+                t.withDatabase(activeDatabaseNameAsSetByUser);
+            }
+        };
         session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
 
-        String query = activeDatabaseName.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
+        String query = activeDatabaseNameAsSetByUser.equals(SYSTEM_DB_NAME) ? "SHOW DATABASES" : "RETURN 1";
+
+        resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
+
         this.version = run.summary().server().version();
-        // It would be nice if we could also get the actual database name here, in the case where we used ABSENT_DB_NAME
-        run.consume();
+        updateActualDbName(run);
     }
 
     @Nonnull
@@ -207,7 +222,22 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             return Optional.empty();
         }
 
+        updateActualDbName(statementResult);
+
         return Optional.of(new StatementBoltResult(statementResult));
+    }
+
+    private String getActualDbName(@Nonnull StatementResult statementResult) {
+        DatabaseInfo dbInfo = statementResult.summary().database();
+        return dbInfo.name() == null ? ABSENT_DB_NAME : dbInfo.name();
+    }
+
+    private void updateActualDbName(@Nonnull StatementResult statementResult) {
+        actualDatabaseNameAsReportedByServer = getActualDbName(statementResult);
+    }
+
+    private void resetActualDbName() {
+        actualDatabaseNameAsReportedByServer = null;
     }
 
     /**
@@ -225,6 +255,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         } finally {
             session = null;
             driver = null;
+            resetActualDbName();
         }
     }
 
@@ -265,7 +296,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            return new ListBoltResult(sr.list(), sr.consume(), sr.keys());
+            BoltResult singleResult = new ListBoltResult(sr.list(), sr.consume(), sr.keys());
+            updateActualDbName(sr);
+            return singleResult;
         });
 
         clearTransactionStatements();

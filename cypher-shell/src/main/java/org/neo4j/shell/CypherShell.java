@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.cypher.internal.evaluator.Evaluator;
 import org.neo4j.cypher.internal.evaluator.ExpressionEvaluator;
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -37,6 +38,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     private final PrettyPrinter prettyPrinter;
     private CommandHelper commandHelper;
     private ExpressionEvaluator evaluator = Evaluator.expressionEvaluator();
+    private String lastNeo4jErrorCode;
 
     public CypherShell(@Nonnull LinePrinter linePrinter, @Nonnull PrettyConfig prettyConfig) {
         this(linePrinter, new BoltStateHandler(), new PrettyPrinter(prettyConfig));
@@ -80,6 +82,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         executeCypher(cmdString);
     }
 
+    @Override
+    public String lastNeo4jErrorCode() {
+        return lastNeo4jErrorCode;
+    }
+
     /**
      * Executes a piece of text as if it were Cypher. By default, all of the cypher is executed in single statement
      * (with an implicit transaction).
@@ -87,8 +94,14 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * @param cypher non-empty cypher text to executeLine
      */
     private void executeCypher(@Nonnull final String cypher) throws CommandException {
-        final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, allParameterValues());
-        result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
+        try {
+            final Optional<BoltResult> result = boltStateHandler.runCypher( cypher, allParameterValues() );
+            result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
+            lastNeo4jErrorCode = null;
+        } catch (Neo4jException e) {
+            lastNeo4jErrorCode = e.code();
+            throw e;
+        }
     }
 
     @Override
@@ -142,9 +155,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
     @Override
     public Optional<List<BoltResult>> commitTransaction() throws CommandException {
-        Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
-        results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, linePrinter)));
-        return results;
+        try {
+            Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
+            results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, linePrinter)));
+            lastNeo4jErrorCode = null;
+            return results;
+        } catch (Neo4jException e) {
+            lastNeo4jErrorCode = e.code();
+            throw e;
+        }
     }
 
     @Override
@@ -202,12 +221,24 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public void setActiveDatabase(String databaseName) throws CommandException
     {
-        boltStateHandler.setActiveDatabase(databaseName);
+        try {
+            boltStateHandler.setActiveDatabase(databaseName);
+            lastNeo4jErrorCode = null;
+        } catch (Neo4jException e) {
+            lastNeo4jErrorCode = e.code();
+            throw e;
+        }
     }
 
     @Override
-    public String getActiveDatabase()
+    public String getActiveDatabaseAsSetByUser()
     {
-        return boltStateHandler.getActiveDatabase();
+        return boltStateHandler.getActiveDatabaseAsSetByUser();
+    }
+
+    @Override
+    public String getActualDatabaseAsReportedByServer()
+    {
+        return boltStateHandler.getActualDatabaseAsReportedByServer();
     }
 }

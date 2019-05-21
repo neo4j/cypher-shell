@@ -200,7 +200,7 @@ public class CypherShellVerboseIntegrationTest {
 
         //then
         String actual = linePrinter.output();
-        assertThat( actual, containsString( "Ordered by" ) );
+        assertThat( actual, containsString( "Order" ) );
         assertThat( actual, containsString( "n.age ASC" ) );
     }
 
