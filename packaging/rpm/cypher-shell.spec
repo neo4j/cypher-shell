@@ -8,7 +8,7 @@ URL: https://github.com/neo4j/cypher-shell
 Source0: https://github.com/neo4j/cypher-shell/archive/%{version}.tar.gz
 
 #Conflicts:
-Requires: which, jre-headless >= 1.8
+Requires: which, jre == 1.8.0
 BuildArch: noarch
 Prefix: /usr
 
