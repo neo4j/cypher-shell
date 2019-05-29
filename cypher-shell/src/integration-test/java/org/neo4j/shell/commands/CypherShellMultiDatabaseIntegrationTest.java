@@ -61,6 +61,14 @@ public class CypherShellMultiDatabaseIntegrationTest
     }
 
     @Test
+    public void switchingToSystemDatabaseIsNotCaseSensitive() throws CommandException {
+        useCommand.execute("SyStEm");
+
+        assertThat(linePrinter.output(), is(""));
+        assertOnSystemDB();
+    }
+
+    @Test
     public void switchingToSystemDatabaseAndBackToNeo4jWorks() throws CommandException {
         useCommand.execute(SYSTEM_DB_NAME);
         useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
