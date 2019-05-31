@@ -108,7 +108,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     @Test
     public void switchingToNonExistingDatabaseShouldGiveErrorResponseFromServer() throws CommandException {
         thrown.expect(ClientException.class);
-        thrown.expectMessage("The database requested does not exist.");
+        thrown.expectMessage("Database does not exist");
 
         useCommand.execute("this_database_name_does_not_exist_in_test_container");
     }
