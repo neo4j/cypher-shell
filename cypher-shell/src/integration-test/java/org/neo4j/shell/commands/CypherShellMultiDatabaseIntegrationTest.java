@@ -61,6 +61,14 @@ public class CypherShellMultiDatabaseIntegrationTest
     }
 
     @Test
+    public void switchingToSystemDatabaseIsNotCaseSensitive() throws CommandException {
+        useCommand.execute("SyStEm");
+
+        assertThat(linePrinter.output(), is(""));
+        assertOnSystemDB();
+    }
+
+    @Test
     public void switchingToSystemDatabaseAndBackToNeo4jWorks() throws CommandException {
         useCommand.execute(SYSTEM_DB_NAME);
         useCommand.execute(DEFAULT_DEFAULT_DB_NAME);
@@ -100,7 +108,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     @Test
     public void switchingToNonExistingDatabaseShouldGiveErrorResponseFromServer() throws CommandException {
         thrown.expect(ClientException.class);
-        thrown.expectMessage("The database requested does not exist.");
+        thrown.expectMessage("Database does not exist");
 
         useCommand.execute("this_database_name_does_not_exist_in_test_container");
     }
