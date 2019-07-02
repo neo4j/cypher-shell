@@ -32,7 +32,7 @@ public class CliArgs {
     /**
      * Set the scheme to the primary value, or if null, the fallback value.
      */
-    void setScheme(@Nullable String primary, @Nonnull String fallback) {
+    public void setScheme(@Nullable String primary, @Nonnull String fallback) {
         scheme = primary == null ? fallback : primary;
     }
 
@@ -46,7 +46,7 @@ public class CliArgs {
     /**
      * Set the port to the value.
      */
-    void setPort(int port) {
+    public void setPort(int port) {
         this.port = port;
     }
 
