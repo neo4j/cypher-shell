@@ -71,7 +71,7 @@ public class Main {
                 cliArgs.getDatabase());
 
         try {
-            CypherShell shell = new CypherShell(logger, prettyConfig);
+            CypherShell shell = new CypherShell(logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ));
             // Can only prompt for password if input has not been redirected
             connectMaybeInteractively(shell, connectionConfig, isInputInteractive());
 

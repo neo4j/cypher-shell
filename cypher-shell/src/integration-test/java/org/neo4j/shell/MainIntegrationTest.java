@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
 public class MainIntegrationTest {
 
     @Test
-    public void connectInteractivelyPromptsOnWrongAuthentication() throws Exception {
+    public void connectInteractivelyPromptOnWrongAuthentication() throws Exception {
         // given
         // what the user inputs when prompted
         String inputString = String.format( "neo4j%nneo%n" );
@@ -43,7 +43,7 @@ public class MainIntegrationTest {
                 cliArgs.getEncryption(),
                 cliArgs.getDatabase());
 
-        CypherShell shell = new CypherShell(logger, prettyConfig);
+        CypherShell shell = new CypherShell(logger, prettyConfig, true);
 
         // when
         assertEquals("", connectionConfig.username());
