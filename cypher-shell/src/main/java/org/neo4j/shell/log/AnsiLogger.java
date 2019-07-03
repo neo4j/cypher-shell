@@ -110,7 +110,7 @@ public class AnsiLogger implements Logger {
     }
 
     /**
-     * Interpret the cause of a Bolt exception and translate it into a sensible error message.
+     * Formatting for Bolt exceptions.
      */
     @Nonnull
     String getFormattedMessage(@Nonnull final Throwable e) {
