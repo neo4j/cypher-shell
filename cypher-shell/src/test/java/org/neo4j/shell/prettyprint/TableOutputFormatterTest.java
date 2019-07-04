@@ -35,6 +35,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Matchers.anyObject;
@@ -75,6 +76,36 @@ public class TableOutputFormatterTest {
             assertThat(actual, CoreMatchers.containsString("| " + k));
             assertThat(actual, CoreMatchers.containsString("| " + v.toString()));
         });
+    }
+
+    @Test
+    public void prettyPrintPlanInformationWithNewlines() {
+        // given
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ProfiledPlan plan = mock(ProfiledPlan.class);
+
+        when(resultSummary.hasPlan()).thenReturn(true);
+        when(resultSummary.hasProfile()).thenReturn(false);
+        when(resultSummary.plan()).thenReturn(plan);
+        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
+        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
+        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
+        when(plan.arguments()).thenReturn(argumentMap);
+
+        BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
+
+        // when
+        String actual = verbosePrinter.format(result);
+
+        // THEN
+        assertThat(actual, startsWith(String.join(NEWLINE,
+                                         "+--------------------------------------------------------------------+",
+                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time |",
+                                         "+--------------------------------------------------------------------+",
+                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12   |",
+                                          "+--------------------------------------------------------------------+",
+                                         NEWLINE)));
     }
 
     @Test
