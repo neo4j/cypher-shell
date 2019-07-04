@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.neo4j.shell.ConnectionConfig;
+
 import static java.lang.String.format;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_AT_END;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
@@ -129,17 +131,17 @@ public class CliArgHelper {
                 .setDefault("bolt://localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
-                .help("username to connect as. Can also be specified using environment variable NEO4J_USERNAME");
+                .help("username to connect as. Can also be specified using environment variable " + ConnectionConfig.USERNAME_ENV_VAR);
         connGroup.addArgument("-p", "--password")
                 .setDefault("")
-                .help("password to connect with. Can also be specified using environment variable NEO4J_PASSWORD");
+                .help("password to connect with. Can also be specified using environment variable " + ConnectionConfig.PASSWORD_ENV_VAR);
         connGroup.addArgument("--encryption")
                 .help("whether the connection to Neo4j should be encrypted; must be consistent with Neo4j's " +
                         "configuration")
                 .type(new BooleanArgumentType())
                 .setDefault(true);
         connGroup.addArgument("-d", "--database")
-                .help("database to connect to")
+                .help("database to connect to. Can also be specified using environment variable " + ConnectionConfig.DATABASE_ENV_VAR)
                 .setDefault("");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();

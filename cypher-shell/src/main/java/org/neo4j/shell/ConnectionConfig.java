@@ -1,10 +1,12 @@
 package org.neo4j.shell;
 
-import org.neo4j.driver.Config;
-
 import javax.annotation.Nonnull;
 
 public class ConnectionConfig {
+    public static final String USERNAME_ENV_VAR = "NEO4J_USERNAME";
+    public static final String PASSWORD_ENV_VAR = "NEO4J_PASSWORD";
+    public static final String DATABASE_ENV_VAR = "NEO4J_DATABASE";
+
     private final String scheme;
     private final String host;
     private final int port;
@@ -13,23 +15,27 @@ public class ConnectionConfig {
     private String password;
     private String database;
 
-    public ConnectionConfig(@Nonnull String scheme, @Nonnull String host, int port,
-                            @Nonnull String username, @Nonnull String password, boolean encryption,
+    public ConnectionConfig(@Nonnull String scheme,
+                            @Nonnull String host,
+                            int port,
+                            @Nonnull String username,
+                            @Nonnull String password,
+                            boolean encryption,
                             @Nonnull String database) {
         this.host = host;
         this.port = port;
-        this.username = fallbackToEnvVariable(username, "NEO4J_USERNAME");
-        this.password = fallbackToEnvVariable(password, "NEO4J_PASSWORD");
+        this.username = fallbackToEnvVariable(username, USERNAME_ENV_VAR);
+        this.password = fallbackToEnvVariable(password, PASSWORD_ENV_VAR);
         this.encryption = encryption;
         this.scheme = scheme;
-        this.database = database;
+        this.database = fallbackToEnvVariable(database, DATABASE_ENV_VAR);
     }
 
     /**
      * @return preferredValue if not empty, else the contents of the fallback environment variable
      */
     @Nonnull
-    static String fallbackToEnvVariable(@Nonnull String preferredValue, @Nonnull String fallbackEnvVar) {
+    private static String fallbackToEnvVariable(@Nonnull String preferredValue, @Nonnull String fallbackEnvVar) {
         String result = System.getenv(fallbackEnvVar);
         if (result == null || !preferredValue.isEmpty()) {
             result = preferredValue;
