@@ -1,5 +1,15 @@
 package org.neo4j.shell.state;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.driver.AccessMode;
 import org.neo4j.driver.AuthToken;
 import org.neo4j.driver.AuthTokens;
@@ -11,6 +21,7 @@ import org.neo4j.driver.SessionParametersTemplate;
 import org.neo4j.driver.Statement;
 import org.neo4j.driver.StatementResult;
 import org.neo4j.driver.Transaction;
+import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
@@ -20,16 +31,6 @@ import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.NullLogging;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Handles interactions with the driver
@@ -42,14 +43,17 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     private List<Statement> transactionStatements;
     private String activeDatabaseNameAsSetByUser;
     private String actualDatabaseNameAsReportedByServer;
+    private final boolean isInteractive;
 
-    public BoltStateHandler() {
-        this(GraphDatabase::driver);
+    public BoltStateHandler(boolean isInteractive) {
+        this(GraphDatabase::driver, isInteractive);
     }
 
-    BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider) {
+    BoltStateHandler(TriFunction<String, AuthToken, Config, Driver> driverProvider,
+                     boolean isInteractive) {
         this.driverProvider = driverProvider;
         activeDatabaseNameAsSetByUser = ABSENT_DB_NAME;
+        this.isInteractive = isInteractive;
     }
 
     @Override
@@ -58,9 +62,31 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         if (isTransactionOpen()) {
             throw new CommandException("There is an open transaction. You need to close it before you can switch database.");
         }
+        String previousDatabaseName = activeDatabaseNameAsSetByUser;
         activeDatabaseNameAsSetByUser = databaseName;
-        if (isConnected()) {
-            reconnect(false);
+        try
+        {
+            if ( isConnected() )
+            {
+                reconnect( false );
+            }
+        }
+        catch ( ClientException e )
+        {
+            if ( isInteractive )
+            {
+                // We want to try to connect to the previous database
+                activeDatabaseNameAsSetByUser = previousDatabaseName;
+                try
+                {
+                    reconnect( false );
+                }
+                catch ( ClientException e2 )
+                {
+                    e.addSuppressed( e2 );
+                }
+            }
+            throw e;
         }
     }
 

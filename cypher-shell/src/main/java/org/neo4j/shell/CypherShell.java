@@ -40,8 +40,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     private ExpressionEvaluator evaluator = Evaluator.expressionEvaluator();
     private String lastNeo4jErrorCode;
 
-    public CypherShell(@Nonnull LinePrinter linePrinter, @Nonnull PrettyConfig prettyConfig) {
-        this(linePrinter, new BoltStateHandler(), new PrettyPrinter(prettyConfig));
+    public CypherShell(@Nonnull LinePrinter linePrinter,
+                       @Nonnull PrettyConfig prettyConfig,
+                       boolean isInteractive) {
+        this(linePrinter, new BoltStateHandler(isInteractive), new PrettyPrinter(prettyConfig));
     }
 
     protected CypherShell(@Nonnull LinePrinter linePrinter,

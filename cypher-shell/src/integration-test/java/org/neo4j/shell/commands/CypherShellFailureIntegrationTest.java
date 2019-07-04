@@ -26,7 +26,7 @@ public class CypherShellFailureIntegrationTest {
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000));
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false);
     }
 
     @Test

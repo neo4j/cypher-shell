@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
-import static org.neo4j.shell.DatabaseManager.DATABASE_NOT_FOUND_ERROR_CODE;
 import static org.neo4j.shell.DatabaseManager.DATABASE_UNAVAILABLE_ERROR_CODE;
 
 /**
@@ -41,7 +40,6 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
     private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
-    private static final String DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT = "[NOT_FOUND]";
     private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
@@ -212,9 +210,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private String getErrorPrompt(String errorCode) {
         // NOTE: errorCode can be null
         String errorPromptSuffix;
-        if (DATABASE_NOT_FOUND_ERROR_CODE.equals(errorCode)) {
-            errorPromptSuffix = DATABASE_NOT_FOUND_ERROR_PROMPT_TEXT;
-        } else if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(errorCode)) {
+        if (DATABASE_UNAVAILABLE_ERROR_CODE.equals(errorCode)) {
             errorPromptSuffix = DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
         } else {
             errorPromptSuffix = "";

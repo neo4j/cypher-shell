@@ -78,7 +78,7 @@ public class BoltStateHandlerTest {
                 return new FakeDriver();
             }
         };
-        BoltStateHandler handler = new BoltStateHandler(provider);
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
@@ -89,7 +89,7 @@ public class BoltStateHandlerTest {
     public void versionIsNotEmptyAfterConnect() throws CommandException {
         Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
-        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
+        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
@@ -101,7 +101,7 @@ public class BoltStateHandlerTest {
         Driver driverMock =
                 stubResultSummaryInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA", "my_default_db");
 
-        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
+        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
@@ -121,7 +121,7 @@ public class BoltStateHandlerTest {
                 .thenThrow(databaseNotFound)
                 .thenReturn(resultMock);
 
-        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock);
+        BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
 
@@ -400,7 +400,7 @@ public class BoltStateHandlerTest {
     @Test
     public void turnOffEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
-        BoltStateHandler handler = new BoltStateHandler(provider);
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.NONE, provider.config.encryptionLevel());
@@ -409,7 +409,7 @@ public class BoltStateHandlerTest {
     @Test
     public void turnOnEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
-        BoltStateHandler handler = new BoltStateHandler(provider);
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME);
         handler.connect(config);
         assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
@@ -444,7 +444,7 @@ public class BoltStateHandlerTest {
     private static class OfflineBoltStateHandler extends BoltStateHandler {
 
         public OfflineBoltStateHandler(Driver driver) {
-            super((uri, authToken, config) -> driver);
+            super((uri, authToken, config) -> driver, false);
         }
 
         public void connect() throws CommandException {

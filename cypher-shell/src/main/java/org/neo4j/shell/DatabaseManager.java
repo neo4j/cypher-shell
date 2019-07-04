@@ -11,7 +11,6 @@ public interface DatabaseManager
     String SYSTEM_DB_NAME = "system";
     String DEFAULT_DEFAULT_DB_NAME = "neo4j";
 
-    String DATABASE_NOT_FOUND_ERROR_CODE = "Neo.ClientError.Database.DatabaseNotFound";
     String DATABASE_UNAVAILABLE_ERROR_CODE = "Neo.TransientError.General.DatabaseUnavailable";
 
     void setActiveDatabase(String databaseName) throws CommandException;

@@ -43,7 +43,7 @@ public class CommandHelperTest {
     {
         // Given
         AnsiLogger logger = new AnsiLogger( false );
-        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell(logger, PrettyConfig.DEFAULT) );
+        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell(logger, PrettyConfig.DEFAULT, false) );
 
         // When
         Command begin = commandHelper.getCommand( ":BEGIN" );
