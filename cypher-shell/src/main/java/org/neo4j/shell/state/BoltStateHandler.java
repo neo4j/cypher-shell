@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -17,12 +16,12 @@ import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
-import org.neo4j.driver.SessionParametersTemplate;
 import org.neo4j.driver.Statement;
 import org.neo4j.driver.StatementResult;
 import org.neo4j.driver.Transaction;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.internal.SessionConfig;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
@@ -173,20 +172,21 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private void reconnect(boolean keepBookmark) {
-        Consumer<SessionParametersTemplate> sessionOptionalArgs = t -> {};
-        if (session != null && keepBookmark) {
+        SessionConfig.Builder builder = SessionConfig.builder();
+        builder.withDefaultAccessMode( AccessMode.WRITE );
+        if ( !ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser ) )
+        {
+            builder.withDatabase( activeDatabaseNameAsSetByUser );
+        }
+        if ( session != null && keepBookmark )
+        {
             // Save the last bookmark and close the session
             final String bookmark = session.lastBookmark();
             session.close();
-            sessionOptionalArgs = t -> t.withBookmarks(bookmark);
+            builder.withBookmarks( bookmark );
         }
-        Consumer<SessionParametersTemplate> sessionArgs = t -> {
-            t.withDefaultAccessMode(AccessMode.WRITE);
-            if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
-                t.withDatabase(activeDatabaseNameAsSetByUser);
-            }
-        };
-        session = driver.session(sessionArgs.andThen(sessionOptionalArgs));
+
+        session = driver.session( builder.build() );
 
         String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DATABASES" : "RETURN 1";
 

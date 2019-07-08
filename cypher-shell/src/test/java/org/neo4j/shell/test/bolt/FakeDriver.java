@@ -3,14 +3,13 @@ package org.neo4j.shell.test.bolt;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Metrics;
 import org.neo4j.driver.Session;
-import org.neo4j.driver.SessionParametersTemplate;
 import org.neo4j.driver.async.AsyncSession;
 import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.driver.internal.SessionConfig;
 import org.neo4j.driver.reactive.RxSession;
 import org.neo4j.driver.types.TypeSystem;
 
 import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 
 public class FakeDriver implements Driver {
     @Override
@@ -24,7 +23,7 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public Session session(Consumer<SessionParametersTemplate> templateConsumer) {
+    public Session session( SessionConfig sessionConfig) {
         return new FakeSession();
     }
 
@@ -50,7 +49,7 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public RxSession rxSession(Consumer<SessionParametersTemplate> templateConsumer)
+    public RxSession rxSession( SessionConfig sessionConfig )
     {
         return null;
     }
@@ -62,13 +61,24 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public AsyncSession asyncSession(Consumer<SessionParametersTemplate> templateConsumer)
+    public AsyncSession asyncSession( SessionConfig sessionConfig )
     {
         return null;
     }
 
     @Override
     public TypeSystem defaultTypeSystem()
+    {
+        return null;
+    }
+
+    @Override
+    public void verifyConnectivity()
+    {
+    }
+
+    @Override
+    public CompletionStage<Void> verifyConnectivityAsync()
     {
         return null;
     }
