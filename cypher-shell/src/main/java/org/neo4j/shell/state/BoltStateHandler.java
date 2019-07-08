@@ -172,6 +172,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private void reconnect(boolean keepBookmark) {
+        // This will already throw an exception if there is no connectivity
+        driver.verifyConnectivity();
+
         SessionConfig.Builder builder = SessionConfig.builder();
         builder.withDefaultAccessMode( AccessMode.WRITE );
         if ( !ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser ) )

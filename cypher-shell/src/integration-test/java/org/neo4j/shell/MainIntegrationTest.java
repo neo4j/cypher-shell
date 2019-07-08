@@ -88,7 +88,7 @@ public class MainIntegrationTest
         main.connectMaybeInteractively( shell, connectionConfig, true );
     }
 
-    @Ignore
+    @Test
     public void wrongPortWithNeo4j() throws Exception
     {
         // given
@@ -103,7 +103,7 @@ public class MainIntegrationTest
         ConnectionConfig connectionConfig = sac.connectionConfig;
 
         exception.expect( ServiceUnavailableException.class );
-        exception.expectMessage( "Unable to connect to localhost:1234, ensure the database is running and that there is a working network connection to it" );
+        exception.expectMessage( "Unable to connect to database, ensure the database is running and that there is a working network connection to it" );
         main.connectMaybeInteractively( shell, connectionConfig, true );
     }
 
