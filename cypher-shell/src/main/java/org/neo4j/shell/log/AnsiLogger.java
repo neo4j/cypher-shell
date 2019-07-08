@@ -110,7 +110,7 @@ public class AnsiLogger implements Logger {
     }
 
     /**
-     * Interpret the cause of a Bolt exception and translate it into a sensible error message.
+     * Formatting for Bolt exceptions.
      */
     @Nonnull
     String getFormattedMessage(@Nonnull final Throwable e) {
@@ -122,23 +122,20 @@ public class AnsiLogger implements Logger {
             e.printStackTrace(ps);
             msg.append(new String(baos.toByteArray(), StandardCharsets.UTF_8));
         } else {
-            //noinspection ThrowableResultOfMethodCallIgnored
-            final Throwable cause = getRootCause(e);
-
-            if (cause instanceof AnsiFormattedException) {
-                msg = msg.append(((AnsiFormattedException) cause).getFormattedMessage());
-            } else if (cause instanceof ClientException &&
-                    cause.getMessage() != null && cause.getMessage().contains("Missing username")) {
+            if (e instanceof AnsiFormattedException) {
+                msg = msg.append(((AnsiFormattedException) e).getFormattedMessage());
+            } else if (e instanceof ClientException &&
+                    e.getMessage() != null && e.getMessage().contains("Missing username")) {
                 // Username and password was not specified
-                msg = msg.append(cause.getMessage())
+                msg = msg.append(e.getMessage())
                          .append("\nPlease specify --username, and optionally --password, as argument(s)")
                          .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
                          .append("\nSee --help for more info.");
             } else {
-                if (cause.getMessage() != null) {
-                    msg = msg.append(cause.getMessage());
+                if (e.getMessage() != null) {
+                    msg = msg.append(e.getMessage());
                 } else {
-                    msg = msg.append(cause.getClass().getSimpleName());
+                    msg = msg.append(e.getClass().getSimpleName());
                 }
             }
         }

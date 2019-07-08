@@ -135,13 +135,13 @@ public class AnsiLoggerTest {
 
     @Test
     public void testNested() {
-        assertEquals("@|RED nested|@", logger.getFormattedMessage(new ClientException("outer",
+        assertEquals("@|RED outer|@", logger.getFormattedMessage(new ClientException("outer",
                 new CommandException("nested"))));
     }
 
     @Test
     public void testNestedDeep() {
-        assertEquals("@|RED nested deep|@", logger.getFormattedMessage(
+        assertEquals("@|RED outer|@", logger.getFormattedMessage(
                 new ClientException("outer",
                         new ClientException("nested",
                                 new ClientException("nested deep")))));
@@ -150,7 +150,7 @@ public class AnsiLoggerTest {
     @Test
     public void testNullMessage() {
         assertEquals("@|RED ClientException|@", logger.getFormattedMessage(new ClientException(null)));
-        assertEquals("@|RED NullPointerException|@",
+        assertEquals("@|RED outer|@",
                 logger.getFormattedMessage(new ClientException("outer", new NullPointerException(null))));
     }
 
