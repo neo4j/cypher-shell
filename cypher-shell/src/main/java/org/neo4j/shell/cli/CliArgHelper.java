@@ -139,7 +139,7 @@ public class CliArgHelper {
                 .help("whether the connection to Neo4j should be encrypted; must be consistent with Neo4j's " +
                         "configuration")
                 .type(new BooleanArgumentType())
-                .setDefault(true);
+                .setDefault(false);
         connGroup.addArgument("-d", "--database")
                 .help("database to connect to. Can also be specified using environment variable " + ConnectionConfig.DATABASE_ENV_VAR)
                 .setDefault("");

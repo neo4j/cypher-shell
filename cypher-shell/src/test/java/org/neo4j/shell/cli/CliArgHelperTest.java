@@ -170,8 +170,8 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void defaultsEncryptionToTrue() {
-        assertEquals(true, CliArgHelper.parse().getEncryption());
+    public void defaultsEncryptionToFalse() {
+        assertEquals(false, CliArgHelper.parse().getEncryption());
     }
 
     @Test
