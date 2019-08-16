@@ -34,6 +34,6 @@ public class CypherShellFailureIntegrationTest {
         thrown.expect(AuthenticationException.class);
         thrown.expectMessage("The client is unauthorized due to authentication failure.");
 
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "", true, ABSENT_DB_NAME));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "", false, ABSENT_DB_NAME));
     }
 }

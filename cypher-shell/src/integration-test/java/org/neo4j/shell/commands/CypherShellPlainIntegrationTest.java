@@ -29,7 +29,7 @@ public class CypherShellPlainIntegrationTest {
     public void setUp() throws Exception {
         linePrinter.clear();
         shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000), false);
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME));
     }
 
     @After

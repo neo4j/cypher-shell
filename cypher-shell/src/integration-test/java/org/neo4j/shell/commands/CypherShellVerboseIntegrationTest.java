@@ -39,7 +39,7 @@ public class CypherShellVerboseIntegrationTest {
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
 
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME));
+        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME));
     }
 
     @After
@@ -73,7 +73,7 @@ public class CypherShellVerboseIntegrationTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
 
-        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", true, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME);
         assertTrue("Shell should already be connected", shell.isConnected());
         shell.connect(config);
     }
