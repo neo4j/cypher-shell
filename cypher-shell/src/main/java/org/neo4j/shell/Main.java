@@ -22,7 +22,10 @@ import static org.neo4j.shell.ShellRunner.isInputInteractive;
 public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
     private final InputStream in;
+    // Used for program output
     private final PrintStream out;
+    // Used for user interaction
+    private final PrintStream err;
 
     public static void main(String[] args) {
         CliArgs cliArgs = CliArgHelper.parse(args);
@@ -38,15 +41,16 @@ public class Main {
     }
 
     Main() {
-        this(System.in, System.out);
+        this(System.in, System.out, System.err);
     }
 
     /**
      * For testing purposes
      */
-    Main(final InputStream in, final PrintStream out) {
+    Main(final InputStream in, final PrintStream out, final PrintStream err) {
         this.in = in;
         this.out = out;
+        this.err = err;
     }
 
     void startShell(@Nonnull CliArgs cliArgs) {
@@ -134,8 +138,8 @@ public class Main {
         if (!text.isEmpty()) {
             return text;
         }
-        out.println(prompt + " cannot be empty");
-        out.println();
+        err.println(prompt + " cannot be empty");
+        err.println();
         return promptForNonEmptyText(prompt, mask);
     }
 
@@ -151,7 +155,7 @@ public class Main {
     @Nonnull
     private String promptForText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
         String line;
-        ConsoleReader consoleReader = new ConsoleReader(in, out);
+        ConsoleReader consoleReader = new ConsoleReader(in, err);
         // Disable expansion of bangs: !
         consoleReader.setExpandEvents(false);
         // Ensure Reader does not handle user input for ctrl+C behaviour

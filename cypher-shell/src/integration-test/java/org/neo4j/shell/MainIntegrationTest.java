@@ -26,7 +26,7 @@ public class MainIntegrationTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, new PrintStream( new ByteArrayOutputStream( ) ), ps);
 
         CliArgs cliArgs = new CliArgs();
         cliArgs.setUsername("", "");

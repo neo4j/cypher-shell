@@ -31,12 +31,12 @@ public class MainTest {
 
     private CypherShell shell;
     private ConnectionConfig connectionConfig;
-    private PrintStream out;
+    private PrintStream ignoredPrintStream;
     private AuthenticationException authException;
 
     @Before
     public void setup() {
-        out = mock(PrintStream.class);
+        ignoredPrintStream = mock(PrintStream.class);
         shell = mock(CypherShell.class);
         connectionConfig = mock(ConnectionConfig.class);
 
@@ -56,7 +56,7 @@ public class MainTest {
 
         thrown.expectMessage("No text could be read, exiting");
 
-        Main main = new Main(inputStream, out);
+        Main main = new Main(inputStream, ignoredPrintStream, ignoredPrintStream );
         main.connectMaybeInteractively(shell, connectionConfig, true);
         verify(shell, times(1)).connect(connectionConfig);
     }
@@ -68,7 +68,7 @@ public class MainTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("bla");
 
-        Main main = new Main(mock(InputStream.class), out);
+        Main main = new Main(mock(InputStream.class), ignoredPrintStream, ignoredPrintStream );
         main.connectMaybeInteractively(shell, connectionConfig, true);
         verify(shell, times(1)).connect(connectionConfig);
     }
@@ -83,7 +83,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
         main.connectMaybeInteractively(shell, connectionConfig, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -104,7 +104,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
 
         try {
             main.connectMaybeInteractively(shell, connectionConfig, false);
@@ -125,7 +125,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
         main.connectMaybeInteractively(shell, connectionConfig, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -146,7 +146,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
         main.connectMaybeInteractively(shell, connectionConfig, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -166,7 +166,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
         main.connectMaybeInteractively(shell, connectionConfig, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -188,7 +188,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
 
         try {
             main.connectMaybeInteractively(shell, connectionConfig, true);
@@ -209,7 +209,7 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
+        Main main = new Main(inputStream, ignoredPrintStream, ps);
         main.connectMaybeInteractively(shell, connectionConfig, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -227,7 +227,7 @@ public class MainTest {
 
         PrintStream printStream = mock(PrintStream.class);
 
-        Main main = new Main(System.in, printStream);
+        Main main = new Main(System.in, printStream, ignoredPrintStream );
         main.startShell(args);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
@@ -243,7 +243,7 @@ public class MainTest {
 
         PrintStream printStream = mock(PrintStream.class);
 
-        Main main = new Main(System.in, printStream);
+        Main main = new Main(System.in, printStream, ignoredPrintStream );
         main.startShell(args);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
