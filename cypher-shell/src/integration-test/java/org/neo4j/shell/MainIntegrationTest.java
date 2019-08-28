@@ -1,5 +1,6 @@
 package org.neo4j.shell;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.log.AnsiLogger;
@@ -16,17 +17,21 @@ import static org.junit.Assert.assertTrue;
 
 public class MainIntegrationTest {
 
-    @Test
-    public void connectInteractivelyPromptsOnWrongAuthentication() throws Exception {
+    private String inputString = String.format( "neo4j%nneo%n" );
+    private ByteArrayOutputStream baos;
+    private ConnectionConfig connectionConfig;
+    private CypherShell shell;
+    private Main main;
+
+    @Before
+    public void setup() {
         // given
-        // what the user inputs when prompted
-        String inputString = String.format( "neo4j%nneo%n" );
-        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+        InputStream inputStream = new ByteArrayInputStream( inputString.getBytes() );
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(baos);
+        baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream( baos );
 
-        Main main = new Main(inputStream, ps);
+        main = new Main( inputStream, ps );
 
         CliArgs cliArgs = new CliArgs();
         cliArgs.setUsername("", "");
@@ -34,7 +39,7 @@ public class MainIntegrationTest {
 
         Logger logger = new AnsiLogger(cliArgs.getDebugMode());
         PrettyConfig prettyConfig = new PrettyConfig(cliArgs);
-        ConnectionConfig connectionConfig = new ConnectionConfig(
+        connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
                 cliArgs.getPort(),
@@ -42,13 +47,17 @@ public class MainIntegrationTest {
                 cliArgs.getPassword(),
                 cliArgs.getEncryption());
 
-        CypherShell shell = new CypherShell(logger, prettyConfig);
+        shell = new CypherShell(logger, prettyConfig);
+    }
 
+
+    @Test
+    public void promptsOnWrongAuthenticationIfInteractive() throws Exception {
         // when
         assertEquals("", connectionConfig.username());
         assertEquals("", connectionConfig.password());
 
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         // then
         // should be connected
@@ -59,5 +68,24 @@ public class MainIntegrationTest {
 
         String out = baos.toString();
         assertEquals( String.format( "username: neo4j%npassword: ***%n" ), out );
+    }
+
+    @Test
+    public void promptsSilentlyOnWrongAuthenticationIfOutputRedirected() throws Exception {
+        // when
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted silently and set the username and password
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        String out = baos.toString();
+        assertEquals( "", out );
     }
 }
