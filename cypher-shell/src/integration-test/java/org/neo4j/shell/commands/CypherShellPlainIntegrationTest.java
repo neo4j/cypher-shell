@@ -18,18 +18,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 
-public class CypherShellPlainIntegrationTest {
+public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
     private StringLinePrinter linePrinter = new StringLinePrinter();
-    private CypherShell shell;
 
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
         shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000), false);
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME));
+        connect( "neo" );
     }
 
     @After

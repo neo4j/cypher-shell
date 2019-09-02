@@ -21,7 +21,7 @@ import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSE
 import static org.neo4j.shell.Versions.majorVersion;
 import static org.neo4j.shell.Versions.minorVersion;
 
-public class CypherShellVerboseIntegrationTest {
+public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -29,7 +29,6 @@ public class CypherShellVerboseIntegrationTest {
     private Command rollbackCommand;
     private Command commitCommand;
     private Command beginCommand;
-    private CypherShell shell;
 
     @Before
     public void setUp() throws Exception {
@@ -39,7 +38,7 @@ public class CypherShellVerboseIntegrationTest {
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
 
-        shell.connect(new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME));
+        connect( "neo" );
     }
 
     @After
@@ -73,9 +72,8 @@ public class CypherShellVerboseIntegrationTest {
         thrown.expect(CommandException.class);
         thrown.expectMessage("Already connected");
 
-        ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME);
         assertTrue("Shell should already be connected", shell.isConnected());
-        shell.connect(config);
+        connect( "neo" );
     }
 
     @Test
@@ -194,6 +192,7 @@ public class CypherShellVerboseIntegrationTest {
         assumeTrue(minorVersion(serverVersion) == 6 || majorVersion(serverVersion) == 4);
 
         shell.execute( "CREATE INDEX ON :Person(age)" );
+        shell.execute( "CALL db.awaitIndexes()" );
 
         //when
         shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age");
