@@ -128,7 +128,7 @@ public class CliArgHelper {
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
                 .help("address and port to connect to")
-                .setDefault("bolt://localhost:7687");
+                .setDefault("neo4j://localhost:7687");
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
                 .help("username to connect as. Can also be specified using environment variable " + ConnectionConfig.USERNAME_ENV_VAR);

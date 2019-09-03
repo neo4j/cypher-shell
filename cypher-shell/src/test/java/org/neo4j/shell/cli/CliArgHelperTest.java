@@ -55,6 +55,13 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void testDefaultScheme() {
+        CliArgs arguments = CliArgHelper.parse();
+        assertNotNull( arguments );
+        assertEquals( "neo4j://", arguments.getScheme() );
+    }
+
+    @Test
     public void testDebugIsNotDefault() {
         assertFalse("Debug should not be the default mode",
                 CliArgHelper.parse(asArray()).getDebugMode());
