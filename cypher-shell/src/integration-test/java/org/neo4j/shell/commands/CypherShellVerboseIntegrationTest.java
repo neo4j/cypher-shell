@@ -5,19 +5,21 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.ConnectionConfig;
+
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 import static org.neo4j.shell.Versions.majorVersion;
 import static org.neo4j.shell.Versions.minorVersion;
 
@@ -33,7 +35,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false);
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false, new ShellParameterMap());
         rollbackCommand = new Rollback(shell);
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
@@ -152,12 +154,12 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
 
     @Test
     public void paramsAndListVariables() throws CommandException {
-        assertTrue(shell.allParameterValues().isEmpty());
+        assertTrue(shell.getParamaterMap().allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
-        shell.setParameter("string", stringInput);
-        Object paramValue = shell.setParameter("bob", String.valueOf(randomLong));
+        shell.getParamaterMap().setParameter("string", stringInput);
+        Object paramValue = shell.getParamaterMap().setParameter("bob", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { bob }, $string");
@@ -165,16 +167,16 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String result = linePrinter.output();
         assertThat(result, containsString("| { bob }"));
         assertThat(result, containsString("| " + randomLong + " | " + stringInput + " |"));
-        assertEquals(randomLong, shell.allParameterValues().get("bob"));
-        assertEquals("randomString", shell.allParameterValues().get("string"));
+        assertEquals(randomLong, shell.getParamaterMap().allParameterValues().get("bob"));
+        assertEquals("randomString", shell.getParamaterMap().allParameterValues().get("string"));
     }
 
     @Test
     public void paramsAndListVariablesWithSpecialCharacters() throws CommandException {
-        assertTrue(shell.allParameterValues().isEmpty());
+        assertTrue(shell.getParamaterMap().allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
-        Object paramValue = shell.setParameter("`bob`", String.valueOf(randomLong));
+        Object paramValue = shell.getParamaterMap().setParameter("`bob`", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { `bob` }");
@@ -182,7 +184,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String result = linePrinter.output();
         assertThat(result, containsString("| { `bob` }"));
         assertThat(result, containsString("\n| " + randomLong+ " |\n"));
-        assertEquals(randomLong, shell.allParameterValues().get("bob"));
+        assertEquals(randomLong, shell.getParamaterMap().allParameterValues().get("bob"));
     }
 
     @Test

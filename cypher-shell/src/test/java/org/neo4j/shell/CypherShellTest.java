@@ -59,7 +59,7 @@ public class CypherShellTest {
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
         ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false, ABSENT_DB_NAME);
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.connect(cc);
         verify(mockedBoltStateHandler).connect(cc);
@@ -70,7 +70,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfResetMethod() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.reset();
         verify(mockedBoltStateHandler).reset();
@@ -78,7 +78,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfGetServerVersionMethod() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.getServerVersion();
         verify(mockedBoltStateHandler).getServerVersion();
@@ -86,7 +86,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfIsTransactionOpenMethod() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.isTransactionOpen();
         verify(mockedBoltStateHandler).isTransactionOpen();
@@ -94,7 +94,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
         when(mockedBoltStateHandler.commitTransaction()).thenReturn(Optional.empty());
 
         shell.beginTransaction();
@@ -113,7 +113,7 @@ public class CypherShellTest {
         when(mockedBoltStateHandler.isConnected()).thenReturn(false);
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenThrow(new CommandException("not connected"));
 
-        Object result = shell.setParameter("bob", "99");
+        Object result = shell.getParamaterMap().setParameter("bob", "99");
         assertEquals(99L, result);
     }
 
@@ -138,11 +138,11 @@ public class CypherShellTest {
         when(recordMock.get("bo`b")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.allParameterValues().isEmpty());
+        assertTrue(offlineTestShell.getParamaterMap().allParameterValues().isEmpty());
 
-        Object result = offlineTestShell.setParameter("`bo``b`", "99");
+        Object result = offlineTestShell.getParamaterMap().setParameter("`bo``b`", "99");
         assertEquals(99L, result);
-        assertEquals(99L, offlineTestShell.allParameterValues().get("bo`b"));
+        assertEquals(99L, offlineTestShell.getParamaterMap().allParameterValues().get("bo`b"));
     }
 
     @Test
@@ -156,11 +156,11 @@ public class CypherShellTest {
         when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.allParameterValues().isEmpty());
+        assertTrue(offlineTestShell.getParamaterMap().allParameterValues().isEmpty());
 
-        Object result = offlineTestShell.setParameter("`bob`", "99");
+        Object result = offlineTestShell.getParamaterMap().setParameter("`bob`", "99");
         assertEquals(99L, result);
-        assertEquals(99L, offlineTestShell.allParameterValues().get("bob"));
+        assertEquals(99L, offlineTestShell.getParamaterMap().allParameterValues().get("bob"));
     }
 
     @Test
@@ -224,6 +224,7 @@ public class CypherShellTest {
         assertTrue(offlineTestShell.getCommandExecutable(":help").isPresent());
         assertTrue(offlineTestShell.getCommandExecutable(":help :param").isPresent());
         assertTrue(offlineTestShell.getCommandExecutable(":param \"A piece of string\"").isPresent());
+        assertTrue(offlineTestShell.getCommandExecutable(":params").isPresent());
     }
 
     @Test
@@ -267,10 +268,10 @@ public class CypherShellTest {
     public void setParameterDoesNotTriggerByBoltError() throws CommandException {
         // given
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.empty());
-        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         // when
-        Object result = shell.setParameter("bob", "99");
+        Object result = shell.getParamaterMap().setParameter("bob", "99");
         assertEquals(99L, result);
     }
 }

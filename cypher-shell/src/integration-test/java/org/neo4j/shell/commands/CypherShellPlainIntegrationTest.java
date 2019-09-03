@@ -1,13 +1,13 @@
 package org.neo4j.shell.commands;
 
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.neo4j.shell.ConnectionConfig;
+
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
@@ -15,7 +15,7 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.junit.Assert.assertEquals;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 
 public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest {
@@ -27,7 +27,7 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest 
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000), false);
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000), false, new ShellParameterMap());
         connect( "neo" );
     }
 
@@ -78,5 +78,22 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest 
         assertThat(actual, containsString("Statement: \"READ_ONLY\""));
         assertThat(actual, containsString("Planner: \"COST\""));
         assertThat(actual, containsString("Runtime: \"INTERPRETED\""));
+    }
+
+    @Test
+    public void shouldUseParamFromCLIArgs() throws CommandException {
+        // given a CLI arg
+        ShellParameterMap parameterMap = new ShellParameterMap();
+        parameterMap.setParameter( "foo", "'bar'" );
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000), false, parameterMap );
+        connect( "neo" );
+
+        //when
+        shell.execute("CYPHER RETURN $foo");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat(actual, containsString("$foo"));
+        assertThat(actual, containsString("bar"));
     }
 }

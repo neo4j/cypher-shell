@@ -23,17 +23,26 @@ public class Param implements Command {
     private static final Pattern lambdaPattern = Pattern.compile("^\\s*(?<key>[\\p{L}_][\\p{L}0-9_]*)\\s*=>\\s*(?<value>.+)$");
     private static final Pattern lambdaMapPattern = Pattern.compile("^\\s*(?<key>[\\p{L}_][\\p{L}0-9_]*):\\s*=>\\s*(?<value>.+)$");
 
-    public static final String COMMAND_NAME = ":param";
+    private final String commandName;
+    private final boolean fromWithinShell;
     private final ParameterMap parameterMap;
 
-    public Param(@Nonnull final ParameterMap parameterMap) {
+    /**
+     * @param parameterMap the map to set parameters in
+     * @param fromWithinShell If {@code true}, this param evaluates ":param" commands from within the shell.
+     *                        If {@code false}, this param evaluates "--param" commands from CLI arguments.
+     */
+    public Param(@Nonnull final ParameterMap parameterMap,
+                 final boolean fromWithinShell) {
         this.parameterMap = parameterMap;
+        this.commandName = fromWithinShell ?  ":param" : "--param";
+        this.fromWithinShell = fromWithinShell;
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return COMMAND_NAME;
+        return commandName;
     }
 
     @Nonnull
@@ -45,7 +54,7 @@ public class Param implements Command {
     @Nonnull
     @Override
     public String getUsage() {
-        return "name => value";
+        return fromWithinShell ? "name => value" : " \"name => value\"" ;
     }
 
     @Nonnull
@@ -65,11 +74,11 @@ public class Param implements Command {
         Matcher lambdaMapMatcher = lambdaMapPattern.matcher(argString);
         if (lambdaMapMatcher.matches()) {
             throw new CommandException(AnsiFormattedText.from("Incorrect usage.\nusage: ")
-                    .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+                                                        .bold().append( commandName ).boldOff().append( " ").append( getUsage()));
         }
         if (!assignIfValidParameter(argString)) {
             throw new CommandException(AnsiFormattedText.from("Incorrect number of arguments.\nusage: ")
-                    .bold().append(COMMAND_NAME).boldOff().append(" ").append(getUsage()));
+                                                        .bold().append( commandName ).boldOff().append( " ").append( getUsage()));
         }
     }
 

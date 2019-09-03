@@ -7,12 +7,11 @@ import org.junit.rules.ExpectedException;
 
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
-
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
 public class CypherShellFailureIntegrationTest extends CypherShellIntegrationTest {
     @Rule
@@ -23,7 +22,7 @@ public class CypherShellFailureIntegrationTest extends CypherShellIntegrationTes
     @Before
     public void setUp() {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false);
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false, new ShellParameterMap());
     }
 
     @Test

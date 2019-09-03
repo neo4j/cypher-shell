@@ -3,6 +3,8 @@ package org.neo4j.shell.cli;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -97,5 +99,13 @@ public class CliArgsTest {
 
         cliArgs.setCypher(null);
         assertFalse(cliArgs.getCypher().isPresent());
+    }
+
+    @Test
+    public void getParameters()
+    {
+        // Parameters are set only through the Action from the CliArgHelper, bypassing CliArgs
+        // so setting them cannot be tested here.
+        assertEquals( Collections.EMPTY_MAP, cliArgs.getParameters().allParameterValues() );
     }
 }

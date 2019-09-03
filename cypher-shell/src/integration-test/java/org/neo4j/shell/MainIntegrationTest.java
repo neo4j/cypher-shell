@@ -146,6 +146,6 @@ public class MainIntegrationTest
                 cliArgs.getEncryption(),
                 cliArgs.getDatabase() );
 
-        return new ShellAndConnection( new CypherShell( logger, prettyConfig, true ), connectionConfig );
+        return new ShellAndConnection( new CypherShell( logger, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
     }
 }

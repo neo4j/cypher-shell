@@ -1,57 +1,51 @@
 package org.neo4j.shell;
 
-import org.neo4j.cypher.internal.evaluator.EvaluationException;
-import org.neo4j.cypher.internal.evaluator.Evaluator;
-import org.neo4j.cypher.internal.evaluator.ExpressionEvaluator;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
-import org.neo4j.shell.prettyprint.CypherVariablesFormatter;
 import org.neo4j.shell.prettyprint.LinePrinter;
 import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
-import org.neo4j.shell.state.ParamValue;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * A possibly interactive shell for evaluating cypher statements.
  */
-public class CypherShell implements StatementExecuter, Connector, TransactionHandler, ParameterMap, DatabaseManager {
+public class CypherShell implements StatementExecuter, Connector, TransactionHandler, DatabaseManager {
     // Final space to catch newline
-    protected static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
-    protected final Map<String, ParamValue> queryParams = new HashMap<>();
+    private static final Pattern cmdNamePattern = Pattern.compile("^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$");
+    private final ParameterMap parameterMap;
     private final LinePrinter linePrinter;
     private final BoltStateHandler boltStateHandler;
     private final PrettyPrinter prettyPrinter;
     private CommandHelper commandHelper;
-    private ExpressionEvaluator evaluator = Evaluator.expressionEvaluator();
     private String lastNeo4jErrorCode;
 
     public CypherShell(@Nonnull LinePrinter linePrinter,
                        @Nonnull PrettyConfig prettyConfig,
-                       boolean isInteractive) {
-        this(linePrinter, new BoltStateHandler(isInteractive), new PrettyPrinter(prettyConfig));
+                       boolean isInteractive,
+                       ParameterMap parameterMap) {
+        this(linePrinter, new BoltStateHandler(isInteractive), new PrettyPrinter(prettyConfig), parameterMap);
     }
 
     protected CypherShell(@Nonnull LinePrinter linePrinter,
                           @Nonnull BoltStateHandler boltStateHandler,
-                          @Nonnull PrettyPrinter prettyPrinter) {
+                          @Nonnull PrettyPrinter prettyPrinter,
+                          ParameterMap parameterMap) {
         this.linePrinter = linePrinter;
         this.boltStateHandler = boltStateHandler;
         this.prettyPrinter = prettyPrinter;
+        this.parameterMap = parameterMap;
         addRuntimeHookToResetShell();
     }
 
@@ -97,7 +91,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     private void executeCypher(@Nonnull final String cypher) throws CommandException {
         try {
-            final Optional<BoltResult> result = boltStateHandler.runCypher( cypher, allParameterValues() );
+            final Optional<BoltResult> result = boltStateHandler.runCypher( cypher, parameterMap.allParameterValues() );
             result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
@@ -178,35 +172,6 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return boltStateHandler.isTransactionOpen();
     }
 
-    @Override
-    @Nonnull
-    public Object setParameter(@Nonnull String name, @Nonnull String valueString) throws CommandException {
-        try {
-            String parameterName = CypherVariablesFormatter.unescapedCypherVariable(name);
-            Object value = evaluator.evaluate(valueString, Object.class);
-            queryParams.put(parameterName, new ParamValue(valueString, value));
-            return value;
-        } catch (EvaluationException e) {
-           throw new CommandException(e.getMessage(), e);
-        }
-    }
-
-    @Override
-    @Nonnull
-    public Map<String, Object> allParameterValues() {
-        return queryParams.entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        value -> value.getValue().getValue()));
-    }
-
-    @Nonnull
-    @Override
-    public Map<String, ParamValue> getAllAsUserInput() {
-        return queryParams;
-    }
-
     void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
     }
@@ -242,5 +207,13 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     public String getActualDatabaseAsReportedByServer()
     {
         return boltStateHandler.getActualDatabaseAsReportedByServer();
+    }
+
+    /**
+     * @return the parameter map.
+     */
+    public ParameterMap getParamaterMap()
+    {
+        return parameterMap;
     }
 }

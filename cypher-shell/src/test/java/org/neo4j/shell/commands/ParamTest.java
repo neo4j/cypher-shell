@@ -23,7 +23,7 @@ public class ParamTest {
 
     @Before
     public void setup() {
-        this.cmd = new Param(mockShell);
+        this.cmd = new Param(mockShell, true);
     }
 
     @Test
@@ -32,7 +32,6 @@ public class ParamTest {
         thrown.expectMessage(containsString("Incorrect number of arguments"));
 
         cmd.execute("");
-        fail("Expected error");
     }
 
     @Test
@@ -41,7 +40,6 @@ public class ParamTest {
         thrown.expectMessage(containsString("Incorrect number of arguments"));
 
         cmd.execute("bob");
-        fail("Expected error");
     }
 
     @Test

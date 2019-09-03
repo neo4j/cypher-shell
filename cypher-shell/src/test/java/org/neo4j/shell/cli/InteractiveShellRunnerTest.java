@@ -10,6 +10,7 @@ import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.UserMessagesHandler;
@@ -462,12 +463,12 @@ public class InteractiveShellRunnerTest {
         verify(boltStateHandler).reset();
     }
 
-    private class FakeInterruptableShell extends CypherShell {
+    private static class FakeInterruptableShell extends CypherShell {
         private AtomicReference<Thread> executionThread = new AtomicReference<>();
 
         FakeInterruptableShell(@Nonnull Logger logger,
                                @Nonnull BoltStateHandler boltStateHandler) {
-            super(logger, boltStateHandler, mock(PrettyPrinter.class));
+            super(logger, boltStateHandler, mock(PrettyPrinter.class), new ShellParameterMap());
         }
 
         @Override

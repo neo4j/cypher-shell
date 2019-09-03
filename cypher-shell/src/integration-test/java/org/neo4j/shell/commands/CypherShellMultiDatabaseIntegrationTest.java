@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
@@ -39,7 +40,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     public void setUp() throws Exception
     {
         linePrinter.clear();
-        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), false );
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), false, new ShellParameterMap() );
         useCommand = new Use( shell );
         beginCommand = new Begin( shell );
         rollbackCommand = new Rollback( shell );
@@ -134,7 +135,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     @Test
     public void switchingToNonExistingDatabaseShouldGiveErrorResponseFromServerInteractive() throws CommandException
     {
-        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), true );
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), true, new ShellParameterMap() );
         useCommand = new Use( shell );
         shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME ) );
 
