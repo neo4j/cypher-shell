@@ -5,7 +5,6 @@ import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
@@ -15,9 +14,11 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
+import static org.neo4j.shell.ShellRunner.isOutputInteractive;
 
 public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
@@ -72,7 +73,7 @@ public class Main {
         try {
             CypherShell shell = new CypherShell(logger, prettyConfig);
             // Can only prompt for password if input has not been redirected
-            connectMaybeInteractively(shell, connectionConfig, isInputInteractive());
+            connectMaybeInteractively(shell, connectionConfig, isInputInteractive(), isOutputInteractive());
 
             // Construct shellrunner after connecting, due to interrupt handling
             ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
@@ -92,9 +93,20 @@ public class Main {
     /**
      * Connect the shell to the server, and try to handle missing passwords and such
      */
-    void connectMaybeInteractively(@Nonnull CypherShell shell, @Nonnull ConnectionConfig connectionConfig,
-                                   boolean interactively)
+    void connectMaybeInteractively(@Nonnull CypherShell shell,
+                                   @Nonnull ConnectionConfig connectionConfig,
+                                   boolean inputInteractive,
+                                   boolean outputInteractive)
             throws Exception {
+
+        OutputStream outputStream = outputInteractive ? out : new ThrowawayOutputStream();
+
+        ConsoleReader consoleReader = new ConsoleReader(in, outputStream);
+        // Disable expansion of bangs: !
+        consoleReader.setExpandEvents(false);
+        // Ensure Reader does not handle user input for ctrl+C behaviour
+        consoleReader.setHandleUserInterrupt(false);
+
         try {
             shell.connect(connectionConfig);
         } catch (AuthenticationException e) {
@@ -103,12 +115,15 @@ public class Main {
                 throw e;
             }
             // else need to prompt for username and password
-            if (interactively) {
+            if (inputInteractive) {
                 if (connectionConfig.username().isEmpty()) {
-                    connectionConfig.setUsername(promptForNonEmptyText("username", null));
+                    String username = outputInteractive ?
+                                      promptForNonEmptyText("username", consoleReader, null) :
+                                      promptForText("username", consoleReader, null);
+                    connectionConfig.setUsername(username);
                 }
                 if (connectionConfig.password().isEmpty()) {
-                    connectionConfig.setPassword(promptForText("password", '*'));
+                    connectionConfig.setPassword(promptForText("password", consoleReader, '*'));
                 }
                 // try again
                 shell.connect(connectionConfig);
@@ -116,6 +131,8 @@ public class Main {
                 // Can't prompt because input has been redirected
                 throw e;
             }
+        } finally {
+            consoleReader.close();
         }
     }
 
@@ -129,14 +146,14 @@ public class Main {
      *         in case of errors
      */
     @Nonnull
-    private String promptForNonEmptyText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
-        String text = promptForText(prompt, mask);
+    private String promptForNonEmptyText(@Nonnull String prompt, @Nonnull ConsoleReader consoleReader, @Nullable Character mask) throws Exception {
+        String text = promptForText(prompt, consoleReader, mask);
         if (!text.isEmpty()) {
             return text;
         }
-        out.println(prompt + " cannot be empty");
-        out.println();
-        return promptForNonEmptyText(prompt, mask);
+        consoleReader.println( prompt + " cannot be empty" );
+        consoleReader.println();
+        return promptForNonEmptyText(prompt, consoleReader, mask);
     }
 
     /**
@@ -144,25 +161,26 @@ public class Main {
      *         to display to the user
      * @param mask
      *         single character to display instead of what the user is typing, use null if text is not secret
+     * @param consoleReader
+     *         the reader
      * @return the text which was entered
      * @throws Exception
      *         in case of errors
      */
     @Nonnull
-    private String promptForText(@Nonnull String prompt, @Nullable Character mask) throws Exception {
-        String line;
-        ConsoleReader consoleReader = new ConsoleReader(in, out);
-        // Disable expansion of bangs: !
-        consoleReader.setExpandEvents(false);
-        // Ensure Reader does not handle user input for ctrl+C behaviour
-        consoleReader.setHandleUserInterrupt(false);
-        line = consoleReader.readLine(prompt + ": ", mask);
-        consoleReader.close();
-
+    private String promptForText(@Nonnull String prompt, @Nonnull ConsoleReader consoleReader, @Nullable Character mask) throws Exception {
+        String line = consoleReader.readLine(prompt + ": ", mask);
         if (line == null) {
             throw new CommandException("No text could be read, exiting...");
         }
 
         return line;
+    }
+
+    private static class ThrowawayOutputStream extends OutputStream {
+        @Override
+        public void write( int b )
+        {
+        }
     }
 }

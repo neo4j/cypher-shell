@@ -48,7 +48,7 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyNonEndedStringFails() throws Exception {
+    public void nonEndedStringFails() throws Exception {
         String inputString = "no newline";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
@@ -57,24 +57,24 @@ public class MainTest {
         thrown.expectMessage("No text could be read, exiting");
 
         Main main = new Main(inputStream, out);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
         verify(shell, times(1)).connect(connectionConfig);
     }
 
     @Test
-    public void connectMaybeInteractivelyUnrelatedErrorDoesNotPrompt() throws Exception {
+    public void unrelatedErrorDoesNotPrompt() throws Exception {
         doThrow(new RuntimeException("bla")).when(shell).connect(connectionConfig);
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("bla");
 
         Main main = new Main(mock(InputStream.class), out);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
         verify(shell, times(1)).connect(connectionConfig);
     }
 
     @Test
-    public void connectMaybeInteractivelyPromptsForBothIfNone() throws Exception {
+    public void promptsForUsernameAndPasswordIfNoneGivenIfInteractive() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "bob\nsecret\n";
@@ -84,18 +84,39 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals( out, String.format( "username: bob%npassword: ******%n" ));
+        assertEquals(String.format( "username: bob%npassword: ******%n" ), out);
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
     }
 
     @Test
-    public void connectMaybeInteractivelyDoesNotPromptIfNotInteractive() throws Exception {
+    public void promptsSilentlyForUsernameAndPasswordIfNoneGivenIfOutputRedirected() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "bob\nsecret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals("", out);
+        verify(connectionConfig).setUsername("bob");
+        verify(connectionConfig).setPassword("secret");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
+    public void doesNotPromptIfInputRedirected() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "bob\nsecret\n";
@@ -107,7 +128,7 @@ public class MainTest {
         Main main = new Main(inputStream, ps);
 
         try {
-            main.connectMaybeInteractively(shell, connectionConfig, false);
+            main.connectMaybeInteractively(shell, connectionConfig, false, true);
             fail("Expected auth exception");
         } catch (AuthenticationException e) {
             verify(shell, times(1)).connect(connectionConfig);
@@ -115,7 +136,7 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyPromptsForUserIfPassExists() throws Exception {
+    public void promptsForUserIfPassExistsIfInteractive() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("secret").when(connectionConfig).password();
 
@@ -126,7 +147,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -136,7 +157,28 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyPromptsForPassIfUserExists() throws Exception {
+    public void promptsSilentlyForUserIfPassExistsIfOutputRedirected() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doReturn("secret").when(connectionConfig).password();
+
+        String inputString = "bob\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(out, "");
+        verify(connectionConfig).setUsername("bob");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
+    public void promptsForPassIfUserExistsIfInteractive() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
 
@@ -147,7 +189,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -157,7 +199,28 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyPromptsHandlesBang() throws Exception {
+    public void promptsSielntlyForPassIfUserExistsIfOutputRedirected() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doReturn("bob").when(connectionConfig).username();
+
+        String inputString = "secret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(out, "");
+        verify(connectionConfig).setPassword("secret");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
+    public void promptsHandlesBang() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "bo!b\nsec!ret\n";
@@ -167,18 +230,18 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format("username: bo!b%npassword: *******%n"));
+        assertEquals(String.format("username: bo!b%npassword: *******%n"), out);
         verify(connectionConfig).setUsername("bo!b");
         verify(connectionConfig).setPassword("sec!ret");
         verify(shell, times(2)).connect(connectionConfig);
     }
 
     @Test
-    public void connectMaybeInteractivelyTriesOnlyOnceIfUserPassExists() throws Exception {
+    public void triesOnlyOnceIfUserPassExists() throws Exception {
         doThrow(authException).doThrow(new RuntimeException("second try")).when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
         doReturn("secret").when(connectionConfig).password();
@@ -191,7 +254,7 @@ public class MainTest {
         Main main = new Main(inputStream, ps);
 
         try {
-            main.connectMaybeInteractively(shell, connectionConfig, true);
+            main.connectMaybeInteractively(shell, connectionConfig, true, true);
             fail("Expected an exception");
         } catch (Neo4jException e) {
             assertEquals(authException.code(), e.code());
@@ -200,7 +263,7 @@ public class MainTest {
     }
 
     @Test
-    public void connectMaybeInteractivelyRepromptsIfUserIsNotProvided() throws Exception {
+    public void repromptsIfUserIsNotProvidedIfInteractive() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "\nbob\nsecret\n";
@@ -210,12 +273,33 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
-        assertEquals(out, String.format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n") );
+        assertEquals(String.format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n"), out );
         verify(connectionConfig).setUsername("bob");
+        verify(connectionConfig).setPassword("secret");
+        verify(shell, times(2)).connect(connectionConfig);
+    }
+
+    @Test
+    public void doesNotRepromptsIfUserIsNotProvidedIfOutputRedirected() throws Exception {
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "\nsecret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals("", out );
+        verify(connectionConfig).setUsername("");
         verify(connectionConfig).setPassword("secret");
         verify(shell, times(2)).connect(connectionConfig);
     }
