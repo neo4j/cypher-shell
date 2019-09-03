@@ -1,6 +1,6 @@
 package org.neo4j.shell;
 
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -36,45 +36,73 @@ public class MainIntegrationTest
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
+    private String inputString = String.format( "neo4j%nneo%n" );
+    private ByteArrayOutputStream baos;
+    private ConnectionConfig connectionConfig;
+    private CypherShell shell;
+    private Main main;
 
-    @Test
-    public void connectInteractivelyPromptOnWrongAuthentication() throws Exception
-    {
+    @Before
+    public void setup() {
         // given
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Main main = getMain( baos );
+        InputStream inputStream = new ByteArrayInputStream( inputString.getBytes() );
+
+        baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream( baos );
+
+        main = new Main( inputStream, ps );
 
         CliArgs cliArgs = new CliArgs();
-        cliArgs.setUsername( "", "" );
+        cliArgs.setUsername("", "");
         cliArgs.setPassword( "", "" );
 
         ShellAndConnection sac = getShell( cliArgs );
-        CypherShell shell = sac.shell;
-        ConnectionConfig connectionConfig = sac.connectionConfig;
+        shell = sac.shell;
+        connectionConfig = sac.connectionConfig;
+    }
 
+    @Test
+    public void promptsOnWrongAuthenticationIfInteractive() throws Exception {
         // when
-        assertEquals( "", connectionConfig.username() );
-        assertEquals( "", connectionConfig.password() );
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
 
-        main.connectMaybeInteractively( shell, connectionConfig, true );
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
 
         // then
         // should be connected
-        assertTrue( shell.isConnected() );
+        assertTrue(shell.isConnected());
         // should have prompted and set the username and password
-        assertEquals( "neo4j", connectionConfig.username() );
-        assertEquals( "neo", connectionConfig.password() );
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
 
         String out = baos.toString();
         assertEquals( String.format( "username: neo4j%npassword: ***%n" ), out );
     }
 
     @Test
+    public void promptsSilentlyOnWrongAuthenticationIfOutputRedirected() throws Exception {
+        // when
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted silently and set the username and password
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        String out = baos.toString();
+        assertEquals( "", out );
+    }
+
+    @Test
     public void wrongPortWithBolt() throws Exception
     {
         // given
-        Main main = getMain( new ByteArrayOutputStream() );
-
         CliArgs cliArgs = new CliArgs();
         cliArgs.setScheme( "bolt://", "" );
         cliArgs.setPort( 1234 );
@@ -85,15 +113,13 @@ public class MainIntegrationTest
 
         exception.expect( ServiceUnavailableException.class );
         exception.expectMessage( "Unable to connect to localhost:1234, ensure the database is running and that there is a working network connection to it" );
-        main.connectMaybeInteractively( shell, connectionConfig, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true );
     }
 
     @Test
     public void wrongPortWithNeo4j() throws Exception
     {
         // given
-        Main main = getMain( new ByteArrayOutputStream() );
-
         CliArgs cliArgs = new CliArgs();
         cliArgs.setScheme( "neo4j://", "" );
         cliArgs.setPort( 1234 );
@@ -104,18 +130,7 @@ public class MainIntegrationTest
 
         exception.expect( ServiceUnavailableException.class );
         exception.expectMessage( "Unable to connect to database, ensure the database is running and that there is a working network connection to it" );
-        main.connectMaybeInteractively( shell, connectionConfig, true );
-    }
-
-    private Main getMain( ByteArrayOutputStream baos )
-    {
-        // what the user inputs when prompted
-        String inputString = String.format( "neo4j%nneo%n" );
-        InputStream inputStream = new ByteArrayInputStream( inputString.getBytes() );
-
-        PrintStream ps = new PrintStream( baos );
-
-        return new Main( inputStream, ps );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true );
     }
 
     private ShellAndConnection getShell( CliArgs cliArgs )
