@@ -203,6 +203,13 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void shouldParseSingleIntegerArgWithAdditionAndWhitespace() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo => 3 + 5" );
+        assertNotNull( cliArgs );
+        assertEquals( 8L, cliArgs.getParameters().allParameterValues().get( "foo" ) );
+    }
+
+    @Test
     public void shouldParseWithSpaceSyntax() {
         CliArgs cliArgs = CliArgHelper.parse( "-P", "foo 3+5" );
         assertNotNull( cliArgs );

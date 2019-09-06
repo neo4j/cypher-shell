@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
@@ -81,7 +82,8 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest 
     }
 
     @Test
-    public void shouldUseParamFromCLIArgs() throws CommandException {
+    public void shouldUseParamFromCLIArgs() throws EvaluationException, CommandException
+    {
         // given a CLI arg
         ShellParameterMap parameterMap = new ShellParameterMap();
         parameterMap.setParameter( "foo", "'bar'" );

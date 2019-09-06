@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
@@ -153,13 +154,13 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
-    public void paramsAndListVariables() throws CommandException {
-        assertTrue(shell.getParamaterMap().allParameterValues().isEmpty());
+    public void paramsAndListVariables() throws EvaluationException, CommandException {
+        assertTrue(shell.getParameterMap().allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
-        shell.getParamaterMap().setParameter("string", stringInput);
-        Object paramValue = shell.getParamaterMap().setParameter("bob", String.valueOf(randomLong));
+        shell.getParameterMap().setParameter("string", stringInput);
+        Object paramValue = shell.getParameterMap().setParameter("bob", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { bob }, $string");
@@ -167,16 +168,16 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String result = linePrinter.output();
         assertThat(result, containsString("| { bob }"));
         assertThat(result, containsString("| " + randomLong + " | " + stringInput + " |"));
-        assertEquals(randomLong, shell.getParamaterMap().allParameterValues().get("bob"));
-        assertEquals("randomString", shell.getParamaterMap().allParameterValues().get("string"));
+        assertEquals(randomLong, shell.getParameterMap().allParameterValues().get( "bob"));
+        assertEquals("randomString", shell.getParameterMap().allParameterValues().get( "string"));
     }
 
     @Test
-    public void paramsAndListVariablesWithSpecialCharacters() throws CommandException {
-        assertTrue(shell.getParamaterMap().allParameterValues().isEmpty());
+    public void paramsAndListVariablesWithSpecialCharacters() throws EvaluationException, CommandException {
+        assertTrue(shell.getParameterMap().allParameterValues().isEmpty());
 
         long randomLong = System.currentTimeMillis();
-        Object paramValue = shell.getParamaterMap().setParameter("`bob`", String.valueOf(randomLong));
+        Object paramValue = shell.getParameterMap().setParameter("`bob`", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
         shell.execute("RETURN { `bob` }");
@@ -184,7 +185,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String result = linePrinter.output();
         assertThat(result, containsString("| { `bob` }"));
         assertThat(result, containsString("\n| " + randomLong+ " |\n"));
-        assertEquals(randomLong, shell.getParamaterMap().allParameterValues().get("bob"));
+        assertEquals(randomLong, shell.getParameterMap().allParameterValues().get("bob"));
     }
 
     @Test

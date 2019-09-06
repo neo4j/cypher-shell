@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
@@ -108,12 +110,13 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setWhenOfflineShouldWork() throws CommandException {
+    public void setWhenOfflineShouldWork() throws EvaluationException, CommandException
+    {
         CypherShell shell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
         when(mockedBoltStateHandler.isConnected()).thenReturn(false);
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenThrow(new CommandException("not connected"));
 
-        Object result = shell.getParamaterMap().setParameter("bob", "99");
+        Object result = shell.getParameterMap().setParameter("bob", "99");
         assertEquals(99L, result);
     }
 
@@ -129,7 +132,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws CommandException {
+    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws EvaluationException, CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = new ListBoltResult(asList(recordMock), mock(ResultSummary.class));
@@ -138,15 +141,15 @@ public class CypherShellTest {
         when(recordMock.get("bo`b")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.getParamaterMap().allParameterValues().isEmpty());
+        assertTrue(offlineTestShell.getParameterMap().allParameterValues().isEmpty());
 
-        Object result = offlineTestShell.getParamaterMap().setParameter("`bo``b`", "99");
+        Object result = offlineTestShell.getParameterMap().setParameter("`bo``b`", "99");
         assertEquals(99L, result);
-        assertEquals(99L, offlineTestShell.getParamaterMap().allParameterValues().get("bo`b"));
+        assertEquals(99L, offlineTestShell.getParameterMap().allParameterValues().get("bo`b"));
     }
 
     @Test
-    public void setParamShouldAddParam() throws CommandException {
+    public void setParamShouldAddParam() throws EvaluationException, CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = mock(ListBoltResult.class);
@@ -156,11 +159,11 @@ public class CypherShellTest {
         when(recordMock.get("bob")).thenReturn(value);
         when(value.asObject()).thenReturn("99");
 
-        assertTrue(offlineTestShell.getParamaterMap().allParameterValues().isEmpty());
+        assertTrue(offlineTestShell.getParameterMap().allParameterValues().isEmpty());
 
-        Object result = offlineTestShell.getParamaterMap().setParameter("`bob`", "99");
+        Object result = offlineTestShell.getParameterMap().setParameter("`bob`", "99");
         assertEquals(99L, result);
-        assertEquals(99L, offlineTestShell.getParamaterMap().allParameterValues().get("bob"));
+        assertEquals(99L, offlineTestShell.getParameterMap().allParameterValues().get("bob"));
     }
 
     @Test
@@ -265,13 +268,13 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParameterDoesNotTriggerByBoltError() throws CommandException {
+    public void setParameterDoesNotTriggerByBoltError() throws EvaluationException, CommandException {
         // given
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.empty());
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         // when
-        Object result = shell.getParamaterMap().setParameter("bob", "99");
+        Object result = shell.getParameterMap().setParameter("bob", "99");
         assertEquals(99L, result);
     }
 }

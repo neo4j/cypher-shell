@@ -23,7 +23,7 @@ public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
-        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell.getParamaterMap());
+        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell.getParameterMap());
     }
 
     private void registerAllCommands(Logger logger,
@@ -38,7 +38,7 @@ public class CommandHelper {
         registerCommand(new Begin(transactionHandler));
         registerCommand(new Commit(transactionHandler));
         registerCommand(new Rollback(transactionHandler));
-        registerCommand(new Param(parameterMap, true));
+        registerCommand(new Param(parameterMap));
         registerCommand(new Params(logger, parameterMap));
     }
 

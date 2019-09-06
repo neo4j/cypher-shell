@@ -212,7 +212,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     /**
      * @return the parameter map.
      */
-    public ParameterMap getParamaterMap()
+    public ParameterMap getParameterMap()
     {
         return parameterMap;
     }

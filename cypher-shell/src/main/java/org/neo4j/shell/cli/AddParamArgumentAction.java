@@ -7,24 +7,22 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 
 import java.util.Map;
 
+import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.shell.ParameterMap;
-import org.neo4j.shell.commands.Param;
-import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.util.ParameterSetter;
 
 /**
  * Action that adds arguments to a ParameterMap.
  * This action always consumes an argument.
  */
-public class AddParamArgumentAction implements ArgumentAction
+public class AddParamArgumentAction extends ParameterSetter<ArgumentParserException> implements ArgumentAction
 {
-    private final Param paramCommand;
-
     /**
-     * @param parameterMap the ParameterMap to add parameters to,
+     * @param parameterMap the ParameterMap to add parameters to.
      */
     AddParamArgumentAction( ParameterMap parameterMap )
     {
-        paramCommand = new Param( parameterMap, false );
+        super(parameterMap);
     }
 
     @Override
@@ -32,9 +30,9 @@ public class AddParamArgumentAction implements ArgumentAction
     {
         try
         {
-            paramCommand.execute( value.toString() );
+            execute( value.toString() );
         }
-        catch ( CommandException e )
+        catch ( Exception e )
         {
             throw new ArgumentParserException(e.getMessage(), e, parser);
         }
@@ -50,5 +48,23 @@ public class AddParamArgumentAction implements ArgumentAction
     public boolean consumeArgument()
     {
         return true;
+    }
+
+    @Override
+    protected void onWrongUsage()
+    {
+        throw new IllegalArgumentException("Incorrect usage.\nusage: --param  \"name => value\"");
+    }
+
+    @Override
+    protected void onWrongNumberOfArguments()
+    {
+        throw new IllegalArgumentException("Incorrect number of arguments.\nusage: --param  \"name => value\"");
+    }
+
+    @Override
+    protected void onEvaluationException( EvaluationException e )
+    {
+        throw new RuntimeException( e.getMessage(), e );
     }
 }
