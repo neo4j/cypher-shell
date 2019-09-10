@@ -9,7 +9,12 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
@@ -54,8 +59,9 @@ public interface ShellRunner {
             return new InteractiveShellRunner(cypherShell, cypherShell, cypherShell, logger, new ShellStatementParser(),
                     System.in, FileHistorian.getDefaultHistoryFile(), userMessagesHandler, connectionConfig);
         } else {
+
             return new NonInteractiveShellRunner(cliArgs.getFailBehavior(), cypherShell, logger,
-                    new ShellStatementParser(), System.in);
+                    new ShellStatementParser(), getInputStream(cliArgs));
         }
     }
 
@@ -64,7 +70,8 @@ public interface ShellRunner {
      * @return true if an interactive shellrunner should be used, false otherwise
      */
     static boolean shouldBeInteractive(@Nonnull CliArgs cliArgs) {
-        if (cliArgs.getNonInteractive()) {
+        if ( cliArgs.getNonInteractive() || cliArgs.getInputFilename() != null )
+        {
             return false;
         }
 
@@ -112,6 +119,20 @@ public interface ShellRunner {
             // system is not using libc (like Alpine Linux)
             // Fallback to checking stdin OR stdout
             return System.console() != null;
+        }
+    }
+
+    /**
+     * If an input file has been defined use that, otherwise use STDIN
+     * @throws FileNotFoundException if the provided input file doesn't exist
+     */
+    static InputStream getInputStream(CliArgs cliArgs) throws FileNotFoundException
+    {
+        if ( cliArgs.getInputFilename() == null)
+        {
+            return System.in;
+        } else {
+            return new BufferedInputStream( new FileInputStream( new File(cliArgs.getInputFilename()) ));
         }
     }
 }

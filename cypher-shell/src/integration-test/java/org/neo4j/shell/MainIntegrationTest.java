@@ -7,6 +7,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -14,10 +15,15 @@ import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.prettyprint.LinePrinter;
 import org.neo4j.shell.prettyprint.PrettyConfig;
+import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 
+import static java.lang.String.format;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class MainIntegrationTest
 {
@@ -77,7 +83,7 @@ public class MainIntegrationTest
         assertEquals("neo", connectionConfig.password());
 
         String out = baos.toString();
-        assertEquals( String.format( "username: neo4j%npassword: ***%n" ), out );
+        assertEquals( format( "username: neo4j%npassword: ***%n" ), out );
     }
 
     @Test
@@ -133,9 +139,54 @@ public class MainIntegrationTest
         main.connectMaybeInteractively( shell, connectionConfig, true, true );
     }
 
+    @Test
+    public void shouldReadCypherStatementsFromFile() throws Exception {
+        // given
+        CliArgs cliArgs = new CliArgs();
+        cliArgs.setInputFilename( fileFromResource("test.cypher") );
+
+        // when
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        ShellAndConnection sac = getShell( cliArgs, linePrinter );
+        CypherShell shell = sac.shell;
+        ConnectionConfig connectionConfig = sac.connectionConfig;
+        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, mock(Logger.class), connectionConfig);
+        shellRunner.runUntilEnd();
+
+        // then
+        assertEquals( format("result%n42%n"), linePrinter.result() );
+    }
+
+    @Test
+    public void shouldFailIfInputFileDoesntExist() throws Exception {
+        // given
+        CliArgs cliArgs = new CliArgs();
+        cliArgs.setInputFilename( "what.cypher" );
+
+        // when
+        ShellAndConnection sac = getShell( cliArgs );
+        CypherShell shell = sac.shell;
+        main.connectMaybeInteractively( shell, sac.connectionConfig, true, true );
+
+        // expect
+        exception.expect( IOException.class);
+        ShellRunner.getShellRunner(cliArgs, shell, mock(Logger.class), sac.connectionConfig );
+    }
+
+    private String fileFromResource(String filename)
+    {
+        return getClass().getClassLoader().getResource(filename).getFile();
+    }
+
     private ShellAndConnection getShell( CliArgs cliArgs )
     {
         Logger logger = new AnsiLogger( cliArgs.getDebugMode() );
+        return getShell( cliArgs, logger );
+    }
+
+    private ShellAndConnection getShell( CliArgs cliArgs, LinePrinter linePrinter )
+    {
         PrettyConfig prettyConfig = new PrettyConfig( cliArgs );
         ConnectionConfig connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
@@ -146,6 +197,6 @@ public class MainIntegrationTest
                 cliArgs.getEncryption(),
                 cliArgs.getDatabase() );
 
-        return new ShellAndConnection( new CypherShell( logger, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
+        return new ShellAndConnection( new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
     }
 }

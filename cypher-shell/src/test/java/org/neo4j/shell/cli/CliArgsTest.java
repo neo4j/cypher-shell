@@ -108,4 +108,11 @@ public class CliArgsTest {
         // so setting them cannot be tested here.
         assertEquals( Collections.EMPTY_MAP, cliArgs.getParameters().allParameterValues() );
     }
+
+    @Test
+    public void setInputFile()
+    {
+        cliArgs.setInputFilename("foo");
+        assertEquals("foo", cliArgs.getInputFilename());
+    }
 }
