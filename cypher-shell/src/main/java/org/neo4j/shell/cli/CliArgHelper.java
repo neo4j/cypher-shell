@@ -5,7 +5,13 @@ import net.sourceforge.argparse4j.impl.action.StoreConstArgumentAction;
 import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.impl.choice.CollectionArgumentChoice;
 import net.sourceforge.argparse4j.impl.type.BooleanArgumentType;
-import net.sourceforge.argparse4j.inf.*;
+import net.sourceforge.argparse4j.inf.Argument;
+import net.sourceforge.argparse4j.inf.ArgumentGroup;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.ArgumentType;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
@@ -14,6 +20,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.neo4j.shell.ConnectionConfig;
+import org.neo4j.shell.ParameterMap;
 
 import static java.lang.String.format;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_AT_END;
@@ -33,7 +40,9 @@ public class CliArgHelper {
      */
     @Nullable
     public static CliArgs parse(@Nonnull String... args) {
-        final ArgumentParser parser = setupParser();
+        final CliArgs cliArgs = new CliArgs();
+
+        final ArgumentParser parser = setupParser(cliArgs.getParameters());
         final Namespace ns;
 
         try {
@@ -42,15 +51,30 @@ public class CliArgHelper {
             parser.handleError(e);
             return null;
         }
+        return getCliArgs( cliArgs, parser, ns );
+    }
 
+    /**
+     * @param args to parse
+     * @return commandline arguments
+     * @throws ArgumentParserException if an argument can't be parsed.
+     */
+    public static CliArgs parseAndThrow( @Nonnull String... args ) throws ArgumentParserException
+    {
+        final CliArgs cliArgs = new CliArgs();
+        final ArgumentParser parser = setupParser( cliArgs.getParameters() );
+        final Namespace ns = parser.parseArgs( args );
+        return getCliArgs( cliArgs, parser, ns );
+    }
+
+    private static CliArgs getCliArgs( CliArgs cliArgs, ArgumentParser parser, Namespace ns )
+    {
         // Parse address string, returns null on error
-        final Matcher addressMatcher = parseAddressMatcher(parser, ns.getString("address"));
+        final Matcher addressMatcher = parseAddressMatcher( parser, ns.getString( "address"));
 
         if (addressMatcher == null) {
             return null;
         }
-
-        CliArgs cliArgs = new CliArgs();
 
         //---------------------
         // Connection arguments
@@ -115,7 +139,7 @@ public class CliArgHelper {
         return matcher;
     }
 
-    private static ArgumentParser setupParser()
+    private static ArgumentParser setupParser(ParameterMap parameterMap)
     {
         ArgumentParser parser = ArgumentParsers.newArgumentParser( "cypher-shell" ).defaultHelp( true ).description(
                 format( "A command line shell where you can execute Cypher against an instance of Neo4j. " +
@@ -165,6 +189,10 @@ public class CliArgHelper {
                         Format.VERBOSE.name().toLowerCase(),
                         Format.PLAIN.name().toLowerCase()))
                 .setDefault(Format.AUTO.name().toLowerCase());
+
+        parser.addArgument( "-P", "--param" )
+              .help( "Add a parameter to this session. Example: `-P \"number => 3\"`. This argument can be specified multiple times." )
+              .action( new AddParamArgumentAction( parameterMap ) );
 
         parser.addArgument("--debug")
                 .help("print additional debug information")

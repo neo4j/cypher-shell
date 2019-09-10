@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.commands.Begin;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandHelper;
@@ -43,7 +44,7 @@ public class CommandHelperTest {
     {
         // Given
         AnsiLogger logger = new AnsiLogger( false );
-        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell(logger, PrettyConfig.DEFAULT, false) );
+        CommandHelper commandHelper = new CommandHelper( logger, Historian.empty, new CypherShell(logger, PrettyConfig.DEFAULT, false, new ShellParameterMap() ) );
 
         // When
         Command begin = commandHelper.getCommand( ":BEGIN" );

@@ -12,8 +12,8 @@ import org.neo4j.shell.state.BoltStateHandler;
  */
 public class OfflineTestShell extends CypherShell {
 
-    public OfflineTestShell(Logger logger, BoltStateHandler boltStateHandler, PrettyPrinter prettyPrinter) {
-        super(logger, boltStateHandler, prettyPrinter);
+    OfflineTestShell( Logger logger, BoltStateHandler boltStateHandler, PrettyPrinter prettyPrinter ) {
+        super(logger, boltStateHandler, prettyPrinter, new ShellParameterMap());
     }
 
     @Override

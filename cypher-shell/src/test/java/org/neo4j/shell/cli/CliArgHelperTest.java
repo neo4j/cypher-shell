@@ -1,7 +1,10 @@
 package org.neo4j.shell.cli;
 
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -9,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -18,6 +23,9 @@ import static org.mockito.Mockito.mock;
 import static org.neo4j.shell.test.Util.asArray;
 
 public class CliArgHelperTest {
+
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
 
     private PrintStream mockedStdErr;
 
@@ -121,23 +129,23 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void parseFormat() throws Exception {
+    public void parseFormat() {
         assertEquals(Format.PLAIN, CliArgHelper.parse("--format", "plain").getFormat());
         assertEquals(Format.VERBOSE, CliArgHelper.parse("--format", "verbose").getFormat());
     }
 
     @Test
-    public void parsePassword() throws Exception {
+    public void parsePassword() {
         assertEquals("foo", CliArgHelper.parse("--password", "foo").getPassword());
     }
 
     @Test
-    public void parseUserName() throws Exception {
+    public void parseUserName() {
         assertEquals("foo", CliArgHelper.parse("--username", "foo").getUsername());
     }
 
     @Test
-    public void parseFullAddress() throws Exception {
+    public void parseFullAddress() {
         CliArgs cliArgs = CliArgHelper.parse("--address", "bolt+routing://alice:foo@bar:69");
         assertNotNull(cliArgs);
         assertEquals("alice", cliArgs.getUsername());
@@ -147,7 +155,7 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void nonsenseArgsGiveError() throws Exception {
+    public void nonsenseArgsGiveError() {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         System.setErr(new PrintStream(bout));
 
@@ -160,7 +168,7 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void nonsenseUrlGivesError() throws Exception {
+    public void nonsenseUrlGivesError() {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         System.setErr(new PrintStream(bout));
 
@@ -186,4 +194,50 @@ public class CliArgHelperTest {
         assertEquals(true, CliArgHelper.parse("--encryption", "true").getEncryption());
         assertEquals(false, CliArgHelper.parse("--encryption", "false").getEncryption());
     }
+
+    @Test
+    public void shouldParseSingleIntegerArgWithAddition() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo=>3+5" );
+        assertNotNull( cliArgs );
+        assertEquals( 8L, cliArgs.getParameters().allParameterValues().get( "foo" ) );
+    }
+
+    @Test
+    public void shouldParseSingleIntegerArgWithAdditionAndWhitespace() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo => 3 + 5" );
+        assertNotNull( cliArgs );
+        assertEquals( 8L, cliArgs.getParameters().allParameterValues().get( "foo" ) );
+    }
+
+    @Test
+    public void shouldParseWithSpaceSyntax() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo 3+5" );
+        assertNotNull( cliArgs );
+        assertEquals( 8L, cliArgs.getParameters().allParameterValues().get( "foo" ) );
+    }
+
+    @Test
+    public void shouldParseSingleStringArg() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo=>'nanana'" );
+        assertNotNull( cliArgs );
+        assertEquals( "nanana", cliArgs.getParameters().allParameterValues().get( "foo" ) );
+    }
+
+    @Test
+    public void shouldParseTwoArgs() {
+        CliArgs cliArgs = CliArgHelper.parse( "-P", "foo=>'nanana'", "-P", "bar=>3+5" );
+        assertNotNull( cliArgs );
+        assertEquals( "nanana", cliArgs.getParameters().allParameterValues().get( "foo" ) );
+        assertEquals( 8L, cliArgs.getParameters().allParameterValues().get( "bar" ) );
+    }
+
+    @Test
+    public void shouldFailForInvalidSyntaxForArg() throws Exception {
+        thrown.expect( ArgumentParserException.class );
+        thrown.expectMessage(allOf(
+                containsString("Incorrect usage"),
+                containsString("usage: --param  \"name => value\"")));
+        CliArgHelper.parseAndThrow( "-P", "foo: => 'nanana'");
+    }
+
 }

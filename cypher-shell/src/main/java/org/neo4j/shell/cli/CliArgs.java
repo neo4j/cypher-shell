@@ -1,8 +1,11 @@
 package org.neo4j.shell.cli;
 
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Optional;
+
+import org.neo4j.shell.ParameterMap;
+import org.neo4j.shell.ShellParameterMap;
 
 import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
@@ -20,6 +23,7 @@ public class CliArgs {
     private String databaseName = ABSENT_DB_NAME;
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
     private Format format = Format.AUTO;
+    @SuppressWarnings( "OptionalUsedAsFieldOrParameterType" )
     private Optional<String> cypher = Optional.empty();
     private boolean encryption;
     private boolean debugMode;
@@ -28,6 +32,7 @@ public class CliArgs {
     private boolean driverVersion = false;
     private int numSampleRows = DEFAULT_NUM_SAMPLE_ROWS;
     private boolean wrap = true;
+    private ParameterMap parameters = new ShellParameterMap();
 
     /**
      * Set the scheme to the primary value, or if null, the fallback value.
@@ -205,5 +210,10 @@ public class CliArgs {
         if (numSampleRows != null && numSampleRows > 0) {
             this.numSampleRows = numSampleRows;
         }
+    }
+
+    public ParameterMap getParameters()
+    {
+        return parameters;
     }
 }

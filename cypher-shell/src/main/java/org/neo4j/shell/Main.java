@@ -1,6 +1,12 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
+
+import java.io.InputStream;
+import java.io.PrintStream;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
@@ -11,11 +17,7 @@ import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyConfig;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
@@ -38,7 +40,7 @@ public class Main {
         main.startShell(cliArgs);
     }
 
-    Main() {
+    private Main() {
         this(System.in, System.out);
     }
 
@@ -72,7 +74,7 @@ public class Main {
                 cliArgs.getDatabase());
 
         try {
-            CypherShell shell = new CypherShell(logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ));
+            CypherShell shell = new CypherShell(logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ), cliArgs.getParameters());
             // Can only prompt for password if input has not been redirected
             connectMaybeInteractively(shell, connectionConfig, isInputInteractive(), isOutputInteractive());
 
