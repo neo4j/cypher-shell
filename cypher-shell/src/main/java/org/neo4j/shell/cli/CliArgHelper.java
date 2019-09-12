@@ -169,7 +169,7 @@ public class CliArgHelper {
                 .help("database to connect to. Can also be specified using environment variable " + ConnectionConfig.DATABASE_ENV_VAR)
                 .setDefault("");
         connGroup.addArgument("-f", "--file")
-                .help("Pass a file with cypher statements to be executed.");
+                .help("Pass a file with cypher statements to be executed. After the statements have been executed cypher-shell will be shutdown");
 
         MutuallyExclusiveGroup failGroup = parser.addMutuallyExclusiveGroup();
         failGroup.addArgument("--fail-fast")
