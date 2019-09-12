@@ -7,14 +7,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.neo4j.shell.CypherShell;
-import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
-import org.neo4j.shell.TransactionHandler;
-import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.DuplicateCommandException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.ShellStatementParser;
 
 /**
  * Utility methods for dealing with commands
@@ -23,23 +21,22 @@ public class CommandHelper {
     private final TreeMap<String, Command> commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public CommandHelper(Logger logger, Historian historian, CypherShell cypherShell) {
-        registerAllCommands(logger, historian, cypherShell, cypherShell, cypherShell.getParameterMap());
+        registerAllCommands(logger, historian, cypherShell);
     }
 
     private void registerAllCommands(Logger logger,
                                      Historian historian,
-                                     DatabaseManager databaseManager,
-                                     TransactionHandler transactionHandler,
-                                     ParameterMap parameterMap) {
+                                     CypherShell cypherShell) {
         registerCommand(new Exit(logger));
         registerCommand(new Help(logger, this));
         registerCommand(new History(logger, historian));
-        registerCommand(new Use(databaseManager));
-        registerCommand(new Begin(transactionHandler));
-        registerCommand(new Commit(transactionHandler));
-        registerCommand(new Rollback(transactionHandler));
-        registerCommand(new Param(parameterMap));
-        registerCommand(new Params(logger, parameterMap));
+        registerCommand(new Use(cypherShell));
+        registerCommand(new Begin(cypherShell));
+        registerCommand(new Commit(cypherShell));
+        registerCommand(new Rollback(cypherShell));
+        registerCommand(new Param(cypherShell.getParameterMap()));
+        registerCommand(new Params(logger, cypherShell.getParameterMap()));
+        registerCommand(new Source(cypherShell, new ShellStatementParser() ));
     }
 
     private void registerCommand(@Nonnull final Command command) throws DuplicateCommandException {

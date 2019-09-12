@@ -14,6 +14,9 @@ import java.io.PrintStream;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.commands.CommandHelper;
+import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.LinePrinter;
@@ -21,8 +24,10 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -85,7 +90,6 @@ public class MainIntegrationTest
         assertEquals( format( "username: neo4j%npassword: ***%n" ), baos.toString() );
         assertEquals("neo4j", connectionConfig.username());
         assertEquals("neo", connectionConfig.password());
-
     }
 
     @Test
@@ -203,6 +207,75 @@ public class MainIntegrationTest
         verifyNoMoreInteractions(logger);
     }
 
+    @Test
+    public void shouldReadSingleCypherStatementsFromFileInteractively() throws Exception {
+        // given
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        CypherShell shell = interactiveShell( linePrinter );
+
+        // when
+        shell.execute( ":source " + fileFromResource( "single.cypher" ));
+        exit( shell );
+
+        // then
+        assertEquals( format("result%n42%n"), linePrinter.result() );
+    }
+
+    @Test
+    public void shouldReadMultipleCypherStatementsFromFileInteractively() throws Exception {
+        // given
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        CypherShell shell = interactiveShell( linePrinter );
+
+        // when
+        shell.execute( ":source " + fileFromResource( "multiple.cypher" ));
+        exit( shell );
+
+        // then
+        assertEquals(format( "result%n42%n" +
+                             "result%n1337%n" +
+                             "result%n\"done\"%n"), linePrinter.result() );
+    }
+
+    @Test
+    public void shouldReadEmptyCypherStatementsFromFileInteractively() throws Exception {
+        // given
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        CypherShell shell = interactiveShell( linePrinter );
+
+        // when
+        shell.execute( ":source " + fileFromResource( "empty.cypher" ));
+        exit( shell );
+
+        // then
+        assertEquals("", linePrinter.result() );
+    }
+
+    @Test
+    public void shouldReadHandleInvalidCypherStatementsFromFileInteractively() throws Exception {
+        // given
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        CypherShell shell = interactiveShell( linePrinter );
+
+        // then
+        exception.expect( ClientException.class );
+        exception.expectMessage( "Invalid input 'T':" );
+        shell.execute( ":source " + fileFromResource( "invalid.cypher" ));
+    }
+
+    @Test
+    public void shouldFailIfInputFileDoesntExistInteractively() throws Exception {
+        // given
+        ToStringLinePrinter linePrinter = new ToStringLinePrinter();
+        CypherShell shell = interactiveShell( linePrinter );
+
+        // expect
+        exception.expect( CommandException.class);
+        exception.expectMessage( "Cannot find file: 'what.cypher'" );
+        exception.expectCause( isA( FileNotFoundException.class ) );
+        shell.execute( ":source what.cypher" );
+    }
+
     private String executeFileNonInteractively(String filename) throws Exception {
         return executeFileNonInteractively(filename, mock(Logger.class));
     }
@@ -228,6 +301,15 @@ public class MainIntegrationTest
         return getClass().getClassLoader().getResource(filename).getFile();
     }
 
+    private CypherShell interactiveShell( LinePrinter linePrinter ) throws Exception
+    {
+        PrettyConfig prettyConfig = new PrettyConfig( new CliArgs() );
+        CypherShell shell = new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        shell.setCommandHelper( new CommandHelper( mock( Logger.class ), Historian.empty, shell) );
+        return shell;
+    }
+
     private ShellAndConnection getShell( CliArgs cliArgs )
     {
         Logger logger = new AnsiLogger( cliArgs.getDebugMode() );
@@ -247,5 +329,18 @@ public class MainIntegrationTest
                 cliArgs.getDatabase() );
 
         return new ShellAndConnection( new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
+    }
+
+    private void exit( CypherShell shell ) throws CommandException
+    {
+        try
+        {
+            shell.execute( ":exit" );
+            fail("Should have exited");
+        }
+        catch ( ExitException e )
+        {
+            //do nothing
+        }
     }
 }
