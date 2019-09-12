@@ -252,7 +252,7 @@ public class MainIntegrationTest
     }
 
     @Test
-    public void shouldReadHandleInvalidCypherStatementsFromFileInteractively() throws Exception {
+    public void shouldHandleInvalidCypherStatementsFromFileInteractively() throws Exception {
         // given
         ToStringLinePrinter linePrinter = new ToStringLinePrinter();
         CypherShell shell = interactiveShell( linePrinter );
