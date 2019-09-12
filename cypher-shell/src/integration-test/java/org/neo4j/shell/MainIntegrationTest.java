@@ -143,6 +143,26 @@ public class MainIntegrationTest
     }
 
     @Test
+    public void shouldAskForCredentialsWhenConnectingWithAFile() throws Exception {
+        //given
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        //when
+        CliArgs cliArgs = new CliArgs();
+        cliArgs.setInputFilename(fileFromResource("single.cypher"));
+        ShellAndConnection sac = getShell(cliArgs);
+        CypherShell shell = sac.shell;
+        ConnectionConfig connectionConfig = sac.connectionConfig;
+        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+
+        // then we should have prompted and set the username and password
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+    }
+
+    @Test
     public void shouldReadSingleCypherStatementsFromFile() throws Exception {
         assertEquals(format( "result%n42%n" ), executeFileNonInteractively(fileFromResource("single.cypher")));
     }
