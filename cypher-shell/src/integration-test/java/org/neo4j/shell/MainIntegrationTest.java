@@ -7,10 +7,11 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.log.AnsiLogger;
@@ -20,10 +21,12 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 
 import static java.lang.String.format;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class MainIntegrationTest
 {
@@ -140,38 +143,65 @@ public class MainIntegrationTest
     }
 
     @Test
-    public void shouldReadCypherStatementsFromFile() throws Exception {
-        // given
-        CliArgs cliArgs = new CliArgs();
-        cliArgs.setInputFilename( fileFromResource("test.cypher") );
+    public void shouldReadSingleCypherStatementsFromFile() throws Exception {
+        assertEquals(format( "result%n42%n" ), executeFileNonInteractively(fileFromResource("single.cypher")));
+    }
+
+    @Test
+    public void shouldReadEmptyCypherStatementsFile() throws Exception {
+        assertEquals("", executeFileNonInteractively(fileFromResource("empty.cypher")));
+    }
+
+    @Test
+    public void shouldReadMultipleCypherStatementsFromFile() throws Exception {
+        assertEquals(format( "result%n42%n" +
+                              "result%n1337%n" +
+                              "result%n\"done\"%n"), executeFileNonInteractively(fileFromResource("multiple.cypher")));
+    }
+
+    @Test
+    public void shouldFailIfInputFileDoesntExist() throws Exception {
+        // expect
+        exception.expect( FileNotFoundException.class);
+        exception.expectMessage( "what.cypher (No such file or directory)" );
+        executeFileNonInteractively("what.cypher");
+    }
+
+    @Test
+    public void shouldHandleInvalidCypherFromFile() throws Exception {
+        //given
+        Logger logger = mock(Logger.class);
+
 
         // when
+        String actual = executeFileNonInteractively( fileFromResource( "invalid.cypher" ), logger);
+
+        //then we print the first valid row
+        assertEquals( format( "result%n42%n" ), actual );
+        //and print errors to the error log
+        verify(logger).printError(any( ClientException.class ));
+        verifyNoMoreInteractions(logger);
+    }
+
+    private String executeFileNonInteractively(String filename) throws Exception {
+        return executeFileNonInteractively(filename, mock(Logger.class));
+    }
+
+    private String executeFileNonInteractively(String filename, Logger logger) throws Exception
+    {
+        CliArgs cliArgs = new CliArgs();
+        cliArgs.setInputFilename(filename);
+
         ToStringLinePrinter linePrinter = new ToStringLinePrinter();
         ShellAndConnection sac = getShell( cliArgs, linePrinter );
         CypherShell shell = sac.shell;
         ConnectionConfig connectionConfig = sac.connectionConfig;
         main.connectMaybeInteractively( shell, connectionConfig, true, true );
-        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, mock(Logger.class), connectionConfig);
+        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
         shellRunner.runUntilEnd();
 
         // then
-        assertEquals( format("result%n42%n"), linePrinter.result() );
-    }
-
-    @Test
-    public void shouldFailIfInputFileDoesntExist() throws Exception {
-        // given
-        CliArgs cliArgs = new CliArgs();
-        cliArgs.setInputFilename( "what.cypher" );
-
-        // when
-        ShellAndConnection sac = getShell( cliArgs );
-        CypherShell shell = sac.shell;
-        main.connectMaybeInteractively( shell, sac.connectionConfig, true, true );
-
-        // expect
-        exception.expect( IOException.class);
-        ShellRunner.getShellRunner(cliArgs, shell, mock(Logger.class), sac.connectionConfig );
+        return linePrinter.result();
     }
 
     private String fileFromResource(String filename)
