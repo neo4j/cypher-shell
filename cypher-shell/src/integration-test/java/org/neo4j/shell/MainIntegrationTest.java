@@ -82,11 +82,10 @@ public class MainIntegrationTest
         // should be connected
         assertTrue(shell.isConnected());
         // should have prompted and set the username and password
+        assertEquals( format( "username: neo4j%npassword: ***%n" ), baos.toString() );
         assertEquals("neo4j", connectionConfig.username());
         assertEquals("neo", connectionConfig.password());
 
-        String out = baos.toString();
-        assertEquals( format( "username: neo4j%npassword: ***%n" ), out );
     }
 
     @Test
@@ -158,6 +157,7 @@ public class MainIntegrationTest
         main.connectMaybeInteractively( shell, connectionConfig, true, true );
 
         // then we should have prompted and set the username and password
+        assertEquals( format( "username: neo4j%npassword: ***%n" ), baos.toString() );
         assertEquals("neo4j", connectionConfig.username());
         assertEquals("neo", connectionConfig.password());
     }
@@ -220,7 +220,6 @@ public class MainIntegrationTest
         ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
         shellRunner.runUntilEnd();
 
-        // then
         return linePrinter.result();
     }
 
