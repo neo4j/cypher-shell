@@ -32,6 +32,7 @@ public class CliArgs {
     private boolean driverVersion = false;
     private int numSampleRows = DEFAULT_NUM_SAMPLE_ROWS;
     private boolean wrap = true;
+    private String inputFilename = null;
     private ParameterMap parameters = new ShellParameterMap();
 
     /**
@@ -112,6 +113,14 @@ public class CliArgs {
     }
 
     /**
+     * Sets a filename where to read Cypher statements from, much like piping statements from a file.
+     */
+    public void setInputFilename(String inputFilename)
+    {
+        this.inputFilename = inputFilename;
+    }
+
+    /**
      * Enable/disable debug mode
      */
     void setDebugMode(boolean enabled) {
@@ -172,6 +181,11 @@ public class CliArgs {
 
     public boolean getNonInteractive() {
         return nonInteractive;
+    }
+
+    public String getInputFilename()
+    {
+        return inputFilename;
     }
 
     public boolean getVersion() {

@@ -240,4 +240,17 @@ public class CliArgHelperTest {
         CliArgHelper.parseAndThrow( "-P", "foo: => 'nanana'");
     }
 
+    @Test
+    public void testDefaultInputFileName() {
+        CliArgs arguments = CliArgHelper.parse();
+        assertNotNull( arguments );
+        assertNull( arguments.getInputFilename() );
+    }
+
+    @Test
+    public void testSetInputFileName() {
+        CliArgs arguments = CliArgHelper.parse("--file",  "foo");
+        assertNotNull( arguments );
+        assertEquals( "foo", arguments.getInputFilename() );
+    }
 }

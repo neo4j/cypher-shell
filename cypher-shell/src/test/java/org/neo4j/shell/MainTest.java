@@ -199,7 +199,7 @@ public class MainTest {
     }
 
     @Test
-    public void promptsSielntlyForPassIfUserExistsIfOutputRedirected() throws Exception {
+    public void promptsSilentlyForPassIfUserExistsIfOutputRedirected() throws Exception {
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("bob").when(connectionConfig).username();
 
