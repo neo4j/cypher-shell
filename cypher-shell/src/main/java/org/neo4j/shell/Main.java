@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import jline.console.ConsoleReader;
+
 import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import static org.neo4j.shell.ShellRunner.getOutputStreamForInteractivePrompt;
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
 
@@ -99,37 +101,48 @@ public class Main {
                                    boolean outputInteractive)
             throws Exception {
 
-        OutputStream outputStream = outputInteractive ? out : new ThrowawayOutputStream();
+        boolean didPrompt = false;
 
-        ConsoleReader consoleReader = new ConsoleReader(in, outputStream);
+        // Prompt directly in interactive mode if user provided username but not password
+        if (inputInteractive && !connectionConfig.username().isEmpty() && connectionConfig.password().isEmpty()) {
+            promptForUsernameAndPassword(connectionConfig, outputInteractive);
+            didPrompt = true;
+        }
+
+        try {
+            // Try to connect
+            shell.connect(connectionConfig);
+        } catch (AuthenticationException e) {
+            // Fail if we already prompted,
+            // or do not have interactive input,
+            // or already tried with both username and password
+            if (didPrompt || !inputInteractive || (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty())) {
+                throw e;
+            }
+
+            // Otherwise we prompt for username and password, and try to connect again
+            promptForUsernameAndPassword(connectionConfig, outputInteractive);
+            shell.connect(connectionConfig);
+        }
+    }
+
+    private void promptForUsernameAndPassword(ConnectionConfig connectionConfig, boolean outputInteractive) throws Exception {
+        OutputStream promptOutputStream = getOutputStreamForInteractivePrompt();
+        ConsoleReader consoleReader = new ConsoleReader(in, promptOutputStream);
         // Disable expansion of bangs: !
         consoleReader.setExpandEvents(false);
         // Ensure Reader does not handle user input for ctrl+C behaviour
         consoleReader.setHandleUserInterrupt(false);
 
         try {
-            shell.connect(connectionConfig);
-        } catch (AuthenticationException e) {
-            // Only prompt for username/password if they weren't used
-            if (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty()) {
-                throw e;
+            if (connectionConfig.username().isEmpty()) {
+                String username = outputInteractive ?
+                                  promptForNonEmptyText("username", consoleReader, null) :
+                                  promptForText("username", consoleReader, null);
+                connectionConfig.setUsername(username);
             }
-            // else need to prompt for username and password
-            if (inputInteractive) {
-                if (connectionConfig.username().isEmpty()) {
-                    String username = outputInteractive ?
-                                      promptForNonEmptyText("username", consoleReader, null) :
-                                      promptForText("username", consoleReader, null);
-                    connectionConfig.setUsername(username);
-                }
-                if (connectionConfig.password().isEmpty()) {
-                    connectionConfig.setPassword(promptForText("password", consoleReader, '*'));
-                }
-                // try again
-                shell.connect(connectionConfig);
-            } else {
-                // Can't prompt because input has been redirected
-                throw e;
+            if (connectionConfig.password().isEmpty()) {
+                connectionConfig.setPassword(promptForText("password", consoleReader, '*'));
             }
         } finally {
             consoleReader.close();
@@ -173,14 +186,6 @@ public class Main {
         if (line == null) {
             throw new CommandException("No text could be read, exiting...");
         }
-
         return line;
-    }
-
-    private static class ThrowawayOutputStream extends OutputStream {
-        @Override
-        public void write( int b )
-        {
-        }
     }
 }
