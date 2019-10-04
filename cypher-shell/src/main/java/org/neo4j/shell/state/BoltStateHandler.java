@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.Bookmark;
+import org.neo4j.driver.Bookmark;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;

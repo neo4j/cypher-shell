@@ -4,10 +4,9 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.ShellParameterMap;
-
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
 
 public class CliArgs {
     private static final String DEFAULT_SCHEME = "bolt://";
@@ -20,7 +19,7 @@ public class CliArgs {
     private int port = DEFAULT_PORT;
     private String username = "";
     private String password = "";
-    private String databaseName = ABSENT_DB_NAME;
+    private String databaseName = DatabaseManager.ABSENT_DB_NAME;
     private FailBehavior failBehavior = FailBehavior.FAIL_FAST;
     private Format format = Format.AUTO;
     @SuppressWarnings( "OptionalUsedAsFieldOrParameterType" )

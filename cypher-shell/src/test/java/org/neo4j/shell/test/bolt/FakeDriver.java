@@ -42,6 +42,10 @@ public class FakeDriver implements Driver {
         return null;
     }
 
+    @Override public boolean isMetricsEnabled() {
+        return false;
+    }
+
     @Override
     public RxSession rxSession()
     {
