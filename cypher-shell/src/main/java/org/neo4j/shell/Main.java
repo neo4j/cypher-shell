@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import static org.neo4j.shell.ShellRunner.getOutputStreamForInteractivePrompt;
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
 
@@ -26,6 +25,7 @@ public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
     private final InputStream in;
     private final PrintStream out;
+    private final boolean hasSpecialInteractiveOutputStream;
 
     public static void main(String[] args) {
         CliArgs cliArgs = CliArgHelper.parse(args);
@@ -41,15 +41,27 @@ public class Main {
     }
 
     Main() {
-        this(System.in, System.out);
+        this(System.in, System.out, false);
     }
 
     /**
      * For testing purposes
      */
     Main(final InputStream in, final PrintStream out) {
+        this(in, out, true);
+    }
+
+    private Main(final InputStream in, final PrintStream out, final boolean hasSpecialInteractiveOutputStream ) {
         this.in = in;
         this.out = out;
+        this.hasSpecialInteractiveOutputStream = hasSpecialInteractiveOutputStream;
+    }
+
+    /**
+     * Delegate for testing purposes
+     */
+    private OutputStream getOutputStreamForInteractivePrompt() {
+        return hasSpecialInteractiveOutputStream ? this.out : ShellRunner.getOutputStreamForInteractivePrompt();
     }
 
     void startShell(@Nonnull CliArgs cliArgs) {
