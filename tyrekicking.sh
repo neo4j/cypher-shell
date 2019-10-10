@@ -12,9 +12,9 @@ function prepare-bundle {
 
 function testscript {
   # first try with encryption off (4.X series), if that fails with encryption on (3.X series)
-  if cypher-shell/cypher-shell -u neo4j -p neo --encryption false "RETURN 1;"; then
+  if cypher-shell/cypher-shell -u neo4j -p neo "RETURN 1;"; then
     echo "$1 Success!"
-  elif cypher-shell/cypher-shell -a "bolt://localhost:7687" -u neo4j -p neo --encryption true "RETURN 1;"; then
+  elif cypher-shell/cypher-shell -a "bolt://localhost:7687" -u neo4j -p neo "RETURN 1;"; then
     echo "$1 Success!"
   else
     echo "$1 Failure!"
