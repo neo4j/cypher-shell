@@ -1,6 +1,7 @@
 package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.*;
+import org.neo4j.driver.internal.Bookmark;
 import org.neo4j.driver.types.TypeSystem;
 
 import java.util.Map;
@@ -63,7 +64,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public String lastBookmark() {
+    public Bookmark lastBookmark() {
         return null;
     }
 

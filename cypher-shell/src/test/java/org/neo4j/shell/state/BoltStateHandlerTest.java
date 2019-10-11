@@ -403,7 +403,7 @@ public class BoltStateHandlerTest {
         BoltStateHandler handler = new BoltStateHandler(provider, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
         handler.connect(config);
-        assertEquals(Config.EncryptionLevel.NONE, provider.config.encryptionLevel());
+        assertFalse(provider.config.encrypted());
     }
 
     @Test
@@ -412,7 +412,7 @@ public class BoltStateHandlerTest {
         BoltStateHandler handler = new BoltStateHandler(provider, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME);
         handler.connect(config);
-        assertEquals(Config.EncryptionLevel.REQUIRED, provider.config.encryptionLevel());
+        assertTrue(provider.config.encrypted());
     }
 
     private Driver stubResultSummaryInAnOpenSession(StatementResult resultMock, Session sessionMock, String version) {

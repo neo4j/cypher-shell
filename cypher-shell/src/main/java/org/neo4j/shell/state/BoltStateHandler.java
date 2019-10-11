@@ -9,19 +9,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.neo4j.driver.AccessMode;
-import org.neo4j.driver.AuthToken;
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.Config;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.Session;
-import org.neo4j.driver.Statement;
-import org.neo4j.driver.StatementResult;
-import org.neo4j.driver.Transaction;
+import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.SessionConfig;
+import org.neo4j.driver.internal.Bookmark;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
@@ -184,7 +175,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         if ( session != null && keepBookmark )
         {
             // Save the last bookmark and close the session
-            final String bookmark = session.lastBookmark();
+            final Bookmark bookmark = session.lastBookmark();
             session.close();
             builder.withBookmarks( bookmark );
         }
@@ -312,13 +303,13 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        Config.ConfigBuilder configBuilder = Config.build().withLogging(NullLogging.NULL_LOGGING);
+        Config.ConfigBuilder configBuilder = Config.builder().withLogging(NullLogging.NULL_LOGGING);
         if (connectionConfig.encryption()) {
             configBuilder = configBuilder.withEncryption();
         } else {
             configBuilder = configBuilder.withoutEncryption();
         }
-        return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.toConfig());
+        return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.build());
     }
 
     private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
