@@ -129,18 +129,19 @@ public interface ShellRunner {
             if (System.console() != null) {
                 return new WriterOutputStream(System.console().writer(), Charset.defaultCharset());
             }
-        }
-        try {
-            if (1 == isatty(STDOUT_FILENO)) {
-                return System.out;
-            } else {
-                return new FileOutputStream(new File("/dev/tty"));
-            }
-        } catch (Throwable ignored) {
-            // system is not using libc (like Alpine Linux)
-            // Fallback to checking stdin OR stdout
-            if (System.console() != null) {
-                return new WriterOutputStream(System.console().writer(), Charset.defaultCharset());
+        } else {
+            try {
+                if (1 == isatty(STDOUT_FILENO)) {
+                    return System.out;
+                } else {
+                    return new FileOutputStream(new File("/dev/tty"));
+                }
+            } catch (Throwable ignored) {
+                // system is not using libc (like Alpine Linux)
+                // Fallback to checking stdin OR stdout
+                if (System.console() != null) {
+                    return new WriterOutputStream(System.console().writer(), Charset.defaultCharset());
+                }
             }
         }
         return new NullOutputStream();
