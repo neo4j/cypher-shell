@@ -159,10 +159,10 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         Object paramValue = shell.setParameter("bob", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
-        shell.execute("RETURN { bob }, $string");
+        shell.execute("RETURN $bob, $string");
 
         String result = linePrinter.output();
-        assertThat(result, containsString("| { bob }"));
+        assertThat(result, containsString("| $bob"));
         assertThat(result, containsString("| " + randomLong + " | " + stringInput + " |"));
         assertEquals(randomLong, shell.allParameterValues().get("bob"));
         assertEquals("randomString", shell.allParameterValues().get("string"));
@@ -176,10 +176,10 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         Object paramValue = shell.setParameter("`bob`", String.valueOf(randomLong));
         assertEquals(randomLong, paramValue);
 
-        shell.execute("RETURN { `bob` }");
+        shell.execute("RETURN $`bob`");
 
         String result = linePrinter.output();
-        assertThat(result, containsString("| { `bob` }"));
+        assertThat(result, containsString("| $`bob`"));
         assertThat(result, containsString("\n| " + randomLong+ " |\n"));
         assertEquals(randomLong, shell.allParameterValues().get("bob"));
     }

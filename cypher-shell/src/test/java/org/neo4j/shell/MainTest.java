@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.neo4j.driver.v1.exceptions.AuthenticationException;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
 import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.system.Utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -96,6 +97,11 @@ public class MainTest {
 
     @Test
     public void promptsSilentlyForUsernameAndPasswordIfNoneGivenIfOutputRedirected() throws Exception {
+        if (Utils.isWindows()) {
+            // Disable this test on Windows due to problem with redirection
+            return;
+        }
+
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "bob\nsecret\n";
@@ -104,15 +110,26 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals("", out);
-        verify(connectionConfig).setUsername("bob");
-        verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals("", out);
+            verify(connectionConfig).setUsername("bob");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
@@ -158,6 +175,11 @@ public class MainTest {
 
     @Test
     public void promptsSilentlyForUserIfPassExistsIfOutputRedirected() throws Exception {
+        if (Utils.isWindows()) {
+            // Disable this test on Windows due to problem with redirection
+            return;
+        }
+
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
         doReturn("secret").when(connectionConfig).password();
 
@@ -167,19 +189,29 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals(out, "");
-        verify(connectionConfig).setUsername("bob");
-        verify(shell, times(2)).connect(connectionConfig);
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals(out, "");
+            verify(connectionConfig).setUsername("bob");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
-    public void promptsForPassIfUserExistsIfInteractive() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+    public void promptsForPassBeforeConnectIfUserExistsIfInteractive() throws Exception {
         doReturn("bob").when(connectionConfig).username();
 
         String inputString = "secret\n";
@@ -195,12 +227,16 @@ public class MainTest {
 
         assertEquals(out, String.format("password: ******%n"));
         verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+        verify(shell, times(1)).connect(connectionConfig);
     }
 
     @Test
-    public void promptsSielntlyForPassIfUserExistsIfOutputRedirected() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+    public void promptsSilentlyForPassIfUserExistsIfOutputRedirected() throws Exception {
+        if (Utils.isWindows()) {
+            // Disable this test on Windows due to problem with redirection
+            return;
+        }
+
         doReturn("bob").when(connectionConfig).username();
 
         String inputString = "secret\n";
@@ -209,14 +245,25 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals(out, "");
-        verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals(out, "");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(1)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
@@ -284,7 +331,12 @@ public class MainTest {
     }
 
     @Test
-    public void doesNotRepromptsIfUserIsNotProvidedIfOutputRedirected() throws Exception {
+    public void doesNotRepromptIfUserIsNotProvidedIfOutputRedirected() throws Exception {
+        if (Utils.isWindows()) {
+            // Disable this test on Windows due to problem with redirection
+            return;
+        }
+
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
 
         String inputString = "\nsecret\n";
@@ -293,15 +345,26 @@ public class MainTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals("", out );
-        verify(connectionConfig).setUsername("");
-        verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals("", out );
+            verify(connectionConfig).setUsername("");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test

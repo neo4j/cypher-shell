@@ -22,20 +22,22 @@ public class MainIntegrationTest {
     private ConnectionConfig connectionConfig;
     private CypherShell shell;
     private Main main;
+    private PrintStream printStream;
+    private InputStream inputStream;
 
     @Before
     public void setup() {
         // given
-        InputStream inputStream = new ByteArrayInputStream( inputString.getBytes() );
+        inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream( baos );
+        printStream = new PrintStream(baos);
 
-        main = new Main( inputStream, ps );
+        main = new Main(inputStream, printStream);
 
         CliArgs cliArgs = new CliArgs();
         cliArgs.setUsername("", "");
-        cliArgs.setPassword( "", "" );
+        cliArgs.setPassword("", "");
 
         Logger logger = new AnsiLogger(cliArgs.getDebugMode());
         PrettyConfig prettyConfig = new PrettyConfig(cliArgs);
@@ -67,25 +69,39 @@ public class MainIntegrationTest {
         assertEquals("neo", connectionConfig.password());
 
         String out = baos.toString();
-        assertEquals( String.format( "username: neo4j%npassword: ***%n" ), out );
+        assertEquals(String.format( "username: neo4j%npassword: ***%n" ), out);
     }
 
     @Test
-    public void promptsSilentlyOnWrongAuthenticationIfOutputRedirected() throws Exception {
+    public void doesNotPromptToStdOutOnWrongAuthenticationIfOutputRedirected() throws Exception {
         // when
         assertEquals("", connectionConfig.username());
         assertEquals("", connectionConfig.password());
 
-        main.connectMaybeInteractively(shell, connectionConfig, true, false);
+        // Redirect System.in and System.out
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(printStream);
 
-        // then
-        // should be connected
-        assertTrue(shell.isConnected());
-        // should have prompted silently and set the username and password
-        assertEquals("neo4j", connectionConfig.username());
-        assertEquals("neo", connectionConfig.password());
+        // Create a Main with the standard in and out
+        try {
+            Main realMain = new Main();
+            realMain.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        String out = baos.toString();
-        assertEquals( "", out );
+            // then
+            // should be connected
+            assertTrue(shell.isConnected());
+            // should have prompted silently and set the username and password
+            assertEquals("neo4j", connectionConfig.username());
+            assertEquals("neo", connectionConfig.password());
+
+            String out = baos.toString();
+            assertEquals("", out);
+        } finally {
+            // Restore in and out
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 }
