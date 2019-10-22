@@ -29,9 +29,7 @@ allprojects {
 
     repositories {
         jcenter()
-        maven {
-            url "http://m2.neo4j.org/content/repositories/snapshots"
-        }
+        mavenCentral()
     }
 }
 
