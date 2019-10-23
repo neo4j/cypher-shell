@@ -98,36 +98,25 @@ public class MainIntegrationTest
     }
 
     @Test
-    public void doesNotPromptToStdOutOnWrongAuthenticationIfOutputRedirected() throws Exception {
+    public void doesNotPromptToStdOutOnWrongAuthenticationIfOutputRedirected() throws Exception
+    {
         // when
-        assertEquals("", connectionConfig.username());
-        assertEquals("", connectionConfig.password());
-
-        // Redirect System.in and System.out
-        InputStream stdIn = System.in;
-        PrintStream stdOut = System.out;
-        System.setIn(inputStream);
-        System.setOut(printStream);
+        assertEquals( "", connectionConfig.username() );
+        assertEquals( "", connectionConfig.password() );
 
         // Create a Main with the standard in and out
-        try {
-            Main realMain = new Main(stdIn, stdOut);
-            realMain.connectMaybeInteractively(shell, connectionConfig, true, false);
+        Main realMain = new Main( inputStream, printStream );
+        realMain.connectMaybeInteractively( shell, connectionConfig, true, false );
 
-            // then
-            // should be connected
-            assertTrue(shell.isConnected());
-            // should have prompted silently and set the username and password
-            assertEquals("neo4j", connectionConfig.username());
-            assertEquals("neo", connectionConfig.password());
+        // then
+        // should be connected
+        assertTrue( shell.isConnected() );
+        // should have prompted silently and set the username and password
+        assertEquals( "neo4j", connectionConfig.username() );
+        assertEquals( "neo", connectionConfig.password() );
 
-            String out = baos.toString();
-            assertEquals("", out);
-        } finally {
-            // Restore in and out
-            System.setIn(stdIn);
-            System.setOut(stdOut);
-        }
+        String out = baos.toString();
+        assertEquals( "", out );
     }
 
     @Test
