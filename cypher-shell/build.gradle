@@ -44,6 +44,7 @@ dependencies {
     compile("jline:jline:$jlineVersion") {
         exclude(group: 'junit', module: 'junit')
     }
+    compile group: 'commons-io', name: 'commons-io', version: "$commonsIoVersion"
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-core:$mockitoVersion"
     testCompile "com.github.stefanbirkner:system-rules:$systemRulesVersion"

@@ -1,5 +1,8 @@
 package org.neo4j.shell;
 
+import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.io.output.WriterOutputStream;
+
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.cli.FileHistorian;
 import org.neo4j.shell.cli.InteractiveShellRunner;
@@ -13,8 +16,11 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
@@ -128,11 +134,38 @@ public interface ShellRunner {
      */
     static InputStream getInputStream(CliArgs cliArgs) throws FileNotFoundException
     {
-        if ( cliArgs.getInputFilename() == null)
+        if ( cliArgs.getInputFilename() == null )
         {
             return System.in;
-        } else {
-            return new BufferedInputStream( new FileInputStream( new File(cliArgs.getInputFilename()) ));
         }
+        else
+        {
+            return new BufferedInputStream( new FileInputStream( new File( cliArgs.getInputFilename() ) ) );
+        }
+    }
+
+    static OutputStream getOutputStreamForInteractivePrompt() {
+        if (isWindows()) {
+            // Output will never be a TTY on windows and it isatty seems to be able to block forever on Windows so avoid
+            // calling it.
+            if (System.console() != null) {
+                return new WriterOutputStream(System.console().writer(), Charset.defaultCharset());
+            }
+        } else {
+            try {
+                if (1 == isatty(STDOUT_FILENO)) {
+                    return System.out;
+                } else {
+                    return new FileOutputStream(new File("/dev/tty"));
+                }
+            } catch (Throwable ignored) {
+                // system is not using libc (like Alpine Linux)
+                // Fallback to checking stdin OR stdout
+                if (System.console() != null) {
+                    return new WriterOutputStream(System.console().writer(), Charset.defaultCharset());
+                }
+            }
+        }
+        return new NullOutputStream();
     }
 }

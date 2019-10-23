@@ -29,9 +29,7 @@ allprojects {
 
     repositories {
         jcenter()
-        maven {
-            url "http://m2.neo4j.org/content/repositories/snapshots"
-        }
+        mavenCentral()
     }
 }
 
@@ -78,4 +76,5 @@ ext {
     jlineVersion = '2.14.6'
     mockitoVersion = '1.9.5'
     systemRulesVersion = '1.19.0'
+    commonsIoVersion = '2.6'
 }

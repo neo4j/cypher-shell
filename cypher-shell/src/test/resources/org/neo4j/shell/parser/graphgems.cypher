@@ -61,9 +61,9 @@ unwind row as text
 with seq, reduce(t=tolower(text), delim in [",",".","!","?",'"',":",";","'","-"] | replace(t,delim,"")) as normalized
 with seq, [w in split(normalized," ") | trim(w)] as words
 unwind range(0,size(words)-2) as idx
-MERGE (w1:Word {name:words[idx], seq:toInt(seq)})
-MERGE (w2:Word {name:words[idx+1], seq:toInt(seq)})
-MERGE (w1)-[r:NEXT {seq:toInt(seq)}]->(w2)
+MERGE (w1:Word {name:words[idx], seq:toInteger(seq)})
+MERGE (w2:Word {name:words[idx+1], seq:toInteger(seq)})
+MERGE (w1)-[r:NEXT {seq:toInteger(seq)}]->(w2)
 
 match (endword:Word), (startword:Word)
 where not ()-[:NEXT]->(startword)
