@@ -3,6 +3,7 @@ package org.neo4j.shell;
 import jline.console.ConsoleReader;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,8 +17,6 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyConfig;
-
-import java.io.OutputStream;
 
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
@@ -41,7 +40,7 @@ public class Main {
         main.startShell(cliArgs);
     }
 
-    private Main() {
+    Main() {
         this(System.in, System.out, false);
     }
 

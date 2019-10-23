@@ -104,22 +104,34 @@ public class MainTest {
         }
 
         doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doReturn("").doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream( baos );
+        PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main( inputStream, ps );
-        main.connectMaybeInteractively( shell, connectionConfig, true, false );
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String( baos.toByteArray(), StandardCharsets.UTF_8 );
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals( "", out );
-        verify( connectionConfig ).setUsername( "bob" );
-        verify( connectionConfig ).setPassword( "secret" );
-        verify( shell, times( 2 ) ).connect( connectionConfig );
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals("", out);
+            verify(connectionConfig).setUsername("bob");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
@@ -174,19 +186,30 @@ public class MainTest {
         doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\n";
-        InputStream inputStream = new ByteArrayInputStream( inputString.getBytes() );
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream( baos );
+        PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main( inputStream, ps );
-        main.connectMaybeInteractively( shell, connectionConfig, true, false );
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String( baos.toByteArray(), StandardCharsets.UTF_8 );
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals( out, "" );
-        verify( connectionConfig ).setUsername( "bob" );
-        verify( shell, times( 2 ) ).connect( connectionConfig );
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals(out, "");
+            verify(connectionConfig).setUsername("bob");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
@@ -216,23 +239,34 @@ public class MainTest {
             return;
         }
 
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doReturn("bob").when(connectionConfig).username();
+        doReturn("").doReturn("").doReturn("secret").when(connectionConfig).password();
 
-        String inputString = "bob\nsecret\n";
+        String inputString = "secret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream( baos );
+        PrintStream ps = new PrintStream(baos);
 
-        Main main = new Main( inputStream, ps );
-        main.connectMaybeInteractively( shell, connectionConfig, true, false );
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        String out = new String( baos.toByteArray(), StandardCharsets.UTF_8 );
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
-        assertEquals( "", out );
-        verify( connectionConfig ).setUsername( "bob" );
-        verify( connectionConfig ).setPassword( "secret" );
-        verify( shell, times( 2 ) ).connect( connectionConfig );
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals(out, "");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(1)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
@@ -312,17 +346,28 @@ public class MainTest {
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream( baos );
-        Main main = new Main( inputStream, ps );
-        main.connectMaybeInteractively( shell, connectionConfig, true, false );
+        PrintStream ps = new PrintStream(baos);
 
-        String out = new String( baos.toByteArray(), StandardCharsets.UTF_8 );
+        // Redirect stdin and stdout
+        InputStream stdIn = System.in;
+        PrintStream stdOut = System.out;
+        System.setIn(inputStream);
+        System.setOut(ps);
 
-        assertEquals( "", out );
-        verify( connectionConfig ).setUsername( "" );
-        verify( connectionConfig ).setPassword( "secret" );
-        verify( shell, times( 2 ) ).connect( connectionConfig );
+        try {
+            Main main = new Main();
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
 
+            String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+            assertEquals("", out );
+            verify(connectionConfig).setUsername("");
+            verify(connectionConfig).setPassword("secret");
+            verify(shell, times(2)).connect(connectionConfig);
+        } finally {
+            System.setIn(stdIn);
+            System.setOut(stdOut);
+        }
     }
 
     @Test
