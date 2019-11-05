@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.Bookmark;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
@@ -187,7 +186,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
 
-        this.version = run.summary().server().version();
+        this.version = run.consume().server().version();
         updateActualDbName(run);
     }
 
@@ -248,7 +247,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private String getActualDbName(@Nonnull StatementResult statementResult) {
-        DatabaseInfo dbInfo = statementResult.summary().database();
+        DatabaseInfo dbInfo = statementResult.consume().database();
         return dbInfo.name() == null ? ABSENT_DB_NAME : dbInfo.name();
     }
 

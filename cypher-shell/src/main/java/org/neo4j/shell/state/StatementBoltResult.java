@@ -40,6 +40,6 @@ public class StatementBoltResult implements BoltResult {
     @Nonnull
     @Override
     public ResultSummary getSummary() {
-        return result.summary();
+        return result.consume();
     }
 }

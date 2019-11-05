@@ -157,7 +157,7 @@ public class BoltStateHandlerTest {
         Driver mockedDriver = stubResultSummaryInAnOpenSession(resultMock, session, "neo4j-version");
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockedDriver);
 
-        when(resultMock.summary()).thenThrow(originalException);
+        when(resultMock.consume()).thenThrow(originalException);
         doThrow(thrownFromSilentDisconnect).when(session).close();
 
         try {
@@ -427,7 +427,7 @@ public class BoltStateHandlerTest {
 
         when(resultSummary.server()).thenReturn(serverInfo);
         when(serverInfo.version()).thenReturn(version);
-        when(resultMock.summary()).thenReturn(resultSummary);
+        when(resultMock.consume()).thenReturn(resultSummary);
         when(resultSummary.database()).thenReturn(databaseInfo);
         when(databaseInfo.name()).thenReturn(databaseName);
 

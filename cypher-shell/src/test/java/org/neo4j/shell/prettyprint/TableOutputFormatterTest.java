@@ -320,7 +320,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.consume()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -346,7 +346,7 @@ public class TableOutputFormatterTest {
         StatementResult result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
         // WHEN
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(false, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(false, 2).formatAndCount(new ListBoltResult(result.list(), result.consume()), printer);
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
@@ -392,7 +392,7 @@ public class TableOutputFormatterTest {
 
     private String formatResult(StatementResult result) {
         ToStringLinePrinter printer = new ToStringLinePrinter();
-        new TableOutputFormatter(true, 1000).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
+        new TableOutputFormatter(true, 1000).formatAndCount(new ListBoltResult(result.list(), result.consume()), printer);
         return printer.result();
     }
 
@@ -410,7 +410,7 @@ public class TableOutputFormatterTest {
         }
         when(result.list()).thenReturn(records);
         when(result.consume()).thenReturn(summary);
-        when(result.summary()).thenReturn(summary);
+        when(result.consume()).thenReturn(summary);
         return result;
     }
 
