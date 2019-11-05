@@ -181,7 +181,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         session = driver.session( builder.build() );
 
-        String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DATABASES" : "RETURN 1";
+        String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DEFAULT DATABASE" : "RETURN 1";
 
         resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
