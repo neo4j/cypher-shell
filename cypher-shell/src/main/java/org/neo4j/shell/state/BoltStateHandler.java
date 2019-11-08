@@ -13,6 +13,7 @@ import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.summary.DatabaseInfo;
+import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -185,9 +186,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
-
-        this.version = run.consume().server().version();
-        updateActualDbName(run);
+        ResultSummary summary = run.consume();
+        this.version = summary.server().version();
+        updateActualDbName(summary);
     }
 
     @Nonnull
@@ -230,6 +231,10 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
     }
 
+    public void updateActualDbName(@Nonnull ResultSummary resultSummary) {
+        actualDatabaseNameAsReportedByServer = getActualDbName(resultSummary);
+    }
+
     /**
      * @throws SessionExpiredException when server no longer serves writes anymore
      */
@@ -241,18 +246,12 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             return Optional.empty();
         }
 
-        updateActualDbName(statementResult);
-
         return Optional.of(new StatementBoltResult(statementResult));
     }
 
-    private String getActualDbName(@Nonnull StatementResult statementResult) {
-        DatabaseInfo dbInfo = statementResult.consume().database();
+    private String getActualDbName(@Nonnull ResultSummary resultSummary) {
+        DatabaseInfo dbInfo = resultSummary.database();
         return dbInfo.name() == null ? ABSENT_DB_NAME : dbInfo.name();
-    }
-
-    private void updateActualDbName(@Nonnull StatementResult statementResult) {
-        actualDatabaseNameAsReportedByServer = getActualDbName(statementResult);
     }
 
     private void resetActualDbName() {
@@ -316,7 +315,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
             BoltResult singleResult = new ListBoltResult(sr.list(), sr.consume(), sr.keys());
-            updateActualDbName(sr);
+            updateActualDbName(singleResult.getSummary());
             return singleResult;
         });
 

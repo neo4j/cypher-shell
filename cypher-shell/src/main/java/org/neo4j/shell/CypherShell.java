@@ -91,8 +91,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     private void executeCypher(@Nonnull final String cypher) throws CommandException {
         try {
-            final Optional<BoltResult> result = boltStateHandler.runCypher( cypher, parameterMap.allParameterValues() );
-            result.ifPresent(boltResult -> prettyPrinter.format(boltResult, linePrinter));
+            final Optional<BoltResult> result = boltStateHandler.runCypher(cypher, parameterMap.allParameterValues());
+            result.ifPresent(boltResult -> {
+                prettyPrinter.format(boltResult, linePrinter);
+                boltStateHandler.updateActualDbName(boltResult.getSummary());
+            });
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
             lastNeo4jErrorCode = e.code();
