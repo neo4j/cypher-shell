@@ -219,4 +219,15 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     {
         return parameterMap;
     }
+
+    public void changePassword(@Nonnull ConnectionConfig connectionConfig) {
+        boltStateHandler.changePassword(connectionConfig);
+    }
+
+    /**
+     * Used for testing purposes
+     */
+    public void disconnect() {
+        boltStateHandler.disconnect();
+    }
 }

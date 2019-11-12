@@ -37,49 +37,46 @@ public class FakeDriver implements Driver {
     }
 
     @Override
-    public Metrics metrics()
-    {
+    public Metrics metrics() {
         return null;
     }
 
     @Override
-    public RxSession rxSession()
-    {
+    public boolean isMetricsEnabled() {
+        return false;
+    }
+
+    @Override
+    public RxSession rxSession() {
         return null;
     }
 
     @Override
-    public RxSession rxSession( SessionConfig sessionConfig )
-    {
+    public RxSession rxSession( SessionConfig sessionConfig ) {
         return null;
     }
 
     @Override
-    public AsyncSession asyncSession()
-    {
+    public AsyncSession asyncSession() {
         return null;
     }
 
     @Override
-    public AsyncSession asyncSession( SessionConfig sessionConfig )
-    {
+    public AsyncSession asyncSession( SessionConfig sessionConfig ) {
         return null;
     }
 
     @Override
-    public TypeSystem defaultTypeSystem()
-    {
+    public TypeSystem defaultTypeSystem() {
         return null;
     }
 
     @Override
-    public void verifyConnectivity()
-    {
+    public void verifyConnectivity() {
     }
 
     @Override
-    public CompletionStage<Void> verifyConnectivityAsync()
-    {
+    public CompletionStage<Void> verifyConnectivityAsync() {
         return null;
     }
 }

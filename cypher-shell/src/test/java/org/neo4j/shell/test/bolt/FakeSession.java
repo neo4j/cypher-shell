@@ -1,8 +1,7 @@
 package org.neo4j.shell.test.bolt;
 
 import org.neo4j.driver.*;
-import org.neo4j.driver.internal.Bookmark;
-import org.neo4j.driver.types.TypeSystem;
+import org.neo4j.driver.Bookmark;
 
 import java.util.Map;
 
@@ -18,8 +17,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public Transaction beginTransaction(TransactionConfig config)
-    {
+    public Transaction beginTransaction(TransactionConfig config) {
         return null;
     }
 
@@ -29,8 +27,7 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public <T> T readTransaction(TransactionWork<T> work, TransactionConfig config )
-    {
+    public <T> T readTransaction(TransactionWork<T> work, TransactionConfig config ) {
         return null;
     }
 
@@ -40,26 +37,22 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public <T> T writeTransaction(TransactionWork<T> work, TransactionConfig config)
-    {
+    public <T> T writeTransaction(TransactionWork<T> work, TransactionConfig config) {
         return null;
     }
 
     @Override
-    public StatementResult run(String statement, TransactionConfig config)
-    {
+    public StatementResult run(String statement, TransactionConfig config) {
         return FakeStatementResult.parseStatement(statement);
     }
 
     @Override
-    public StatementResult run(String statement, Map<String,Object> parameters, TransactionConfig config)
-    {
+    public StatementResult run(String statement, Map<String,Object> parameters, TransactionConfig config) {
         return FakeStatementResult.parseStatement(statement);
     }
 
     @Override
-    public StatementResult run(Statement statement, TransactionConfig config)
-    {
+    public StatementResult run(Statement statement, TransactionConfig config) {
         return new FakeStatementResult();
     }
 

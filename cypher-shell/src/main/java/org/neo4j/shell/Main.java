@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.neo4j.driver.exceptions.AuthenticationException;
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
@@ -122,21 +123,38 @@ public class Main {
             didPrompt = true;
         }
 
-        try {
-            // Try to connect
-            shell.connect(connectionConfig);
-        } catch (AuthenticationException e) {
-            // Fail if we already prompted,
-            // or do not have interactive input,
-            // or already tried with both username and password
-            if (didPrompt || !inputInteractive || (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty())) {
-                throw e;
-            }
+        while (true) {
+            try {
+                // Try to connect
+                shell.connect(connectionConfig);
 
-            // Otherwise we prompt for username and password, and try to connect again
-            promptForUsernameAndPassword(connectionConfig, outputInteractive);
-            shell.connect(connectionConfig);
+                // If no exception occurred we are done
+                break;
+            } catch (AuthenticationException e) {
+                // Fail if we already prompted,
+                // or do not have interactive input,
+                // or already tried with both username and password
+                if (didPrompt || !inputInteractive || (!connectionConfig.username().isEmpty() && !connectionConfig.password().isEmpty())) {
+                    throw e;
+                }
+
+                // Otherwise we prompt for username and password, and try to connect again
+                promptForUsernameAndPassword(connectionConfig, outputInteractive);
+                didPrompt = true;
+            } catch (Neo4jException e) {
+                if (passwordChangeRequiredException(e)) {
+                    promptForPasswordChange(connectionConfig, outputInteractive);
+                    shell.changePassword(connectionConfig);
+                    didPrompt = true;
+                } else {
+                    throw e;
+                }
+            }
         }
+    }
+
+    private boolean passwordChangeRequiredException(Neo4jException e) {
+        return "Neo.ClientError.Security.CredentialsExpired".equalsIgnoreCase(e.code());
     }
 
     private void promptForUsernameAndPassword(ConnectionConfig connectionConfig, boolean outputInteractive) throws Exception {
@@ -157,6 +175,35 @@ public class Main {
             if (connectionConfig.password().isEmpty()) {
                 connectionConfig.setPassword(promptForText("password", consoleReader, '*'));
             }
+        } finally {
+            consoleReader.close();
+        }
+    }
+
+    private void promptForPasswordChange(ConnectionConfig connectionConfig, boolean outputInteractive) throws Exception {
+        OutputStream promptOutputStream = getOutputStreamForInteractivePrompt();
+        ConsoleReader consoleReader = new ConsoleReader(in, promptOutputStream);
+        // Disable expansion of bangs: !
+        consoleReader.setExpandEvents(false);
+        // Ensure Reader does not handle user input for ctrl+C behaviour
+        consoleReader.setHandleUserInterrupt(false);
+
+        consoleReader.println("Password change required");
+
+        try {
+            if (connectionConfig.username().isEmpty()) {
+                String username = outputInteractive ?
+                                  promptForNonEmptyText("username", consoleReader, null) :
+                                  promptForText("username", consoleReader, null);
+                connectionConfig.setUsername(username);
+            }
+            if (connectionConfig.password().isEmpty()) {
+                connectionConfig.setPassword(promptForText("password", consoleReader, '*'));
+            }
+            String newPassword = outputInteractive ?
+                                 promptForNonEmptyText("new password", consoleReader, '*') :
+                                 promptForText("new password", consoleReader, '*');
+            connectionConfig.setNewPassword(newPassword);
         } finally {
             consoleReader.close();
         }

@@ -34,6 +34,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     private String activeDatabaseNameAsSetByUser;
     private String actualDatabaseNameAsReportedByServer;
     private final boolean isInteractive;
+    private Bookmark systemBookmark;
 
     public BoltStateHandler(boolean isInteractive) {
         this(GraphDatabase::driver, isInteractive);
@@ -172,12 +173,13 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         {
             builder.withDatabase( activeDatabaseNameAsSetByUser );
         }
-        if ( session != null && keepBookmark )
-        {
+        if (session != null && keepBookmark) {
             // Save the last bookmark and close the session
             final Bookmark bookmark = session.lastBookmark();
             session.close();
-            builder.withBookmarks( bookmark );
+            builder.withBookmarks(bookmark);
+        } else if (systemBookmark != null) {
+            builder.withBookmarks(systemBookmark);
         }
 
         session = driver.session( builder.build() );
@@ -235,6 +237,52 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         actualDatabaseNameAsReportedByServer = getActualDbName(resultSummary);
     }
 
+    public void changePassword(@Nonnull ConnectionConfig connectionConfig) {
+        if (!connectionConfig.passwordChangeRequired()) {
+            return;
+        }
+
+        if (isConnected()) {
+            silentDisconnect();
+        }
+
+        final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
+
+        try {
+            driver = getDriver(connectionConfig, authToken);
+
+            // This will already throw an exception if there is no connectivity
+            driver.verifyConnectivity();
+
+            SessionConfig.Builder builder = SessionConfig.builder()
+                    .withDefaultAccessMode(AccessMode.WRITE)
+                    .withDatabase(SYSTEM_DB_NAME);
+            session = driver.session(builder.build());
+
+            String command = "ALTER CURRENT USER SET PASSWORD FROM $o TO $n";
+            Value parameters = Values.parameters("o", connectionConfig.password(), "n", connectionConfig.newPassword());
+
+            StatementResult run = session.run(command, parameters);
+            run.consume();
+
+            // If successful, use the new password when reconnecting
+            connectionConfig.setPassword(connectionConfig.newPassword());
+            connectionConfig.setNewPassword(null);
+
+            // Save a system bookmark to make sure we wait for the password change to propagate on reconnection
+            systemBookmark = session.lastBookmark();
+
+            silentDisconnect();
+        } catch (Throwable t) {
+            try {
+                silentDisconnect();
+            } catch (Exception e) {
+                t.addSuppressed(e);
+            }
+            throw t;
+        }
+    }
+
     /**
      * @throws SessionExpiredException when server no longer serves writes anymore
      */
@@ -290,6 +338,14 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 clearTransactionStatements();
             }
         }
+    }
+
+    /**
+     * Used for testing purposes
+     */
+    public void disconnect() {
+         reset();
+         silentDisconnect();
     }
 
     List<Statement> getTransactionStatements() {

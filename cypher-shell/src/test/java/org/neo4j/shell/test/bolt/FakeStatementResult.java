@@ -78,12 +78,6 @@ class FakeStatementResult implements StatementResult {
         return new FakeResultSummary();
     }
 
-    @Override
-    public ResultSummary summary()
-    {
-        return new FakeResultSummary();
-    }
-
     /**
      * Supports fake parsing of very limited cypher statements, only for basic test purposes
      */

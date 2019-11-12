@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.driver.exceptions.SecurityException;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.system.Utils;
 
@@ -35,6 +36,7 @@ public class MainTest {
     private ConnectionConfig connectionConfig;
     private PrintStream out;
     private AuthenticationException authException;
+    private Neo4jException passwordChangeRequiredException;
 
     @Before
     public void setup() {
@@ -47,6 +49,7 @@ public class MainTest {
 
         // Don't mock because of gradle bug: https://github.com/gradle/gradle/issues/1618
         authException = new AuthenticationException(Main.NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED, "BOOM");
+        passwordChangeRequiredException = new SecurityException("Neo.ClientError.Security.CredentialsExpired", "BLAM");
     }
 
     @Test
@@ -267,6 +270,56 @@ public class MainTest {
             System.setIn(stdIn);
             System.setOut(stdOut);
         }
+    }
+
+    @Test
+    public void promptsForNewPasswordIfPasswordChangeRequired() throws Exception {
+        // Use a real ConnectionConfig instead of the mock in this test
+        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
+        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "bob\nsecret\nnewsecret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(String.format( "username: bob%npassword: ******%nPassword change required%nnew password: *********%n" ), out);
+        assertEquals("bob", connectionConfig.username());
+        assertEquals("secret", connectionConfig.password());
+        assertEquals("newsecret", connectionConfig.newPassword());
+        verify(shell, times(3)).connect(connectionConfig);
+        verify(shell).changePassword(connectionConfig);
+    }
+
+    @Test
+    public void promptsForNewPasswordIfPasswordChangeRequiredCannotBeEmpty() throws Exception {
+        // Use a real ConnectionConfig instead of the mock in this test
+        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
+        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig);
+
+        String inputString = "bob\nsecret\n\nnewsecret\n";
+        InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        Main main = new Main(inputStream, ps);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+        assertEquals(String.format("username: bob%npassword: ******%nPassword change required%nnew password: %nnew password cannot be empty%n%nnew password: *********%n" ), out);
+        assertEquals("bob", connectionConfig.username());
+        assertEquals("secret", connectionConfig.password());
+        assertEquals("newsecret", connectionConfig.newPassword());
+        verify(shell, times(3)).connect(connectionConfig);
+        verify(shell).changePassword(connectionConfig);
     }
 
     @Test
