@@ -55,26 +55,20 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
         String previousDatabaseName = activeDatabaseNameAsSetByUser;
         activeDatabaseNameAsSetByUser = databaseName;
-        try
-        {
-            if ( isConnected() )
-            {
-                reconnect( false );
+        try {
+            if (isConnected()) {
+                reconnect(true);
             }
         }
-        catch ( ClientException e )
-        {
-            if ( isInteractive )
-            {
+        catch (ClientException e) {
+            if (isInteractive) {
                 // We want to try to connect to the previous database
                 activeDatabaseNameAsSetByUser = previousDatabaseName;
-                try
-                {
-                    reconnect( false );
+                try {
+                    reconnect(true);
                 }
-                catch ( ClientException e2 )
-                {
-                    e.addSuppressed( e2 );
+                catch (ClientException e2) {
+                    e.addSuppressed(e2);
                 }
             }
             throw e;
@@ -182,7 +176,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             builder.withBookmarks(systemBookmark);
         }
 
-        session = driver.session( builder.build() );
+        session = driver.session(builder.build());
 
         String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DEFAULT DATABASE" : "RETURN 1";
 
