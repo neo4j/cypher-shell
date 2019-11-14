@@ -22,6 +22,8 @@ import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.NullLogging;
 
+import static org.neo4j.shell.util.Versions.majorVersion;
+
 /**
  * Handles interactions with the driver
  */
@@ -253,8 +255,15 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                     .withDatabase(SYSTEM_DB_NAME);
             session = driver.session(builder.build());
 
-            String command = "ALTER CURRENT USER SET PASSWORD FROM $o TO $n";
-            Value parameters = Values.parameters("o", connectionConfig.password(), "n", connectionConfig.newPassword());
+            String command;
+            Value parameters;
+            if (majorVersion(getServerVersion()) >= 4) {
+                command = "ALTER CURRENT USER SET PASSWORD FROM $o TO $n";
+                parameters = Values.parameters("o", connectionConfig.password(), "n", connectionConfig.newPassword());
+            } else {
+                command = "CALL dbms.security.changePassword($n)";
+                parameters = Values.parameters("n", connectionConfig.newPassword());
+            }
 
             StatementResult run = session.run(command, parameters);
             run.consume();
@@ -364,7 +373,10 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            BoltResult singleResult = new ListBoltResult(sr.list(), sr.consume(), sr.keys());
+            List<Record> list = sr.list();
+            List<String> keys = sr.keys();
+            ResultSummary summary = sr.consume();
+            BoltResult singleResult = new ListBoltResult(list, summary, keys );
             updateActualDbName(singleResult.getSummary());
             return singleResult;
         });

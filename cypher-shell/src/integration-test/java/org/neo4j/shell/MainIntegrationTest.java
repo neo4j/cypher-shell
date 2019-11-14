@@ -34,6 +34,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.shell.util.Versions.majorVersion;
 
 public class MainIntegrationTest
 {
@@ -84,10 +85,21 @@ public class MainIntegrationTest
     }
 
     private void ensureUser() throws Exception {
-        shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
-        shell.execute("CREATE OR REPLACE USER foo SET PASSWORD 'pass';");
-        shell.execute("GRANT ROLE reader TO foo;");
-        shell.execute(":use");
+        if (majorVersion(shell.getServerVersion() ) >= 4) {
+            shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+            shell.execute("CREATE OR REPLACE USER foo SET PASSWORD 'pass';");
+            shell.execute("GRANT ROLE reader TO foo;");
+            shell.execute(":use");
+        } else {
+            try {
+                shell.execute("CALL dbms.security.createUser('foo', 'pass', true)");
+            } catch (ClientException e) {
+                if (e.code().equalsIgnoreCase("Neo.ClientError.General.InvalidArguments") && e.getMessage().contains("already exists")) {
+                    shell.execute("CALL dbms.security.deleteUser('foo')");
+                    shell.execute("CALL dbms.security.createUser('foo', 'pass', true)");
+                }
+            }
+        }
     }
 
     @Test
@@ -140,12 +152,28 @@ public class MainIntegrationTest
 
         // then
         assertTrue(shell.isConnected());
-        // should have prompted to change the password
-        String expectedChangePasswordOutput = format( "username: foo%npassword: ****%nPassword change required%nnew password: *******%n" );
-        assertEquals(expectedLoginOutput + expectedChangePasswordOutput, baos.toString());
-        assertEquals("foo", connectionConfig.username());
-        assertEquals("newpass", connectionConfig.password());
-        assertNull(connectionConfig.newPassword());
+        if (majorVersion(shell.getServerVersion() ) >= 4) {
+            // should have prompted to change the password
+            String expectedChangePasswordOutput = format( "username: foo%npassword: ****%nPassword change required%nnew password: *******%n" );
+            assertEquals(expectedLoginOutput + expectedChangePasswordOutput, baos.toString());
+            assertEquals("foo", connectionConfig.username());
+            assertEquals("newpass", connectionConfig.password());
+            assertNull(connectionConfig.newPassword());
+
+            // Should be able to execute read query
+            shell.execute("MATCH (n) RETURN count(n)");
+        } else {
+            // in 3.x we do not get credentials expired exception on connection, but when we try to access data
+            String expectedChangePasswordOutput = format( "username: foo%npassword: ****%n" );
+            assertEquals(expectedLoginOutput + expectedChangePasswordOutput, baos.toString());
+            assertEquals("foo", connectionConfig.username());
+            assertEquals("pass", connectionConfig.password());
+
+            // Should get exception with instructions on how to change password using procedure
+            exception.expect(ClientException.class);
+            exception.expectMessage("CALL dbms.changePassword");
+            shell.execute("MATCH (n) RETURN count(n)");
+        }
     }
 
     @Test
