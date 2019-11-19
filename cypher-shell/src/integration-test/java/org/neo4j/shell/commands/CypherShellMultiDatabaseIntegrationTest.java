@@ -20,10 +20,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.SYSTEM_DB_NAME;
-import static org.neo4j.shell.Versions.majorVersion;
+import static org.neo4j.shell.util.Versions.majorVersion;
 
 public class CypherShellMultiDatabaseIntegrationTest
 {

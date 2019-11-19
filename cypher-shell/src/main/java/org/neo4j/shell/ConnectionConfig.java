@@ -13,6 +13,7 @@ public class ConnectionConfig {
     private final boolean encryption;
     private String username;
     private String password;
+    private String newPassword;
     private String database;
 
     public ConnectionConfig(@Nonnull String scheme,
@@ -67,6 +68,10 @@ public class ConnectionConfig {
         return password;
     }
 
+    public String newPassword() {
+        return newPassword;
+    }
+
     @Nonnull
     public String driverUrl() {
         return String.format("%s%s:%d", scheme(), host(), port());
@@ -88,5 +93,13 @@ public class ConnectionConfig {
 
     public void setPassword(@Nonnull String password) {
         this.password = password;
+    }
+
+    public void setNewPassword(@Nonnull String password) {
+        this.newPassword = password;
+    }
+
+    public boolean passwordChangeRequired() {
+        return this.newPassword != null;
     }
 }

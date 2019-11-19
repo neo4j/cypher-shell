@@ -35,7 +35,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class CypherShellTest {

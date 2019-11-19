@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
 
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
@@ -26,12 +27,14 @@ import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.neo4j.shell.util.Versions.majorVersion;
 
 public class MainIntegrationTest
 {
@@ -53,28 +56,50 @@ public class MainIntegrationTest
     private String inputString = String.format( "neo4j%nneo%n" );
     private ByteArrayOutputStream baos;
     private ConnectionConfig connectionConfig;
+    private CliArgs cliArgs;
     private CypherShell shell;
     private Main main;
     private PrintStream printStream;
     private InputStream inputStream;
+    private ByteBuffer inputBuffer;
 
     @Before
     public void setup() {
         // given
-        inputStream = new ByteArrayInputStream(inputString.getBytes());
+        inputBuffer = ByteBuffer.allocate(256);
+        inputBuffer.put(inputString.getBytes());
+        inputStream = new ByteArrayInputStream(inputBuffer.array());
 
         baos = new ByteArrayOutputStream();
         printStream = new PrintStream(baos);
 
         main = new Main(inputStream, printStream);
 
-        CliArgs cliArgs = new CliArgs();
+        cliArgs = new CliArgs();
         cliArgs.setUsername("", "");
         cliArgs.setPassword("", "");
 
         ShellAndConnection sac = getShell( cliArgs );
         shell = sac.shell;
         connectionConfig = sac.connectionConfig;
+    }
+
+    private void ensureUser() throws Exception {
+        if (majorVersion(shell.getServerVersion() ) >= 4) {
+            shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+            shell.execute("CREATE OR REPLACE USER foo SET PASSWORD 'pass';");
+            shell.execute("GRANT ROLE reader TO foo;");
+            shell.execute(":use");
+        } else {
+            try {
+                shell.execute("CALL dbms.security.createUser('foo', 'pass', true)");
+            } catch (ClientException e) {
+                if (e.code().equalsIgnoreCase("Neo.ClientError.General.InvalidArguments") && e.getMessage().contains("already exists")) {
+                    shell.execute("CALL dbms.security.deleteUser('foo')");
+                    shell.execute("CALL dbms.security.createUser('foo', 'pass', true)");
+                }
+            }
+        }
     }
 
     @Test
@@ -92,6 +117,63 @@ public class MainIntegrationTest
         assertEquals(format("username: neo4j%npassword: ***%n"), baos.toString());
         assertEquals("neo4j", connectionConfig.username());
         assertEquals("neo", connectionConfig.password());
+    }
+
+    @Test
+    public void promptsOnPasswordChangeRequired() throws Exception {
+        shell.setCommandHelper(new CommandHelper(mock(Logger.class), Historian.empty, shell));
+        inputBuffer.put(String.format("foo%npass%nnewpass%n").getBytes());
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted and set the username and password
+        String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
+        assertEquals(expectedLoginOutput, baos.toString());
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        // Create a new user
+        ensureUser();
+        shell.disconnect();
+
+        connectionConfig = getConnectionConfig(cliArgs);
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // then
+        assertTrue(shell.isConnected());
+        if (majorVersion(shell.getServerVersion() ) >= 4) {
+            // should have prompted to change the password
+            String expectedChangePasswordOutput = format( "username: foo%npassword: ****%nPassword change required%nnew password: *******%n" );
+            assertEquals(expectedLoginOutput + expectedChangePasswordOutput, baos.toString());
+            assertEquals("foo", connectionConfig.username());
+            assertEquals("newpass", connectionConfig.password());
+            assertNull(connectionConfig.newPassword());
+
+            // Should be able to execute read query
+            shell.execute("MATCH (n) RETURN count(n)");
+        } else {
+            // in 3.x we do not get credentials expired exception on connection, but when we try to access data
+            String expectedChangePasswordOutput = format( "username: foo%npassword: ****%n" );
+            assertEquals(expectedLoginOutput + expectedChangePasswordOutput, baos.toString());
+            assertEquals("foo", connectionConfig.username());
+            assertEquals("pass", connectionConfig.password());
+
+            // Should get exception with instructions on how to change password using procedure
+            exception.expect(ClientException.class);
+            exception.expectMessage("CALL dbms.changePassword");
+            shell.execute("MATCH (n) RETURN count(n)");
+        }
     }
 
     @Test
@@ -335,7 +417,14 @@ public class MainIntegrationTest
     private ShellAndConnection getShell( CliArgs cliArgs, LinePrinter linePrinter )
     {
         PrettyConfig prettyConfig = new PrettyConfig( cliArgs );
-        ConnectionConfig connectionConfig = new ConnectionConfig(
+        ConnectionConfig connectionConfig = getConnectionConfig( cliArgs );
+
+        return new ShellAndConnection( new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
+    }
+
+    private ConnectionConfig getConnectionConfig( CliArgs cliArgs )
+    {
+        return new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
                 cliArgs.getPort(),
@@ -343,8 +432,6 @@ public class MainIntegrationTest
                 cliArgs.getPassword(),
                 cliArgs.getEncryption(),
                 cliArgs.getDatabase() );
-
-        return new ShellAndConnection( new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() ), connectionConfig );
     }
 
     private void exit( CypherShell shell ) throws CommandException

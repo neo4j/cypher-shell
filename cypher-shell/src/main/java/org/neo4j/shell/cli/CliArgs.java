@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import org.neo4j.shell.ParameterMap;
 import org.neo4j.shell.ShellParameterMap;
 
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 public class CliArgs {
     private static final String DEFAULT_SCHEME = "bolt://";

@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
 import org.neo4j.driver.*;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.Bookmark;
 import org.neo4j.driver.summary.DatabaseInfo;
+import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -21,6 +21,8 @@ import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.NullLogging;
+
+import static org.neo4j.shell.util.Versions.majorVersion;
 
 /**
  * Handles interactions with the driver
@@ -34,6 +36,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     private String activeDatabaseNameAsSetByUser;
     private String actualDatabaseNameAsReportedByServer;
     private final boolean isInteractive;
+    private Bookmark systemBookmark;
 
     public BoltStateHandler(boolean isInteractive) {
         this(GraphDatabase::driver, isInteractive);
@@ -54,26 +57,20 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
         String previousDatabaseName = activeDatabaseNameAsSetByUser;
         activeDatabaseNameAsSetByUser = databaseName;
-        try
-        {
-            if ( isConnected() )
-            {
-                reconnect( false );
+        try {
+            if (isConnected()) {
+                reconnect(true);
             }
         }
-        catch ( ClientException e )
-        {
-            if ( isInteractive )
-            {
+        catch (ClientException e) {
+            if (isInteractive) {
                 // We want to try to connect to the previous database
                 activeDatabaseNameAsSetByUser = previousDatabaseName;
-                try
-                {
-                    reconnect( false );
+                try {
+                    reconnect(true);
                 }
-                catch ( ClientException e2 )
-                {
-                    e.addSuppressed( e2 );
+                catch (ClientException e2) {
+                    e.addSuppressed(e2);
                 }
             }
             throw e;
@@ -172,23 +169,24 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         {
             builder.withDatabase( activeDatabaseNameAsSetByUser );
         }
-        if ( session != null && keepBookmark )
-        {
+        if (session != null && keepBookmark) {
             // Save the last bookmark and close the session
             final Bookmark bookmark = session.lastBookmark();
             session.close();
-            builder.withBookmarks( bookmark );
+            builder.withBookmarks(bookmark);
+        } else if (systemBookmark != null) {
+            builder.withBookmarks(systemBookmark);
         }
 
-        session = driver.session( builder.build() );
+        session = driver.session(builder.build());
 
-        String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DATABASES" : "RETURN 1";
+        String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DEFAULT DATABASE" : "RETURN 1";
 
         resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
-
-        this.version = run.summary().server().version();
-        updateActualDbName(run);
+        ResultSummary summary = run.consume();
+        this.version = summary.server().version();
+        updateActualDbName(summary);
     }
 
     @Nonnull
@@ -231,6 +229,63 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
     }
 
+    public void updateActualDbName(@Nonnull ResultSummary resultSummary) {
+        actualDatabaseNameAsReportedByServer = getActualDbName(resultSummary);
+    }
+
+    public void changePassword(@Nonnull ConnectionConfig connectionConfig) {
+        if (!connectionConfig.passwordChangeRequired()) {
+            return;
+        }
+
+        if (isConnected()) {
+            silentDisconnect();
+        }
+
+        final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
+
+        try {
+            driver = getDriver(connectionConfig, authToken);
+
+            // This will already throw an exception if there is no connectivity
+            driver.verifyConnectivity();
+
+            SessionConfig.Builder builder = SessionConfig.builder()
+                    .withDefaultAccessMode(AccessMode.WRITE)
+                    .withDatabase(SYSTEM_DB_NAME);
+            session = driver.session(builder.build());
+
+            String command;
+            Value parameters;
+            if (majorVersion(getServerVersion()) >= 4) {
+                command = "ALTER CURRENT USER SET PASSWORD FROM $o TO $n";
+                parameters = Values.parameters("o", connectionConfig.password(), "n", connectionConfig.newPassword());
+            } else {
+                command = "CALL dbms.security.changePassword($n)";
+                parameters = Values.parameters("n", connectionConfig.newPassword());
+            }
+
+            StatementResult run = session.run(command, parameters);
+            run.consume();
+
+            // If successful, use the new password when reconnecting
+            connectionConfig.setPassword(connectionConfig.newPassword());
+            connectionConfig.setNewPassword(null);
+
+            // Save a system bookmark to make sure we wait for the password change to propagate on reconnection
+            systemBookmark = session.lastBookmark();
+
+            silentDisconnect();
+        } catch (Throwable t) {
+            try {
+                silentDisconnect();
+            } catch (Exception e) {
+                t.addSuppressed(e);
+            }
+            throw t;
+        }
+    }
+
     /**
      * @throws SessionExpiredException when server no longer serves writes anymore
      */
@@ -242,18 +297,12 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             return Optional.empty();
         }
 
-        updateActualDbName(statementResult);
-
         return Optional.of(new StatementBoltResult(statementResult));
     }
 
-    private String getActualDbName(@Nonnull StatementResult statementResult) {
-        DatabaseInfo dbInfo = statementResult.summary().database();
+    private String getActualDbName(@Nonnull ResultSummary resultSummary) {
+        DatabaseInfo dbInfo = resultSummary.database();
         return dbInfo.name() == null ? ABSENT_DB_NAME : dbInfo.name();
-    }
-
-    private void updateActualDbName(@Nonnull StatementResult statementResult) {
-        actualDatabaseNameAsReportedByServer = getActualDbName(statementResult);
     }
 
     private void resetActualDbName() {
@@ -294,6 +343,14 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
     }
 
+    /**
+     * Used for testing purposes
+     */
+    public void disconnect() {
+         reset();
+         silentDisconnect();
+    }
+
     List<Statement> getTransactionStatements() {
         return this.transactionStatements;
     }
@@ -316,8 +373,11 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
             StatementResult sr = transaction.run(statement);
-            BoltResult singleResult = new ListBoltResult(sr.list(), sr.consume(), sr.keys());
-            updateActualDbName(sr);
+            List<Record> list = sr.list();
+            List<String> keys = sr.keys();
+            ResultSummary summary = sr.consume();
+            BoltResult singleResult = new ListBoltResult(list, summary, keys );
+            updateActualDbName(singleResult.getSummary());
             return singleResult;
         });
 

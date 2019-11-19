@@ -5,7 +5,7 @@ import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.exception.CommandException;
 
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 abstract class CypherShellIntegrationTest
 {

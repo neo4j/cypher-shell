@@ -1,4 +1,4 @@
-package org.neo4j.shell;
+package org.neo4j.shell.util;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;

@@ -21,8 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.neo4j.shell.Versions.majorVersion;
-import static org.neo4j.shell.Versions.minorVersion;
+import static org.neo4j.shell.util.Versions.majorVersion;
+import static org.neo4j.shell.util.Versions.minorVersion;
 
 public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTest {
     @Rule

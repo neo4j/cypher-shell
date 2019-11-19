@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.neo4j.driver.internal.messaging.request.MultiDatabaseUtil.ABSENT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
