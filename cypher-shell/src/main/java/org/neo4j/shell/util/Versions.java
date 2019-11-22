@@ -26,6 +26,9 @@ public final class Versions {
         if (version == null) {
             throw new AssertionError("null is not a valid version string");
         }
+        if (version.isEmpty()) {
+            return new Version(0, 0, 0);
+        }
         //remove -alpha, and -beta etc
         int offset = version.indexOf("-");
         if (offset > 0) {

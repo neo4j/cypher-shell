@@ -164,9 +164,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         driver.verifyConnectivity();
 
         SessionConfig.Builder builder = SessionConfig.builder();
-        builder.withDefaultAccessMode( AccessMode.WRITE );
-        if ( !ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser ) )
-        {
+        builder.withDefaultAccessMode(AccessMode.WRITE);
+        if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
             builder.withDatabase( activeDatabaseNameAsSetByUser );
         }
         if (session != null && keepBookmark) {
@@ -184,9 +183,17 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         resetActualDbName(); // Set this to null first in case run throws an exception
         StatementResult run = session.run(query);
-        ResultSummary summary = run.consume();
-        this.version = summary.server().version();
-        updateActualDbName(summary);
+        ResultSummary summary = null;
+        try {
+            summary = run.consume();
+        } finally {
+            // Since run.consume() can throw the first time we have to go through this extra hoop to get the summary
+            if (summary == null) {
+                summary = run.consume();
+            }
+            this.version = summary.server().version();
+            updateActualDbName(summary);
+        }
     }
 
     @Nonnull
