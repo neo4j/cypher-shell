@@ -2,13 +2,19 @@ package org.neo4j.shell.prettyprint;
 
 import org.junit.Test;
 
-import org.neo4j.driver.internal.types.InternalTypeSystem;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
+import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.summary.ProfiledPlan;
+import org.neo4j.driver.summary.QueryType;
 import org.neo4j.driver.summary.ResultSummary;
-import org.neo4j.driver.summary.StatementType;
 import org.neo4j.driver.summary.SummaryCounters;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
@@ -16,12 +22,6 @@ import org.neo4j.driver.types.Relationship;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.ListBoltResult;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -73,7 +73,7 @@ public class PrettyPrinterTest {
         when(resultSummary.profile()).thenReturn(plan);
         when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
         when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
-        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
@@ -108,7 +108,7 @@ public class PrettyPrinterTest {
         when(resultSummary.plan()).thenReturn(plan);
         when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
         when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
-        when(resultSummary.statementType()).thenReturn(StatementType.READ_ONLY);
+        when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
         Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
