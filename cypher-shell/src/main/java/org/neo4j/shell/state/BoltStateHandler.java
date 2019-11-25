@@ -9,7 +9,21 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.neo4j.driver.*;
+import org.neo4j.driver.AccessMode;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Bookmark;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.summary.DatabaseInfo;
@@ -32,7 +46,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     protected Driver driver;
     Session session;
     private String version;
-    private List<Statement> transactionStatements;
+    private List<Query> transactionStatements;
     private String activeDatabaseNameAsSetByUser;
     private String actualDatabaseNameAsReportedByServer;
     private final boolean isInteractive;
@@ -182,7 +196,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "SHOW DEFAULT DATABASE" : "RETURN 1";
 
         resetActualDbName(); // Set this to null first in case run throws an exception
-        StatementResult run = session.run(query);
+        Result run = session.run(query);
         ResultSummary summary = null;
         try {
             summary = run.consume();
@@ -220,7 +234,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             throw new CommandException("Not connected to Neo4j");
         }
         if (this.transactionStatements != null) {
-            transactionStatements.add(new Statement(cypher, queryParams));
+            transactionStatements.add(new Query(cypher, queryParams));
             return Optional.empty();
         } else {
             try {
@@ -272,7 +286,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 parameters = Values.parameters("n", connectionConfig.newPassword());
             }
 
-            StatementResult run = session.run(command, parameters);
+            Result run = session.run(command, parameters);
             run.consume();
 
             // If successful, use the new password when reconnecting
@@ -298,7 +312,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
      */
     @Nonnull
     private Optional<BoltResult> getBoltResult(@Nonnull String cypher, @Nonnull Map<String, Object> queryParams) throws SessionExpiredException {
-        StatementResult statementResult = session.run(new Statement(cypher, queryParams));
+        Result statementResult = session.run(new Query(cypher, queryParams));
 
         if (statementResult == null) {
             return Optional.empty();
@@ -358,7 +372,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
          silentDisconnect();
     }
 
-    List<Statement> getTransactionStatements() {
+    List<Query> getTransactionStatements() {
         return this.transactionStatements;
     }
 
@@ -376,10 +390,10 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.build());
     }
 
-    private Optional<List<BoltResult>> captureResults(@Nonnull List<Statement> transactionStatements) {
+    private Optional<List<BoltResult>> captureResults(@Nonnull List<Query> transactionStatements) {
         List<BoltResult> results = executeWithRetry(transactionStatements, (statement, transaction) -> {
             // calling list() is what actually executes cypher on the server
-            StatementResult sr = transaction.run(statement);
+            Result sr = transaction.run(statement);
             List<Record> list = sr.list();
             List<String> keys = sr.keys();
             ResultSummary summary = sr.consume();
@@ -395,7 +409,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         return Optional.of(results);
     }
 
-    private List<BoltResult> executeWithRetry(List<Statement> transactionStatements, BiFunction<Statement, Transaction, BoltResult> biFunction) {
+    private List<BoltResult> executeWithRetry(List<Query> transactionStatements, BiFunction<Query, Transaction, BoltResult> biFunction) {
         return session.writeTransaction(tx ->
                 transactionStatements.stream()
                         .map(transactionStatement -> biFunction.apply(transactionStatement, tx))

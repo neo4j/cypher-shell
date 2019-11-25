@@ -1,19 +1,26 @@
 package org.neo4j.shell.test.bolt;
 
-import org.neo4j.driver.internal.summary.InternalSummaryCounters;
-import org.neo4j.driver.Statement;
-import org.neo4j.driver.summary.*;
-import org.neo4j.shell.test.Util;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.neo4j.driver.Query;
+import org.neo4j.driver.internal.summary.InternalSummaryCounters;
+import org.neo4j.driver.summary.DatabaseInfo;
+import org.neo4j.driver.summary.Notification;
+import org.neo4j.driver.summary.Plan;
+import org.neo4j.driver.summary.ProfiledPlan;
+import org.neo4j.driver.summary.QueryType;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.driver.summary.ServerInfo;
+import org.neo4j.driver.summary.SummaryCounters;
+import org.neo4j.shell.test.Util;
 
 /**
  * A fake result summary
  */
 class FakeResultSummary implements ResultSummary {
     @Override
-    public Statement statement() {
+    public Query query() {
         throw new Util.NotImplementedYetException("Not implemented yet");
     }
 
@@ -23,7 +30,7 @@ class FakeResultSummary implements ResultSummary {
     }
 
     @Override
-    public StatementType statementType() {
+    public QueryType queryType() {
         throw new Util.NotImplementedYetException("Not implemented yet");
     }
 
