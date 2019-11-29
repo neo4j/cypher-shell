@@ -1,6 +1,7 @@
 package org.neo4j.shell;
 
 import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -98,7 +99,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             });
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -160,7 +161,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             lastNeo4jErrorCode = null;
             return results;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -195,7 +196,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             boltStateHandler.setActiveDatabase(databaseName);
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -229,5 +230,18 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     public void disconnect() {
         boltStateHandler.disconnect();
+    }
+
+    private String getErrorCode(Neo4jException e) {
+        if (e instanceof ServiceUnavailableException) {
+            // Unwrap possible transient Neo4jExceptions
+            Throwable cause = e.getCause();
+            if (cause instanceof Neo4jException) {
+                return ((Neo4jException) cause).code();
+            }
+            // Treat this the same way as a DatabaseUnavailable error for now.
+            return DATABASE_UNAVAILABLE_ERROR_CODE;
+        }
+        return e.code();
     }
 }
