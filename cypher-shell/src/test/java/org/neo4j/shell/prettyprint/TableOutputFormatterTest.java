@@ -105,11 +105,11 @@ public class TableOutputFormatterTest {
 
         // THEN
         assertThat(actual, startsWith(String.join(NEWLINE,
-                                         "+--------------------------------------------------------------------+",
-                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time |",
-                                         "+--------------------------------------------------------------------+",
-                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12   |",
-                                          "+--------------------------------------------------------------------+",
+                                         "+-----------------------------------------------------------------------------------+",
+                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time                |",
+                                         "+-----------------------------------------------------------------------------------+",
+                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12                  |",
+                                          "+-----------------------------------------------------------------------------------+",
                                          NEWLINE)));
     }
 
@@ -303,8 +303,8 @@ public class TableOutputFormatterTest {
         // WHEN
         String table = formatResult(result);
         // THEN
-        assertThat(table, containsString("| c1  | c2 |"));
-        assertThat(table, containsString("| \"a\" | 42 |"));
+        assertThat(table, containsString("| c1  | c2                  |"));
+        assertThat(table, containsString("| \"a\" | 42                  |"));
     }
 
     @Test
@@ -314,12 +314,12 @@ public class TableOutputFormatterTest {
         // WHEN
         String table = formatResult(result);
         // THEN
-        assertThat(table, containsString("| \"a\" | 42 |"));
-        assertThat(table, containsString("| \"b\" | 43 |"));
+        assertThat(table, containsString("| \"a\" | 42                  |"));
+        assertThat(table, containsString("| \"b\" | 43                  |"));
     }
 
     @Test
-    public void wrapContent()
+    public void wrapStringContent()
     {
         // GIVEN
         Result result = mockResult( asList( "c1"), "a", "bb","ccc","dddd","eeeee" );
@@ -335,12 +335,72 @@ public class TableOutputFormatterTest {
                 "| \"a\"  |",
                 "| \"bb\" |",
                 "| \"ccc |",
-                "| \"    |",
+                "\\ \"    |",
                 "| \"ddd |",
-                "| d\"   |",
+                "\\ d\"   |",
                 "| \"eee |",
-                "| ee\"  |",
+                "\\ ee\"  |",
                 "+------+",
+                NEWLINE)));
+    }
+
+    @Test
+    public void wrapStringContentWithTwoColumns()
+    {
+        // GIVEN
+        Result result = mockResult( asList( "c1", "c2" ), "a", "b",
+                                             "aa", "bb",
+                                             "aaa", "b",
+                                             "a", "bbb",
+                                             "aaaa", "bb",
+                                             "aa", "bbbb",
+                                             "aaaaa", "bbbbb" );
+        // WHEN
+        ToStringLinePrinter printer = new ToStringLinePrinter();
+        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.consume()), printer);
+        String table = printer.result();
+        // THEN
+        assertThat(table, is(String.join(NEWLINE,
+                "+-------------+",
+                "| c1   | c2   |",
+                "+-------------+",
+                "| \"a\"  | \"b\"  |",
+                "| \"aa\" | \"bb\" |",
+                "| \"aaa | \"b\"  |",
+                "\\ \"    |      |",
+                "| \"a\"  | \"bbb |",
+                "|      \\ \"    |",
+                "| \"aaa | \"bb\" |",
+                "\\ a\"   |      |",
+                "| \"aa\" | \"bbb |",
+                "|      \\ b\"   |",
+                "| \"aaa | \"bbb |",
+                "\\ aa\"  \\ bb\"  |",
+                "+-------------+",
+                NEWLINE)));
+    }
+
+    @Test
+    public void wrapNumberContentWithLongSize()
+    {
+        // GIVEN
+        Result result = mockResult( asList( "c1"), 345, 12, 978623, 132456798, 9223372036854775807L );
+        result = mockResult( asList( "c1"), 345, 12, 978623, 132456798, 9223372036854775807L );
+        // WHEN
+        ToStringLinePrinter printer = new ToStringLinePrinter();
+        new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.consume()), printer);
+        String table = printer.result();
+        // THEN
+        assertThat(table, is(String.join(NEWLINE,
+                "+---------------------+",
+                 "| c1                  |",
+                 "+---------------------+",
+                 "| 345                 |",
+                 "| 12                  |",
+                 "| 978623              |",
+                 "| 132456798           |",
+                 "| 9223372036854775807 |",
+                 "+---------------------+",
                 NEWLINE)));
     }
 
