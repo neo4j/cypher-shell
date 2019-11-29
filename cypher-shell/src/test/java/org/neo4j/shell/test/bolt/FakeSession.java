@@ -1,9 +1,16 @@
 package org.neo4j.shell.test.bolt;
 
-import org.neo4j.driver.*;
-import org.neo4j.driver.Bookmark;
-
 import java.util.Map;
+
+import org.neo4j.driver.Bookmark;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.TransactionConfig;
+import org.neo4j.driver.TransactionWork;
+import org.neo4j.driver.Value;
 
 /**
  * A fake session which returns fake StatementResults
@@ -42,18 +49,18 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public StatementResult run(String statement, TransactionConfig config) {
-        return FakeStatementResult.parseStatement(statement);
+    public Result run(String statement, TransactionConfig config) {
+        return FakeResult.parseStatement(statement);
     }
 
     @Override
-    public StatementResult run(String statement, Map<String,Object> parameters, TransactionConfig config) {
-        return FakeStatementResult.parseStatement(statement);
+    public Result run(String statement, Map<String,Object> parameters, TransactionConfig config) {
+        return FakeResult.parseStatement(statement);
     }
 
     @Override
-    public StatementResult run(Statement statement, TransactionConfig config) {
-        return new FakeStatementResult();
+    public Result run(Query statement, TransactionConfig config) {
+        return new FakeResult();
     }
 
     @Override
@@ -76,27 +83,27 @@ public class FakeSession implements Session {
     }
 
     @Override
-    public StatementResult run(String statementTemplate, Value parameters) {
-        return FakeStatementResult.parseStatement(statementTemplate);
+    public Result run(String statementTemplate, Value parameters) {
+        return FakeResult.parseStatement(statementTemplate);
     }
 
     @Override
-    public StatementResult run(String statementTemplate, Map<String, Object> statementParameters) {
-        return FakeStatementResult.parseStatement(statementTemplate);
+    public Result run(String statementTemplate, Map<String, Object> statementParameters) {
+        return FakeResult.parseStatement(statementTemplate);
     }
 
     @Override
-    public StatementResult run(String statementTemplate, Record statementParameters) {
-        return FakeStatementResult.parseStatement(statementTemplate);
+    public Result run(String statementTemplate, Record statementParameters) {
+        return FakeResult.parseStatement(statementTemplate);
     }
 
     @Override
-    public StatementResult run(String statementTemplate) {
-        return FakeStatementResult.parseStatement(statementTemplate);
+    public Result run(String statementTemplate) {
+        return FakeResult.parseStatement(statementTemplate);
     }
 
     @Override
-    public StatementResult run(Statement statement) {
-        return new FakeStatementResult();
+    public Result run(Query statement) {
+        return new FakeResult();
     }
 }

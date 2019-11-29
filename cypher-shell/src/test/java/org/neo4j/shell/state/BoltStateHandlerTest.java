@@ -4,13 +4,19 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+
 import org.neo4j.driver.AuthToken;
 import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
+import org.neo4j.driver.Query;
 import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
-import org.neo4j.driver.Statement;
-import org.neo4j.driver.StatementResult;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
@@ -23,11 +29,6 @@ import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
@@ -87,7 +88,7 @@ public class BoltStateHandlerTest {
 
     @Test
     public void versionIsNotEmptyAfterConnect() throws CommandException {
-        Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
+        Driver driverMock = stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
@@ -99,7 +100,7 @@ public class BoltStateHandlerTest {
     @Test
     public void actualDatabaseNameIsNotEmptyAfterConnect() throws CommandException {
         Driver driverMock =
-                stubResultSummaryInAnOpenSession(mock(StatementResult.class), mock(Session.class), "Neo4j/9.4.1-ALPHA", "my_default_db");
+                stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA", "my_default_db");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
@@ -111,13 +112,13 @@ public class BoltStateHandlerTest {
     @Test
     public void exceptionFromRunQueryDoesNotResetActualDatabaseNameToUnresolved() throws CommandException {
         Session sessionMock = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        Result resultMock = mock(Result.class);
         Driver driverMock =
                 stubResultSummaryInAnOpenSession(resultMock, sessionMock, "Neo4j/9.4.1-ALPHA", "my_default_db");
 
         ClientException databaseNotFound = new ClientException("Neo.ClientError.Database.DatabaseNotFound", "blah");
 
-        when(sessionMock.run(any(Statement.class)))
+        when(sessionMock.run(any(Query.class)))
                 .thenThrow(databaseNotFound)
                 .thenReturn(resultMock);
 
@@ -149,7 +150,7 @@ public class BoltStateHandlerTest {
     @Test
     public void exceptionsFromSilentDisconnectAreSuppressedToReportOriginalErrors() throws CommandException {
         Session session = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        Result resultMock = mock(Result.class);
 
         RuntimeException originalException = new RuntimeException("original exception");
         RuntimeException thrownFromSilentDisconnect = new RuntimeException("exception from silent disconnect");
@@ -211,7 +212,7 @@ public class BoltStateHandlerTest {
     @Test
     public void commitPurgesTheTransactionStatementsAndCollectsResults() throws CommandException {
         Session sessionMock = mock(Session.class);
-        Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
+        Driver driverMock = stubResultSummaryInAnOpenSession(mock(Result.class), sessionMock, "neo4j-version");
 
         Record record1 = mock(Record.class);
         Record record2 = mock(Record.class);
@@ -287,7 +288,7 @@ public class BoltStateHandlerTest {
     @Test
     public void shouldRunCypherQuery() throws CommandException {
         Session sessionMock = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        Result resultMock = mock(Result.class);
         Record recordMock = mock(Record.class);
         Value valueMock = mock(Value.class);
 
@@ -297,7 +298,7 @@ public class BoltStateHandlerTest {
 
         when(valueMock.toString()).thenReturn("999");
         when(recordMock.get(0)).thenReturn(valueMock);
-        when(sessionMock.run(any(Statement.class))).thenReturn(resultMock);
+        when(sessionMock.run(any(Query.class))).thenReturn(resultMock);
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
 
@@ -305,7 +306,7 @@ public class BoltStateHandlerTest {
 
         BoltResult boltResult = boltStateHandler.runCypher("RETURN 999",
                 new HashMap<>()).get();
-        verify(sessionMock).run(any(Statement.class));
+        verify(sessionMock).run(any(Query.class));
 
         assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
     }
@@ -313,7 +314,7 @@ public class BoltStateHandlerTest {
     @Test
     public void triesAgainOnSessionExpired() throws Exception {
         Session sessionMock = mock(Session.class);
-        StatementResult resultMock = mock(StatementResult.class);
+        Result resultMock = mock(Result.class);
         Record recordMock = mock(Record.class);
         Value valueMock = mock(Value.class);
 
@@ -323,7 +324,7 @@ public class BoltStateHandlerTest {
 
         when(valueMock.toString()).thenReturn("999");
         when(recordMock.get(0)).thenReturn(valueMock);
-        when(sessionMock.run(any(Statement.class)))
+        when(sessionMock.run(any(Query.class)))
                 .thenThrow(new SessionExpiredException("leaderswitch"))
                 .thenReturn(resultMock);
 
@@ -334,7 +335,7 @@ public class BoltStateHandlerTest {
                 new HashMap<>()).get();
 
         verify(driverMock, times(2)).session(any());
-        verify(sessionMock, times(2)).run(any(Statement.class));
+        verify(sessionMock, times(2)).run(any(Query.class));
 
         assertEquals("999", boltResult.getRecords().get(0).get(0).toString());
     }
@@ -364,7 +365,7 @@ public class BoltStateHandlerTest {
     public void resetSessionOnReset() throws Exception {
         // given
         Session sessionMock = mock(Session.class);
-        Driver driverMock = stubResultSummaryInAnOpenSession(mock(StatementResult.class), sessionMock, "neo4j-version");
+        Driver driverMock = stubResultSummaryInAnOpenSession(mock(Result.class), sessionMock, "neo4j-version");
 
         OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
 
@@ -415,11 +416,11 @@ public class BoltStateHandlerTest {
         assertTrue(provider.config.encrypted());
     }
 
-    private Driver stubResultSummaryInAnOpenSession(StatementResult resultMock, Session sessionMock, String version) {
+    private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version) {
         return stubResultSummaryInAnOpenSession(resultMock, sessionMock, version, DEFAULT_DEFAULT_DB_NAME);
     }
 
-    private Driver stubResultSummaryInAnOpenSession(StatementResult resultMock, Session sessionMock, String version, String databaseName) {
+    private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version, String databaseName) {
         Driver driverMock = mock(Driver.class);
         ResultSummary resultSummary = mock(ResultSummary.class);
         ServerInfo serverInfo = mock(ServerInfo.class);
