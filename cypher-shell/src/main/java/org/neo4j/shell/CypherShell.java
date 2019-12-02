@@ -1,5 +1,6 @@
 package org.neo4j.shell;
 
+import org.neo4j.driver.exceptions.DiscoveryException;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.commands.Command;
@@ -237,18 +238,14 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 
         // If we encountered a later suppressed Neo4jException we use that as the basis for the status instead
         Throwable[] suppressed = e.getSuppressed();
-        for (Throwable t : suppressed) {
-            if (t instanceof Neo4jException) {
-                statusException = (Neo4jException) t;
+        for (Throwable s : suppressed) {
+            if (s instanceof Neo4jException) {
+                statusException = (Neo4jException) s;
+                break;
             }
         }
 
-        if (statusException instanceof ServiceUnavailableException) {
-            // Unwrap possible transient Neo4jExceptions
-            Throwable cause = statusException.getCause();
-            if (cause instanceof Neo4jException) {
-                return ((Neo4jException) cause).code();
-            }
+        if (statusException instanceof ServiceUnavailableException || statusException instanceof DiscoveryException) {
             // Treat this the same way as a DatabaseUnavailable error for now.
             return DATABASE_UNAVAILABLE_ERROR_CODE;
         }
