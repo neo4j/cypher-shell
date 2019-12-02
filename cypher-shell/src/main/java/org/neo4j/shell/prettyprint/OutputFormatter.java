@@ -1,8 +1,17 @@
 package org.neo4j.shell.prettyprint;
 
-import org.neo4j.driver.internal.types.TypeRepresentation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+
 import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
+import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.summary.Plan;
 import org.neo4j.driver.summary.ProfiledPlan;
 import org.neo4j.driver.summary.ResultSummary;
@@ -11,10 +20,6 @@ import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Point;
 import org.neo4j.driver.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
-
-import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -197,7 +202,7 @@ public interface OutputFormatter {
 
         Plan plan = summary.plan();
         result.put("Plan", Values.value(summary.hasProfile() ? "PROFILE" : "EXPLAIN"));
-        result.put("Statement", Values.value(summary.statementType().name()));
+        result.put("Statement", Values.value(summary.queryType().name()));
         Map<String, Value> arguments = plan.arguments();
         Value defaultValue = Values.value("");
 

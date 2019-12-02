@@ -1,12 +1,5 @@
 package org.neo4j.shell.test.bolt;
 
-import org.neo4j.driver.Record;
-import org.neo4j.driver.StatementResult;
-import org.neo4j.driver.exceptions.NoSuchRecordException;
-import org.neo4j.driver.summary.ResultSummary;
-import org.neo4j.shell.test.Util;
-
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,16 +8,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.exceptions.NoSuchRecordException;
+import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.shell.test.Util;
 
 /**
- * A fake StatementResult with fake records and fake values
+ * A fake Result with fake records and fake values
  */
-class FakeStatementResult implements StatementResult {
+class FakeResult implements Result
+{
 
     private final List<Record> records;
     private int currentRecord = -1;
 
-    FakeStatementResult() {
+    FakeResult() {
         records = new ArrayList<>();
     }
 
@@ -81,7 +82,7 @@ class FakeStatementResult implements StatementResult {
     /**
      * Supports fake parsing of very limited cypher statements, only for basic test purposes
      */
-    static FakeStatementResult parseStatement(@Nonnull final String statement) {
+    static FakeResult parseStatement(@Nonnull final String statement) {
 
         Pattern returnAsPattern = Pattern.compile("^return (.*) as (.*)$", Pattern.CASE_INSENSITIVE);
         Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
@@ -95,7 +96,7 @@ class FakeStatementResult implements StatementResult {
                 if (m.groupCount() > 1) {
                     key = m.group(2);
                 }
-                FakeStatementResult statementResult = new FakeStatementResult();
+                FakeResult statementResult = new FakeResult();
                 statementResult.records.add(FakeRecord.of(key, value));
                 return statementResult;
             }
