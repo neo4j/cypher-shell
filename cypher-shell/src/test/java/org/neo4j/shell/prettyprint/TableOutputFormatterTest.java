@@ -105,11 +105,11 @@ public class TableOutputFormatterTest {
 
         // THEN
         assertThat(actual, startsWith(String.join(NEWLINE,
-                                         "+-----------------------------------------------------------------------------------+",
-                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time                |",
-                                         "+-----------------------------------------------------------------------------------+",
-                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12                  |",
-                                          "+-----------------------------------------------------------------------------------+",
+                                         "+--------------------------------------------------------------------+",
+                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time |",
+                                         "+--------------------------------------------------------------------+",
+                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12   |",
+                                          "+--------------------------------------------------------------------+",
                                          NEWLINE)));
     }
 
@@ -303,19 +303,33 @@ public class TableOutputFormatterTest {
         // WHEN
         String table = formatResult(result);
         // THEN
-        assertThat(table, containsString("| c1  | c2                  |"));
-        assertThat(table, containsString("| \"a\" | 42                  |"));
+        assertThat(table, containsString("| c1  | c2 |"));
+        assertThat(table, containsString("| \"a\" | 42 |"));
     }
 
     @Test
-    public void twoRows() {
+    public void twoRowsWithNumbersAllSampled() {
         // GIVEN
         Result result = mockResult(asList("c1", "c2"), "a", 42, "b", 43);
         // WHEN
         String table = formatResult(result);
         // THEN
-        assertThat(table, containsString("| \"a\" | 42                  |"));
-        assertThat(table, containsString("| \"b\" | 43                  |"));
+        assertThat(table, containsString("| \"a\" | 42 |"));
+        assertThat(table, containsString("| \"b\" | 43 |"));
+    }
+
+    @Test
+    public void fiveRowsWithNumbersNotAllSampled() {
+        // GIVEN
+        Result result = mockResult(asList("c1", "c2"), "a", 42, "b", 43, "c", 44, "d", 45, "e", 46);
+        // WHEN
+        String table = formatResult(result);
+        // THEN
+        assertThat(table, containsString("| \"a\" | 42 |"));
+        assertThat(table, containsString("| \"b\" | 43 |"));
+        assertThat(table, containsString("| \"c\" | 44 |"));
+        assertThat(table, containsString("| \"d\" | 45 |"));
+        assertThat(table, containsString("| \"e\" | 46 |"));
     }
 
     @Test
