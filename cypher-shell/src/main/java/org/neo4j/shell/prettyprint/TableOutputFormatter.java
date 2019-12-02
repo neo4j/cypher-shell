@@ -54,7 +54,7 @@ public class TableOutputFormatter implements OutputFormatter {
                                          LinePrinter output) {
 
         List<Record> topRecords = take(records, numSampleRows);
-        int[] columnSizes = calculateColumnSizes(columns, topRecords);
+        int[] columnSizes = calculateColumnSizes(columns, topRecords, records.hasNext());
 
         int totalWidth = 1;
         for (int columnSize : columnSizes) {
@@ -83,14 +83,21 @@ public class TableOutputFormatter implements OutputFormatter {
         return numberOfRows;
     }
 
-    private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data) {
+    /**
+     * Calculate the size of the columns for table formatting
+     * @param columns the column names
+     * @param data (sample) data
+     * @param moreDataAfterSamples if there is more data that should be written into the table after `data`
+     * @return the column sizes
+     */
+    private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data, boolean moreDataAfterSamples) {
         int[] columnSizes = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             columnSizes[i] = columns[i].length();
         }
         for (Record record : data) {
             for (int i = 0; i < columns.length; i++) {
-                int len = columnLengthForValue(record.get(i));
+                int len = columnLengthForValue(record.get(i), moreDataAfterSamples);
                 if (columnSizes[i] < len) {
                     columnSizes[i] = len;
                 }
@@ -101,9 +108,13 @@ public class TableOutputFormatter implements OutputFormatter {
 
     /**
      * The length of a column, where Numbers are always getting enough space to fit the highest number possible.
+     *
+     * @param value the value to calculate the length for
+     * @param moreDataAfterSamples if there is more data that should be written into the table after `data`
+     * @return the column size for this value.
      */
-    private int columnLengthForValue(Value value) {
-        if (value instanceof NumberValueAdapter ) {
+    private int columnLengthForValue(Value value, boolean moreDataAfterSamples) {
+        if (value instanceof NumberValueAdapter && moreDataAfterSamples) {
             return 19; // The number of digits of Long.Max
         } else {
             return formatValue(value).length();
