@@ -83,7 +83,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 try {
                     reconnect(true);
                 }
-                catch (ClientException e2) {
+                catch (Exception e2) {
                     e.addSuppressed(e2);
                 }
             }

@@ -233,15 +233,25 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     private String getErrorCode(Neo4jException e) {
-        if (e instanceof ServiceUnavailableException) {
+        Neo4jException statusException = e;
+
+        // If we encountered a later suppressed Neo4jException we use that as the basis for the status instead
+        Throwable[] suppressed = e.getSuppressed();
+        for (Throwable t : suppressed) {
+            if (t instanceof Neo4jException) {
+                statusException = (Neo4jException) t;
+            }
+        }
+
+        if (statusException instanceof ServiceUnavailableException) {
             // Unwrap possible transient Neo4jExceptions
-            Throwable cause = e.getCause();
+            Throwable cause = statusException.getCause();
             if (cause instanceof Neo4jException) {
                 return ((Neo4jException) cause).code();
             }
             // Treat this the same way as a DatabaseUnavailable error for now.
             return DATABASE_UNAVAILABLE_ERROR_CODE;
         }
-        return e.code();
+        return statusException.code();
     }
 }
