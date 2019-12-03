@@ -6,28 +6,36 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.neo4j.driver.exceptions.ClientException;
+import org.neo4j.driver.exceptions.DiscoveryException;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
+import org.neo4j.driver.exceptions.TransientException;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.OfflineTestShell;
 import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.UserMessagesHandler;
+import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.exception.NoMoreInputException;
 import org.neo4j.shell.log.AnsiFormattedText;
+import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.ShellStatementParser;
 import org.neo4j.shell.parser.StatementParser;
 import org.neo4j.shell.prettyprint.OutputFormatter;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
+
 import sun.misc.Signal;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +45,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -49,6 +58,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.neo4j.shell.cli.InteractiveShellRunner.DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT;
 
 public class InteractiveShellRunnerTest {
     @Rule
@@ -294,6 +304,78 @@ public class InteractiveShellRunnerTest {
     }
 
     @Test
+    public void testPromptShowDatabaseAsSetByUserWhenServerReportNull() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
+
+        // when
+        when(txHandler.isTransactionOpen()).thenReturn(false);
+        when(databaseManager.getActiveDatabaseAsSetByUser()).thenReturn("foo");
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(null);
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
+
+        // then
+        String wantedPrompt = "myusername@foo> ";
+        assertEquals(wantedPrompt, prompt.plainString());
+    }
+
+    @Test
+    public void testPromptShowDatabaseAsSetByUserWhenServerReportAbsent() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
+
+        // when
+        when(txHandler.isTransactionOpen()).thenReturn(false);
+        when(databaseManager.getActiveDatabaseAsSetByUser()).thenReturn("foo");
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(DatabaseManager.ABSENT_DB_NAME);
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
+
+        // then
+        String wantedPrompt = "myusername@foo> ";
+        assertEquals(wantedPrompt, prompt.plainString());
+    }
+
+    @Test
+    public void testPromptShowUnresolvedDefaultDatabaseWhenServerReportNull() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
+
+        // when
+        when(txHandler.isTransactionOpen()).thenReturn(false);
+        when(databaseManager.getActiveDatabaseAsSetByUser()).thenReturn(DatabaseManager.ABSENT_DB_NAME);
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(null);
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
+
+        // then
+        String wantedPrompt = format("myusername@%s> ", InteractiveShellRunner.UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT);
+        assertEquals(wantedPrompt, prompt.plainString());
+    }
+
+    @Test
+    public void testPromptShowUnresolvedDefaultDatabaseWhenServerReportAbsent() throws Exception {
+        // given
+        InputStream inputStream = new ByteArrayInputStream("".getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(cmdExecuter, txHandler, databaseManager, logger, statementParser, inputStream,
+                historyFile, userMessagesHandler, connectionConfig);
+
+        // when
+        when(txHandler.isTransactionOpen()).thenReturn(false);
+        when(databaseManager.getActiveDatabaseAsSetByUser()).thenReturn(DatabaseManager.ABSENT_DB_NAME);
+        when(databaseManager.getActualDatabaseAsReportedByServer()).thenReturn(DatabaseManager.ABSENT_DB_NAME);
+        AnsiFormattedText prompt = runner.updateAndGetPrompt();
+
+        // then
+        String wantedPrompt = format("myusername@%s> ", InteractiveShellRunner.UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT);
+        assertEquals(wantedPrompt, prompt.plainString());
+    }
+
+    @Test
     public void testLongPrompt() throws Exception {
         // given
         InputStream inputStream = new ByteArrayInputStream("".getBytes());
@@ -498,5 +580,112 @@ public class InteractiveShellRunnerTest {
         public String getActualDatabaseAsReportedByServer() {
             return DEFAULT_DEFAULT_DB_NAME;
         }
+    }
+
+    private static class TestInteractiveShellRunner {
+        InteractiveShellRunner runner;
+        ByteArrayOutputStream output;
+        ByteArrayOutputStream error;
+        BoltStateHandler mockedBoltStateHandler;
+
+        TestInteractiveShellRunner(InteractiveShellRunner runner, ByteArrayOutputStream output,
+                                   ByteArrayOutputStream error, BoltStateHandler mockedBoltStateHandler) {
+            this.runner = runner;
+            this.output = output;
+            this.error = error;
+            this.mockedBoltStateHandler = mockedBoltStateHandler;
+        }
+    }
+
+    private TestInteractiveShellRunner setupInteractiveTestShellRunner(String input) throws Exception {
+        // NOTE: Tests using this will test a bit more of the stack using OfflineTestShell
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream error = new ByteArrayOutputStream();
+
+        BoltStateHandler mockedBoltStateHandler = mock(BoltStateHandler.class);
+        when(mockedBoltStateHandler.getServerVersion()).thenReturn("");
+
+        final PrettyPrinter mockedPrettyPrinter = mock(PrettyPrinter.class);
+
+        Logger logger = new AnsiLogger(false, Format.VERBOSE, new PrintStream(output), new PrintStream(error));
+
+        OfflineTestShell offlineTestShell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
+        CommandHelper commandHelper = new CommandHelper(logger, Historian.empty, offlineTestShell);
+        offlineTestShell.setCommandHelper(commandHelper);
+
+        InputStream inputStream = new ByteArrayInputStream(input.getBytes());
+        InteractiveShellRunner runner = new InteractiveShellRunner(offlineTestShell, offlineTestShell, offlineTestShell, logger,
+                new ShellStatementParser(), inputStream, historyFile, userMessagesHandler, connectionConfig);
+
+        return new TestInteractiveShellRunner(runner, output, error, mockedBoltStateHandler);
+    }
+
+    @Test
+    public void testSwitchToUnavailableDatabase1() throws Exception {
+        // given
+        String input = ":use foo;\n";
+        TestInteractiveShellRunner sr = setupInteractiveTestShellRunner(input);
+
+        // when
+        when(sr.mockedBoltStateHandler.getActualDatabaseAsReportedByServer()).thenReturn("foo");
+        doThrow(new TransientException(DatabaseManager.DATABASE_UNAVAILABLE_ERROR_CODE, "Not available"))
+                .when(sr.mockedBoltStateHandler).setActiveDatabase("foo");
+
+        sr.runner.runUntilEnd();
+
+        // then
+        assertThat(sr.output.toString(), containsString(format("myusername@foo%s> ", DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT)));
+        assertThat(sr.error.toString(), containsString("Not available"));
+    }
+
+    @Test
+    public void testSwitchToUnavailableDatabase2() throws Exception {
+        // given
+        String input = ":use foo;\n";
+        TestInteractiveShellRunner sr = setupInteractiveTestShellRunner(input);
+
+        // when
+        when(sr.mockedBoltStateHandler.getActualDatabaseAsReportedByServer()).thenReturn("foo");
+        doThrow(new ServiceUnavailableException("Not available")).when(sr.mockedBoltStateHandler).setActiveDatabase("foo");
+
+        sr.runner.runUntilEnd();
+
+        // then
+        assertThat(sr.output.toString(), containsString(format("myusername@foo%s> ", DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT)));
+        assertThat(sr.error.toString(), containsString("Not available"));
+    }
+
+    @Test
+    public void testSwitchToUnavailableDatabase3() throws Exception {
+        // given
+        String input = ":use foo;\n";
+        TestInteractiveShellRunner sr = setupInteractiveTestShellRunner(input);
+
+        // when
+        when(sr.mockedBoltStateHandler.getActualDatabaseAsReportedByServer()).thenReturn("foo");
+        doThrow(new DiscoveryException("Not available", null)).when(sr.mockedBoltStateHandler).setActiveDatabase("foo");
+
+        sr.runner.runUntilEnd();
+
+        // then
+        assertThat(sr.output.toString(), containsString(format("myusername@foo%s> ", DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT)));
+        assertThat(sr.error.toString(), containsString("Not available"));
+    }
+
+    @Test
+    public void testSwitchToNonExistingDatabase() throws Exception {
+        // given
+        String input = ":use foo;\n";
+        TestInteractiveShellRunner sr = setupInteractiveTestShellRunner(input);
+
+        // when
+        when(sr.mockedBoltStateHandler.getActualDatabaseAsReportedByServer()).thenReturn("mydb");
+        doThrow(new ClientException("Non existing")).when(sr.mockedBoltStateHandler).setActiveDatabase("foo");
+
+        sr.runner.runUntilEnd();
+
+        // then
+        assertThat(sr.output.toString(), containsString("myusername@mydb> "));
+        assertThat(sr.error.toString(), containsString("Non existing"));
     }
 }
