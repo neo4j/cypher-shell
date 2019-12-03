@@ -177,7 +177,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return boltStateHandler.isTransactionOpen();
     }
 
-    void setCommandHelper(@Nonnull CommandHelper commandHelper) {
+    public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
     }
 

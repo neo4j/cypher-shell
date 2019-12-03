@@ -39,8 +39,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String TRANSACTION_PROMPT = "# ";
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
-    private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
-    private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
+    static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
