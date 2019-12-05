@@ -1,14 +1,21 @@
 package org.neo4j.shell.prettyprint;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.neo4j.driver.internal.InternalRecord;
+import org.neo4j.driver.internal.value.NumberValueAdapter;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.state.BoltResult;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -47,7 +54,7 @@ public class TableOutputFormatter implements OutputFormatter {
                                          LinePrinter output) {
 
         List<Record> topRecords = take(records, numSampleRows);
-        int[] columnSizes = calculateColumnSizes(columns, topRecords);
+        int[] columnSizes = calculateColumnSizes(columns, topRecords, records.hasNext());
 
         int totalWidth = 1;
         for (int columnSize : columnSizes) {
@@ -55,7 +62,7 @@ public class TableOutputFormatter implements OutputFormatter {
         }
 
         StringBuilder builder = new StringBuilder(totalWidth);
-        String headerLine = formatRow(builder, columnSizes, columns);
+        String headerLine = formatRow(builder, columnSizes, columns, new boolean[columnSizes.length]);
         int lineWidth = totalWidth - 2;
         String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
 
@@ -76,14 +83,21 @@ public class TableOutputFormatter implements OutputFormatter {
         return numberOfRows;
     }
 
-    private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data) {
+    /**
+     * Calculate the size of the columns for table formatting
+     * @param columns the column names
+     * @param data (sample) data
+     * @param moreDataAfterSamples if there is more data that should be written into the table after `data`
+     * @return the column sizes
+     */
+    private int[] calculateColumnSizes(@Nonnull String[] columns, @Nonnull List<Record> data, boolean moreDataAfterSamples) {
         int[] columnSizes = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             columnSizes[i] = columns[i].length();
         }
         for (Record record : data) {
             for (int i = 0; i < columns.length; i++) {
-                int len = formatValue(record.get(i)).length();
+                int len = columnLengthForValue(record.get(i), moreDataAfterSamples);
                 if (columnSizes[i] < len) {
                     columnSizes[i] = len;
                 }
@@ -92,9 +106,24 @@ public class TableOutputFormatter implements OutputFormatter {
         return columnSizes;
     }
 
+    /**
+     * The length of a column, where Numbers are always getting enough space to fit the highest number possible.
+     *
+     * @param value the value to calculate the length for
+     * @param moreDataAfterSamples if there is more data that should be written into the table after `data`
+     * @return the column size for this value.
+     */
+    private int columnLengthForValue(Value value, boolean moreDataAfterSamples) {
+        if (value instanceof NumberValueAdapter && moreDataAfterSamples) {
+            return 19; // The number of digits of Long.Max
+        } else {
+            return formatValue(value).length();
+        }
+    }
+
     private String formatRecord(StringBuilder sb, int[] columnSizes, Record record) {
         sb.setLength(0);
-        return formatRow(sb, columnSizes, formatValues(record));
+        return formatRow(sb, columnSizes, formatValues(record), new boolean[columnSizes.length]);
     }
 
     private String[] formatValues(Record record) {
@@ -105,8 +134,21 @@ public class TableOutputFormatter implements OutputFormatter {
         return row;
     }
 
-    private String formatRow(StringBuilder sb, int[] columnSizes, String[] row) {
-        sb.append("|");
+    /**
+     * Format one row of data.
+     *
+     * @param sb the StringBuilder to use
+     * @param columnSizes the size of all columns
+     * @param row the data
+     * @param continuation for each column whether it holds the remainder of data that did not fit in the column
+     * @return the String result
+     */
+    private String formatRow(StringBuilder sb, int[] columnSizes, String[] row, boolean[] continuation) {
+        if (!continuation[0]) {
+            sb.append("|");
+        } else {
+            sb.append("\\");
+        }
         boolean remainder = false;
         for (int i = 0; i < row.length; i++) {
             sb.append(" ");
@@ -117,6 +159,7 @@ public class TableOutputFormatter implements OutputFormatter {
                     if (wrap) {
                         sb.append(txt, 0, length);
                         row[i] = txt.substring(length);
+                        continuation[i] = true;
                         remainder = true;
                     } else {
                         sb.append(txt, 0, length - 1);
@@ -129,11 +172,15 @@ public class TableOutputFormatter implements OutputFormatter {
             } else {
                 sb.append(OutputFormatter.repeat(' ', length));
             }
-            sb.append(" |");
+            if (i == row.length -1 || !continuation[i+1]) {
+                sb.append(" |");
+            } else {
+                sb.append(" \\");
+            }
         }
         if (wrap && remainder) {
             sb.append(OutputFormatter.NEWLINE);
-            formatRow(sb, columnSizes, row);
+            formatRow(sb, columnSizes, row, continuation);
         }
         return sb.toString();
     }
