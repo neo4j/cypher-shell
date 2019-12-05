@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
+import org.neo4j.driver.exceptions.TransientException;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
@@ -27,9 +28,11 @@ import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -100,6 +103,16 @@ public class MainIntegrationTest
                 }
             }
         }
+    }
+
+    private void ensureDefaultDatabaseStarted() throws Exception {
+        CliArgs cliArgs = new CliArgs();
+        cliArgs.setUsername("neo4j", "");
+        cliArgs.setPassword("neo", "");
+        cliArgs.setDatabase("system");
+        ShellAndConnection sac = getShell(cliArgs);
+        main.connectMaybeInteractively(sac.shell, sac.connectionConfig, true, false);
+        sac.shell.execute("START DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
     }
 
     @Test
@@ -239,7 +252,7 @@ public class MainIntegrationTest
         ConnectionConfig connectionConfig = sac.connectionConfig;
 
         exception.expect( ServiceUnavailableException.class );
-        exception.expectMessage( "Unable to connect to database, ensure the database is running and that there is a working network connection to it" );
+        // The error message here may be subject to change and is not stable across versions so let us not assert on it
         main.connectMaybeInteractively( shell, connectionConfig, true, true );
     }
 
@@ -372,6 +385,173 @@ public class MainIntegrationTest
         exception.expectMessage( "Cannot find file: 'what.cypher'" );
         exception.expectCause( isA( FileNotFoundException.class ) );
         shell.execute( ":source what.cypher" );
+    }
+
+    @Test
+    public void doesNotStartWhenDefaultDatabaseUnavailableIfInteractive() throws Exception {
+        shell.setCommandHelper(new CommandHelper(mock(Logger.class), Historian.empty, shell));
+        inputBuffer.put(String.format("neo4j%nneo%n").getBytes());
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // Multiple databases are only available from 4.0
+        assumeTrue( majorVersion( shell.getServerVersion() ) >= 4 );
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted and set the username and password
+        String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
+        assertEquals(expectedLoginOutput, baos.toString());
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        // Stop the default database
+        shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+        shell.execute("STOP DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+
+        try {
+            shell.disconnect();
+
+            // Should get exception that database is unavailable when trying to connect
+            exception.expect(TransientException.class);
+            exception.expectMessage("Database 'neo4j' is unavailable");
+            main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+            // then
+            assertFalse(shell.isConnected());
+        } finally {
+            // Start the default database again
+            ensureDefaultDatabaseStarted();
+        }
+    }
+
+    @Test
+    public void startsAgainstSystemDatabaseWhenDefaultDatabaseUnavailableIfInteractive() throws Exception {
+        shell.setCommandHelper(new CommandHelper(mock(Logger.class), Historian.empty, shell));
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // Multiple databases are only available from 4.0
+        assumeTrue( majorVersion( shell.getServerVersion() ) >= 4 );
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted and set the username and password
+        String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
+        assertEquals(expectedLoginOutput, baos.toString());
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        // Stop the default database
+        shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+        shell.execute("STOP DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+
+        try {
+            shell.disconnect();
+
+            // Connect to system database
+            CliArgs cliArgs = new CliArgs();
+            cliArgs.setUsername("neo4j", "");
+            cliArgs.setPassword("neo", "");
+            cliArgs.setDatabase("system");
+            ShellAndConnection sac = getShell(cliArgs);
+            // Use the new shell and connection config from here on
+            shell = sac.shell;
+            connectionConfig = sac.connectionConfig;
+            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+
+            // then
+            assertTrue(shell.isConnected());
+        } finally {
+            // Start the default database again
+            ensureDefaultDatabaseStarted();
+        }
+    }
+
+    @Test
+    public void switchingToUnavailableDatabaseIfInteractive() throws Exception {
+        shell.setCommandHelper(new CommandHelper(mock(Logger.class), Historian.empty, shell));
+        inputBuffer.put(String.format("neo4j%nneo%n").getBytes());
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // Multiple databases are only available from 4.0
+        assumeTrue(majorVersion( shell.getServerVersion() ) >= 4);
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted and set the username and password
+        String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
+        assertEquals(expectedLoginOutput, baos.toString());
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        // Stop the default database
+        shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+        shell.execute("STOP DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+
+        try {
+            // Should get exception that database is unavailable when trying to connect
+            exception.expect(TransientException.class);
+            exception.expectMessage("Database 'neo4j' is unavailable");
+            shell.execute(":use " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+        } finally {
+            // Start the default database again
+            ensureDefaultDatabaseStarted();
+        }
+    }
+
+    @Test
+    public void switchingToUnavailableDefaultDatabaseIfInteractive() throws Exception {
+        shell.setCommandHelper(new CommandHelper(mock(Logger.class), Historian.empty, shell));
+        inputBuffer.put(String.format("neo4j%nneo%n").getBytes());
+
+        assertEquals("", connectionConfig.username());
+        assertEquals("", connectionConfig.password());
+
+        // when
+        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+
+        // Multiple databases are only available from 4.0
+        assumeTrue(majorVersion( shell.getServerVersion() ) >= 4);
+
+        // then
+        // should be connected
+        assertTrue(shell.isConnected());
+        // should have prompted and set the username and password
+        String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
+        assertEquals(expectedLoginOutput, baos.toString());
+        assertEquals("neo4j", connectionConfig.username());
+        assertEquals("neo", connectionConfig.password());
+
+        // Stop the default database
+        shell.execute(":use " + DatabaseManager.SYSTEM_DB_NAME);
+        shell.execute("STOP DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+
+        try {
+            // Should get exception that database is unavailable when trying to connect
+            exception.expect(TransientException.class);
+            exception.expectMessage("Database 'neo4j' is unavailable");
+            shell.execute(":use");
+        } finally {
+            // Start the default database again
+            ensureDefaultDatabaseStarted();
+        }
     }
 
     private String executeFileNonInteractively(String filename) throws Exception {

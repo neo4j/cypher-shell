@@ -39,8 +39,8 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
     private final static String TRANSACTION_PROMPT = "# ";
     private final static String USERNAME_DB_DELIMITER = "@";
     private final static int ONELINE_PROMPT_MAX_LENGTH = 50;
-    private static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
-    private static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
+    static final String UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT = "<default_database>";
+    static final String DATABASE_UNAVAILABLE_ERROR_PROMPT_TEXT = "[UNAVAILABLE]";
 
     // Need to know if we are currently executing when catch Ctrl-C, needs to be atomic due to
     // being called from different thread
@@ -166,14 +166,11 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
         }
 
         String databaseName = databaseManager.getActualDatabaseAsReportedByServer();
-        if (databaseName == null) {
+        if (databaseName == null || ABSENT_DB_NAME.equals(databaseName)) {
             // We have failed to get a successful response from the connection ping query
             // Build the prompt from the db name as set by the user + a suffix indicating that we are in a disconnected state
             String dbNameSetByUser = databaseManager.getActiveDatabaseAsSetByUser();
             databaseName = ABSENT_DB_NAME.equals(dbNameSetByUser)? UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT : dbNameSetByUser;
-        } else if (ABSENT_DB_NAME.equals(databaseName)) {
-            // The driver did not give us a database name in the response from the connection ping query
-            databaseName = UNRESOLVED_DEFAULT_DB_PROPMPT_TEXT;
         }
 
         String errorSuffix = getErrorPrompt(executer.lastNeo4jErrorCode());

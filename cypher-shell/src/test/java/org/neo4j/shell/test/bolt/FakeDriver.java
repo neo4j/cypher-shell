@@ -11,6 +11,8 @@ import org.neo4j.driver.types.TypeSystem;
 
 import java.util.concurrent.CompletionStage;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 public class FakeDriver implements Driver {
     @Override
     public boolean isEncrypted() {
@@ -78,5 +80,17 @@ public class FakeDriver implements Driver {
     @Override
     public CompletionStage<Void> verifyConnectivityAsync() {
         return null;
+    }
+
+    @Override
+    public boolean supportsMultiDb()
+    {
+        return true;
+    }
+
+    @Override
+    public CompletionStage<Boolean> supportsMultiDbAsync()
+    {
+        return completedFuture(true);
     }
 }
