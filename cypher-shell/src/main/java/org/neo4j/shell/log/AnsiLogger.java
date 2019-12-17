@@ -3,6 +3,8 @@ package org.neo4j.shell.log;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.neo4j.driver.exceptions.ClientException;
+import org.neo4j.driver.exceptions.DiscoveryException;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.AnsiFormattedException;
 
@@ -132,10 +134,23 @@ public class AnsiLogger implements Logger {
                          .append("\nor as environment variable(s), NEO4J_USERNAME, and NEO4J_PASSWORD respectively.")
                          .append("\nSee --help for more info.");
             } else {
-                if (e.getMessage() != null) {
-                    msg = msg.append(e.getMessage());
+                Throwable cause = e;
+
+                // Get the suppressed root cause of ServiceUnavailableExceptions
+                if (e instanceof ServiceUnavailableException) {
+                    Throwable[] suppressed = e.getSuppressed();
+                    for (Throwable s : suppressed) {
+                        if (s instanceof DiscoveryException ) {
+                            cause = getRootCause(s);
+                            break;
+                        }
+                    }
+                }
+
+                if (cause.getMessage() != null) {
+                    msg = msg.append(cause.getMessage());
                 } else {
-                    msg = msg.append(e.getClass().getSimpleName());
+                    msg = msg.append(cause.getClass().getSimpleName());
                 }
             }
         }

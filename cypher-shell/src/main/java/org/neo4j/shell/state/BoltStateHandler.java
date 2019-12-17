@@ -83,7 +83,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 try {
                     reconnect(true);
                 }
-                catch (ClientException e2) {
+                catch (Exception e2) {
                     e.addSuppressed(e2);
                 }
             }
@@ -174,9 +174,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private void reconnect(boolean keepBookmark) {
-        // This will already throw an exception if there is no connectivity
-        driver.verifyConnectivity();
-
         SessionConfig.Builder builder = SessionConfig.builder();
         builder.withDefaultAccessMode(AccessMode.WRITE);
         if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
@@ -267,9 +264,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         try {
             driver = getDriver(connectionConfig, authToken);
-
-            // This will already throw an exception if there is no connectivity
-            driver.verifyConnectivity();
 
             SessionConfig.Builder builder = SessionConfig.builder()
                     .withDefaultAccessMode(AccessMode.WRITE)

@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltStateHandler;
@@ -12,7 +11,7 @@ import org.neo4j.shell.state.BoltStateHandler;
  */
 public class OfflineTestShell extends CypherShell {
 
-    OfflineTestShell( Logger logger, BoltStateHandler boltStateHandler, PrettyPrinter prettyPrinter ) {
+    public OfflineTestShell(Logger logger, BoltStateHandler boltStateHandler, PrettyPrinter prettyPrinter) {
         super(logger, boltStateHandler, prettyPrinter, new ShellParameterMap());
     }
 

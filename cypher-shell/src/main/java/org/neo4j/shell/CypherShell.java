@@ -1,6 +1,8 @@
 package org.neo4j.shell;
 
+import org.neo4j.driver.exceptions.DiscoveryException;
 import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -98,7 +100,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             });
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -160,7 +162,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             lastNeo4jErrorCode = null;
             return results;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -175,7 +177,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         return boltStateHandler.isTransactionOpen();
     }
 
-    void setCommandHelper(@Nonnull CommandHelper commandHelper) {
+    public void setCommandHelper(@Nonnull CommandHelper commandHelper) {
         this.commandHelper = commandHelper;
     }
 
@@ -195,7 +197,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             boltStateHandler.setActiveDatabase(databaseName);
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
-            lastNeo4jErrorCode = e.code();
+            lastNeo4jErrorCode = getErrorCode(e);
             throw e;
         }
     }
@@ -229,5 +231,24 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      */
     public void disconnect() {
         boltStateHandler.disconnect();
+    }
+
+    private String getErrorCode(Neo4jException e) {
+        Neo4jException statusException = e;
+
+        // If we encountered a later suppressed Neo4jException we use that as the basis for the status instead
+        Throwable[] suppressed = e.getSuppressed();
+        for (Throwable s : suppressed) {
+            if (s instanceof Neo4jException) {
+                statusException = (Neo4jException) s;
+                break;
+            }
+        }
+
+        if (statusException instanceof ServiceUnavailableException || statusException instanceof DiscoveryException) {
+            // Treat this the same way as a DatabaseUnavailable error for now.
+            return DATABASE_UNAVAILABLE_ERROR_CODE;
+        }
+        return statusException.code();
     }
 }
