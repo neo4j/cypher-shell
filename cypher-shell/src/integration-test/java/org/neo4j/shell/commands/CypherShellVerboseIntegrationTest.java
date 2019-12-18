@@ -36,7 +36,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false, new ShellParameterMap());
+        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 2), false, new ShellParameterMap());
         rollbackCommand = new Rollback(shell);
         commitCommand = new Commit(shell);
         beginCommand = new Begin(shell);
@@ -56,6 +56,75 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
 
         //then
         assertThat(linePrinter.output(), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
+    }
+
+    @Test
+    public void test1() throws CommandException {
+        //when
+        shell.execute("CREATE ({num: 123}), ({num: 456})");
+        shell.execute("MATCH(n) RETURN n.num ORDER BY n.num");
+
+        //then
+        System.out.println( linePrinter.output() );
+        assertThat(linePrinter.output(), containsString(
+                "+-------+\n" +
+                        "| n.num |\n" +
+                        "+-------+\n" +
+                        "| 123   |\n" +
+                        "| ----- |\n" +
+                        "| 456   |\n" +
+                        "+-------+" ) );
+    }
+
+    @Test
+    public void test2() throws CommandException {
+        //when
+        shell.execute("CREATE ({num: 123}), ({num: 456}), ({num: 12675674767853}), ({num: 866497885467})");
+        shell.execute("MATCH(n) RETURN n.num ORDER BY n.num");
+
+        //then
+        System.out.println( linePrinter.output() );
+        assertThat(linePrinter.output(), containsString(
+                "+-------+\n" +
+                        "| n.num |\n" +
+                        "+-------+\n" +
+                        "| 123   |\n" +
+                        "| ----- |\n" +
+                        "| 456   |\n" +
+                        "| ----- |\n" +
+                        "| 86649 |\n" +
+                        "| 78854 |\n" +
+                        "| 67    |\n" +
+                        "| ----- |\n" +
+                        "| 12675 |\n" +
+                        "| 67476 |\n" +
+                        "| 7853  |\n" +
+                        "+-------+" ) );
+    }
+
+    @Test
+    public void test3() throws CommandException {
+        //when
+        shell.execute("CREATE ({num: 123, next: 998272537}), ({num: 456, next: 122}), ({num: 12675674767853, next: 998272537}), ({num: 866497885467, next: 123})");
+        shell.execute("MATCH(n) RETURN n.num, n.next ORDER BY n.num");
+
+        //then
+        System.out.println( linePrinter.output() );
+        assertThat(linePrinter.output(), containsString("+-------------------+\n" +
+                "| n.num | n.next    |\n" +
+                "+-------------------+\n" +
+                "| 123   | 998272537 |\n" +
+                "| ----------------- |\n" +
+                "| 456   | 122       |\n" +
+                "| ----------------- |\n" +
+                "| 86649 | 123       |\n" +
+                "| 78854 |           |\n" +
+                "| 67    |           |\n" +
+                "| ----------------- |\n" +
+                "| 12675 | 998272537 |\n" +
+                "| 67476 |           |\n" +
+                "| 7853  |           |\n" +
+                "+-------------------+" ) );
     }
 
     @Test
