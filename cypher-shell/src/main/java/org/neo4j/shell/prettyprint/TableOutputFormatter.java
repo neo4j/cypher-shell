@@ -62,7 +62,7 @@ public class TableOutputFormatter implements OutputFormatter {
         }
 
         StringBuilder builder = new StringBuilder(totalWidth);
-        String headerLine = formatRow(builder, columnSizes, columns, new boolean[columnSizes.length]);
+        String headerLine = formatRow(builder, columnSizes, columns, false);
         int lineWidth = totalWidth - 2;
         String dashes = "+" + OutputFormatter.repeat('-', lineWidth) + "+";
 
@@ -72,11 +72,12 @@ public class TableOutputFormatter implements OutputFormatter {
 
         int numberOfRows = 0;
         for (Record record : topRecords) {
-            output.printOut(formatRecord(builder, columnSizes, record));
+            output.printOut(formatRecord(builder, columnSizes, record, numberOfRows < topRecords.size() - 1 || records.hasNext()));
             numberOfRows++;
         }
         while (records.hasNext()) {
-            output.printOut(formatRecord(builder, columnSizes, records.next()));
+            Record next = records.next();
+            output.printOut( formatRecord( builder, columnSizes, next, records.hasNext()));
             numberOfRows++;
         }
         output.printOut(String.format("%s%n", dashes));
@@ -121,9 +122,9 @@ public class TableOutputFormatter implements OutputFormatter {
         }
     }
 
-    private String formatRecord(StringBuilder sb, int[] columnSizes, Record record) {
+    private String formatRecord(StringBuilder sb, int[] columnSizes, Record record, boolean appendDashes) {
         sb.setLength(0);
-        return formatRow(sb, columnSizes, formatValues(record), new boolean[columnSizes.length]);
+        return formatRow(sb, columnSizes, formatValues(record), appendDashes);
     }
 
     private String[] formatValues(Record record) {
@@ -140,15 +141,11 @@ public class TableOutputFormatter implements OutputFormatter {
      * @param sb the StringBuilder to use
      * @param columnSizes the size of all columns
      * @param row the data
-     * @param continuation for each column whether it holds the remainder of data that did not fit in the column
+     * @param appendDashes whether do have a line of dashes to separate the new row
      * @return the String result
      */
-    private String formatRow(StringBuilder sb, int[] columnSizes, String[] row, boolean[] continuation) {
-        if (!continuation[0]) {
-            sb.append("|");
-        } else {
-            sb.append("\\");
-        }
+    private String formatRow(StringBuilder sb, int[] columnSizes, String[] row, boolean appendDashes) {
+        sb.append("|");
         boolean remainder = false;
         for (int i = 0; i < row.length; i++) {
             sb.append(" ");
@@ -159,7 +156,6 @@ public class TableOutputFormatter implements OutputFormatter {
                     if (wrap) {
                         sb.append(txt, 0, length);
                         row[i] = txt.substring(length);
-                        continuation[i] = true;
                         remainder = true;
                     } else {
                         sb.append(txt, 0, length - 1);
@@ -172,15 +168,23 @@ public class TableOutputFormatter implements OutputFormatter {
             } else {
                 sb.append(OutputFormatter.repeat(' ', length));
             }
-            if (i == row.length -1 || !continuation[i+1]) {
-                sb.append(" |");
-            } else {
-                sb.append(" \\");
-            }
+            sb.append(" |");
         }
         if (wrap && remainder) {
             sb.append(OutputFormatter.NEWLINE);
-            formatRow(sb, columnSizes, row, continuation);
+            formatRow(sb, columnSizes, row, appendDashes);
+        }
+        else if (appendDashes)
+        {
+            int linewidth = 0;
+            for ( int columnSize : columnSizes )
+            {
+                linewidth += columnSize;
+            }
+            sb.append( OutputFormatter.NEWLINE );
+            sb.append( "| " );
+            sb.append( OutputFormatter.repeat( '-', linewidth + (columnSizes.length - 1) * 3 ) );
+            sb.append( " |" );
         }
         return sb.toString();
     }
