@@ -343,19 +343,23 @@ public class TableOutputFormatterTest {
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
-                "+------+",
-                "| c1   |",
-                "+------+",
-                "| \"a\"  |",
-                "| \"bb\" |",
-                "| \"ccc |",
-                "\\ \"    |",
-                "| \"ddd |",
-                "\\ d\"   |",
-                "| \"eee |",
-                "\\ ee\"  |",
-                "+------+",
-                NEWLINE)));
+                                         "+------+",
+                                         "| c1   |",
+                                         "+------+",
+                                         "| \"a\"  |",
+                                         "| ---- |",
+                                         "| \"bb\" |",
+                                         "| ---- |",
+                                         "| \"ccc |",
+                                         "| \"    |",
+                                         "| ---- |",
+                                         "| \"ddd |",
+                                         "| d\"   |",
+                                         "| ---- |",
+                                         "| \"eee |",
+                                         "| ee\"  |",
+                                         "+------+",
+                                         NEWLINE ) ) );
     }
 
     @Test
@@ -374,24 +378,30 @@ public class TableOutputFormatterTest {
         new TableOutputFormatter(true, 2).formatAndCount(new ListBoltResult(result.list(), result.summary()), printer);
         String table = printer.result();
         // THEN
-        assertThat(table, is(String.join(NEWLINE,
-                "+-------------+",
-                "| c1   | c2   |",
-                "+-------------+",
-                "| \"a\"  | \"b\"  |",
-                "| \"aa\" | \"bb\" |",
-                "| \"aaa | \"b\"  |",
-                "\\ \"    |      |",
-                "| \"a\"  | \"bbb |",
-                "|      \\ \"    |",
-                "| \"aaa | \"bb\" |",
-                "\\ a\"   |      |",
-                "| \"aa\" | \"bbb |",
-                "|      \\ b\"   |",
-                "| \"aaa | \"bbb |",
-                "\\ aa\"  \\ bb\"  |",
-                "+-------------+",
-                NEWLINE)));
+        assertThat( table, is( String.join( NEWLINE,
+                                            "+-------------+",
+                                            "| c1   | c2   |",
+                                            "+-------------+",
+                                            "| \"a\"  | \"b\"  |",
+                                            "| ----------- |",
+                                            "| \"aa\" | \"bb\" |",
+                                            "| ----------- |",
+                                            "| \"aaa | \"b\"  |",
+                                            "| \"    |      |",
+                                            "| ----------- |",
+                                            "| \"a\"  | \"bbb |",
+                                            "|      | \"    |",
+                                            "| ----------- |",
+                                            "| \"aaa | \"bb\" |",
+                                            "| a\"   |      |",
+                                            "| ----------- |",
+                                            "| \"aa\" | \"bbb |",
+                                            "|      | b\"   |",
+                                            "| ----------- |",
+                                            "| \"aaa | \"bbb |",
+                                            "| aa\"  | bb\"  |",
+                                            "+-------------+",
+                                            NEWLINE ) ) );
     }
 
     @Test
@@ -405,15 +415,19 @@ public class TableOutputFormatterTest {
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
-                "+---------------------+",
-                 "| c1                  |",
-                 "+---------------------+",
-                 "| 345                 |",
-                 "| 12                  |",
-                 "| 978623              |",
-                 "| 132456798           |",
-                 "| 9223372036854775807 |",
-                 "+---------------------+",
+                                         "+---------------------+",
+                                         "| c1                  |",
+                                         "+---------------------+",
+                                         "| 345                 |",
+                                         "| ------------------- |",
+                                         "| 12                  |",
+                                         "| ------------------- |",
+                                         "| 978623              |",
+                                         "| ------------------- |",
+                                         "| 132456798           |",
+                                         "| ------------------- |",
+                                         "| 9223372036854775807 |",
+                                         "+---------------------+",
                 NEWLINE)));
     }
 
@@ -428,16 +442,20 @@ public class TableOutputFormatterTest {
         String table = printer.result();
         // THEN
         assertThat(table, is(String.join(NEWLINE,
-                "+------+",
-                "| c1   |",
-                "+------+",
-                "| \"a\"  |",
-                "| \"bb\" |",
-                "| \"cc… |",
-                "| \"dd… |",
-                "| \"ee… |",
-                "+------+",
-                NEWLINE)));
+                                         "+------+",
+                                         "| c1   |",
+                                         "+------+",
+                                         "| \"a\"  |",
+                                         "| ---- |",
+                                         "| \"bb\" |",
+                                         "| ---- |",
+                                         "| \"cc… |",
+                                         "| ---- |",
+                                         "| \"dd… |",
+                                         "| ---- |",
+                                         "| \"ee… |",
+                                         "+------+",
+                                         NEWLINE ) ) );
     }
 
     @Test

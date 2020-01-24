@@ -107,6 +107,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String result = linePrinter.output();
         assertThat(result, containsString(
                 "| (:TestPerson {name: \"Jane Smith\"}) |\n" +
+                "| ---------------------------------- |\n" +
                 "| (:TestPerson {name: \"Jane Smith\"}) |"));
     }
 
@@ -146,7 +147,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         //then
         String result = linePrinter.output();
         assertThat(result,
-                containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
+                containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| ---------------------------------- |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
     }
 
     @Test
@@ -241,7 +242,9 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
                         "| row |%n" +
                         "+-----+%n" +
                         "| 1   |%n" +
+                        "| --- |%n" +
                         "| 2   |%n" +
+                        "| --- |%n" +
                         "| 3   |%n" +
                         "+-----+%n" +
                         "%n" +
