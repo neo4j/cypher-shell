@@ -20,12 +20,12 @@ public class FakeSession implements Session {
 
     @Override
     public Transaction beginTransaction() {
-        return null;
+        return new FakeTransaction();
     }
 
     @Override
     public Transaction beginTransaction(TransactionConfig config) {
-        return null;
+        return new FakeTransaction();
     }
 
     @Override
