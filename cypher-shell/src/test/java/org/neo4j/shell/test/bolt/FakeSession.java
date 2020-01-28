@@ -4,6 +4,7 @@ import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.TypeSystem;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -14,7 +15,7 @@ public class FakeSession implements Session {
 
     @Override
     public Transaction beginTransaction() {
-        return null;
+        return new FakeTransaction();
     }
 
     @Override
@@ -36,7 +37,9 @@ public class FakeSession implements Session {
     @Override
     public CompletionStage<Transaction> beginTransactionAsync( TransactionConfig config )
     {
-        return null;
+        CompletableFuture<Transaction> transactionFuture = new CompletableFuture<>();
+        transactionFuture.runAsync(() -> new FakeTransaction());
+        return transactionFuture;
     }
 
     @Override
