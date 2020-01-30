@@ -1,8 +1,9 @@
 package org.neo4j.shell;
 
-import org.neo4j.shell.exception.CommandException;
-
 import javax.annotation.Nonnull;
+
+import org.neo4j.function.ThrowingAction;
+import org.neo4j.shell.exception.CommandException;
 
 /**
  * An object with the ability to connect and disconnect.
@@ -18,7 +19,15 @@ public interface Connector {
      *
      * @throws CommandException if connection failed
      */
-    void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException;
+    default void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException {
+        connect( connectionConfig, null );
+    }
+
+    /**
+     *
+     * @throws CommandException if connection failed
+     */
+    void connect( @Nonnull ConnectionConfig connectionConfig, ThrowingAction<CommandException> action) throws CommandException;
 
     /**
      * Returns the version of Neo4j which the shell is connected to. If the version is before 3.1.0-M09, or we are not

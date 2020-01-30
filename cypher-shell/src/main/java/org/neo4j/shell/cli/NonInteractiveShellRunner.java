@@ -1,5 +1,11 @@
 package org.neo4j.shell.cli;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
@@ -7,11 +13,8 @@ import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
 
-import javax.annotation.Nonnull;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
+import static org.neo4j.shell.Main.EXIT_FAILURE;
+import static org.neo4j.shell.Main.EXIT_SUCCESS;
 
 
 /**
@@ -52,7 +55,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
             return 1;
         }
 
-        int exitCode = 0;
+        int exitCode = EXIT_SUCCESS;
         for (String statement : statements) {
             try {
                 executer.execute(statement);
@@ -60,7 +63,7 @@ public class NonInteractiveShellRunner implements ShellRunner {
                 // These exceptions are always fatal
                 return e.getCode();
             } catch (Throwable e) {
-                exitCode = 1;
+                exitCode = EXIT_FAILURE;
                 logger.printError(e);
                 if (FailBehavior.FAIL_AT_END != failBehavior) {
                     return exitCode;

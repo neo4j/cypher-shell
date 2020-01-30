@@ -1,10 +1,20 @@
 package org.neo4j.shell.cli;
 
 import jline.console.ConsoleReader;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
 
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.Historian;
+import org.neo4j.shell.Main;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.TransactionHandler;
@@ -16,15 +26,6 @@ import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.parser.StatementParser;
 import org.neo4j.shell.prettyprint.OutputFormatter;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
-
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.DATABASE_UNAVAILABLE_ERROR_CODE;
@@ -94,7 +95,7 @@ public class InteractiveShellRunner implements ShellRunner, SignalHandler {
 
     @Override
     public int runUntilEnd() {
-        int exitCode = 0;
+        int exitCode = Main.EXIT_SUCCESS;
         boolean running = true;
 
         logger.printIfVerbose(userMessagesHandler.getWelcomeMessage());

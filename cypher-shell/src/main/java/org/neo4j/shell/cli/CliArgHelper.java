@@ -211,7 +211,7 @@ public class CliArgHelper {
                 .setDefault(CliArgs.DEFAULT_NUM_SAMPLE_ROWS);
 
         parser.addArgument("--wrap")
-                .help("wrap table colum values if column is too narrow (only for format=VERBOSE)")
+                .help("wrap table column values if column is too narrow (only for format=VERBOSE)")
                 .type(new BooleanArgumentType())
                 .setDefault(true);
 
