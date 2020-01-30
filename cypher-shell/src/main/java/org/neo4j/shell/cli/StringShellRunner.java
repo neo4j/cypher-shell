@@ -1,12 +1,14 @@
 package org.neo4j.shell.cli;
 
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.Historian;
 import org.neo4j.shell.ShellRunner;
 import org.neo4j.shell.StatementExecuter;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
-import java.util.Optional;
+import static org.neo4j.shell.Main.EXIT_FAILURE;
+import static org.neo4j.shell.Main.EXIT_SUCCESS;
 
 /**
  * A shell runner which executes a single String and exits afterward. Any errors will throw immediately.
@@ -30,12 +32,12 @@ public class StringShellRunner implements ShellRunner {
 
     @Override
     public int runUntilEnd() {
-        int exitCode = 0;
+        int exitCode = EXIT_SUCCESS;
         try {
             executer.execute(cypher.trim());
         } catch (Throwable t) {
             logger.printError(t);
-            exitCode = 1;
+            exitCode = EXIT_FAILURE;
         }
         return exitCode;
     }
