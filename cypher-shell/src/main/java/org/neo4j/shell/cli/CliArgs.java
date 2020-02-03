@@ -10,14 +10,14 @@ import org.neo4j.shell.ShellParameterMap;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 public class CliArgs {
-    private static final String DEFAULT_SCHEME = "bolt://";
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 7687;
+    private static final String ABSENT_SCHEME = "bolt://";
+    private static final String ABSENT_HOST = "localhost";
+    private static final int ABSENT_PORT = 7687;
     static final int DEFAULT_NUM_SAMPLE_ROWS = 1000;
 
-    private String scheme = DEFAULT_SCHEME;
-    private String host = DEFAULT_HOST;
-    private int port = DEFAULT_PORT;
+    private String scheme = ABSENT_SCHEME;
+    private String host = ABSENT_HOST;
+    private int port = ABSENT_PORT;
     private String username = "";
     private String password = "";
     private String databaseName = ABSENT_DB_NAME;
