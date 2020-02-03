@@ -20,6 +20,7 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.internal.DriverFactory;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.driver.summary.ServerInfo;
@@ -414,6 +415,27 @@ public class BoltStateHandlerTest {
         ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME);
         handler.connect(config);
         assertTrue(provider.config.encrypted());
+    }
+
+    @Test
+    public void fallbackToBolt() throws CommandException {
+        final String[] uriScheme = new String[1];
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                uriScheme[0] = uri.substring(0, uri.indexOf(':'));
+                if (uriScheme[0].equals("neo4j")) {
+                    throw new org.neo4j.driver.exceptions.ServiceUnavailableException("Please fall back");
+                }
+                super.apply(uri, authToken, config);
+                return new FakeDriver();
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
+        ConnectionConfig config = new ConnectionConfig("neo4j://", "", -1, "", "", false, ABSENT_DB_NAME);
+        handler.connect(config);
+
+        assertEquals("bolt", uriScheme[0]);
     }
 
     private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version) {
