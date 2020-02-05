@@ -57,30 +57,30 @@ public class MainTest {
         String inputString = "no newline";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
 
-        doThrow(authException).when(shell).connect(connectionConfig);
+        doThrow(authException).when(shell).connect(connectionConfig, null);
 
         thrown.expectMessage("No text could be read, exiting");
 
         Main main = new Main(inputStream, out);
         main.connectMaybeInteractively(shell, connectionConfig, true, true);
-        verify(shell, times(1)).connect(connectionConfig);
+        verify(shell, times(1)).connect(connectionConfig, null);
     }
 
     @Test
     public void unrelatedErrorDoesNotPrompt() throws Exception {
-        doThrow(new RuntimeException("bla")).when(shell).connect(connectionConfig);
+        doThrow(new RuntimeException("bla")).when(shell).connect(connectionConfig, null);
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("bla");
 
         Main main = new Main(mock(InputStream.class), out);
         main.connectMaybeInteractively(shell, connectionConfig, true, true);
-        verify(shell, times(1)).connect(connectionConfig);
+        verify(shell, times(1)).connect(connectionConfig, null);
     }
 
     @Test
     public void promptsForUsernameAndPasswordIfNoneGivenIfInteractive() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -96,7 +96,7 @@ public class MainTest {
         assertEquals(String.format( "username: bob%npassword: ******%n" ), out);
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+        verify(shell, times(2)).connect(connectionConfig, null);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class MainTest {
             return;
         }
 
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
         doReturn("").doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\nsecret\n";
@@ -130,7 +130,7 @@ public class MainTest {
             assertEquals("", out);
             verify(connectionConfig).setUsername("bob");
             verify(connectionConfig).setPassword("secret");
-            verify(shell, times(2)).connect(connectionConfig);
+            verify(shell, times(2)).connect(connectionConfig, null);
         } finally {
             System.setIn(stdIn);
             System.setOut(stdOut);
@@ -139,7 +139,7 @@ public class MainTest {
 
     @Test
     public void doesNotPromptIfInputRedirected() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -153,13 +153,13 @@ public class MainTest {
             main.connectMaybeInteractively(shell, connectionConfig, false, true);
             fail("Expected auth exception");
         } catch (AuthenticationException e) {
-            verify(shell, times(1)).connect(connectionConfig);
+            verify(shell, times(1)).connect(connectionConfig, null);
         }
     }
 
     @Test
     public void promptsForUserIfPassExistsIfInteractive() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
         doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\n";
@@ -175,7 +175,7 @@ public class MainTest {
 
         assertEquals(out, String.format( "username: bob%n" ));
         verify(connectionConfig).setUsername("bob");
-        verify(shell, times(2)).connect(connectionConfig);
+        verify(shell, times(2)).connect(connectionConfig, null);
     }
 
     @Test
@@ -185,7 +185,7 @@ public class MainTest {
             return;
         }
 
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
         doReturn("secret").when(connectionConfig).password();
 
         String inputString = "bob\n";
@@ -208,7 +208,7 @@ public class MainTest {
 
             assertEquals(out, "");
             verify(connectionConfig).setUsername("bob");
-            verify(shell, times(2)).connect(connectionConfig);
+            verify(shell, times(2)).connect(connectionConfig, null);
         } finally {
             System.setIn(stdIn);
             System.setOut(stdOut);
@@ -232,7 +232,7 @@ public class MainTest {
 
         assertEquals(out, String.format("password: ******%n"));
         verify(connectionConfig).setPassword("secret");
-        verify(shell, times(1)).connect(connectionConfig);
+        verify(shell, times(1)).connect(connectionConfig, null);
     }
 
     @Test
@@ -265,7 +265,7 @@ public class MainTest {
 
             assertEquals(out, "");
             verify(connectionConfig).setPassword("secret");
-            verify(shell, times(1)).connect(connectionConfig);
+            verify(shell, times(1)).connect(connectionConfig, null);
         } finally {
             System.setIn(stdIn);
             System.setOut(stdOut);
@@ -276,7 +276,7 @@ public class MainTest {
     public void promptsForNewPasswordIfPasswordChangeRequired() throws Exception {
         // Use a real ConnectionConfig instead of the mock in this test
         ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
-        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\nnewsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -293,7 +293,7 @@ public class MainTest {
         assertEquals("bob", connectionConfig.username());
         assertEquals("secret", connectionConfig.password());
         assertEquals("newsecret", connectionConfig.newPassword());
-        verify(shell, times(3)).connect(connectionConfig);
+        verify(shell, times(3)).connect(connectionConfig, null);
         verify(shell).changePassword(connectionConfig);
     }
 
@@ -301,7 +301,7 @@ public class MainTest {
     public void promptsForNewPasswordIfPasswordChangeRequiredCannotBeEmpty() throws Exception {
         // Use a real ConnectionConfig instead of the mock in this test
         ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
-        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\n\nnewsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -318,13 +318,13 @@ public class MainTest {
         assertEquals("bob", connectionConfig.username());
         assertEquals("secret", connectionConfig.password());
         assertEquals("newsecret", connectionConfig.newPassword());
-        verify(shell, times(3)).connect(connectionConfig);
+        verify(shell, times(3)).connect(connectionConfig, null);
         verify(shell).changePassword(connectionConfig);
     }
 
     @Test
     public void promptsHandlesBang() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bo!b\nsec!ret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -340,12 +340,12 @@ public class MainTest {
         assertEquals(String.format("username: bo!b%npassword: *******%n"), out);
         verify(connectionConfig).setUsername("bo!b");
         verify(connectionConfig).setPassword("sec!ret");
-        verify(shell, times(2)).connect(connectionConfig);
+        verify(shell, times(2)).connect(connectionConfig, null);
     }
 
     @Test
     public void triesOnlyOnceIfUserPassExists() throws Exception {
-        doThrow(authException).doThrow(new RuntimeException("second try")).when(shell).connect(connectionConfig);
+        doThrow(authException).doThrow(new RuntimeException("second try")).when(shell).connect(connectionConfig, null);
         doReturn("bob").when(connectionConfig).username();
         doReturn("secret").when(connectionConfig).password();
 
@@ -361,13 +361,13 @@ public class MainTest {
             fail("Expected an exception");
         } catch (Neo4jException e) {
             assertEquals(authException.code(), e.code());
-            verify(shell, times(1)).connect(connectionConfig);
+            verify(shell, times(1)).connect(connectionConfig, null);
         }
     }
 
     @Test
     public void repromptsIfUserIsNotProvidedIfInteractive() throws Exception {
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "\nbob\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -383,7 +383,7 @@ public class MainTest {
         assertEquals(String.format( "username: %nusername cannot be empty%n%nusername: bob%npassword: ******%n"), out );
         verify(connectionConfig).setUsername("bob");
         verify(connectionConfig).setPassword("secret");
-        verify(shell, times(2)).connect(connectionConfig);
+        verify(shell, times(2)).connect(connectionConfig, null);
     }
 
     @Test
@@ -393,7 +393,7 @@ public class MainTest {
             return;
         }
 
-        doThrow(authException).doNothing().when(shell).connect(connectionConfig);
+        doThrow(authException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "\nsecret\n";
         InputStream inputStream = new ByteArrayInputStream(inputString.getBytes());
@@ -416,7 +416,7 @@ public class MainTest {
             assertEquals("", out );
             verify(connectionConfig).setUsername("");
             verify(connectionConfig).setPassword("secret");
-            verify(shell, times(2)).connect(connectionConfig);
+            verify(shell, times(2)).connect(connectionConfig, null);
         } finally {
             System.setIn(stdIn);
             System.setOut(stdOut);

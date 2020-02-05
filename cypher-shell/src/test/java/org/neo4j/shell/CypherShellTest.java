@@ -66,7 +66,7 @@ public class CypherShellTest {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.connect(cc);
-        verify(mockedBoltStateHandler).connect(cc);
+        verify(mockedBoltStateHandler).connect(cc, null);
 
         shell.isConnected();
         verify(mockedBoltStateHandler).isConnected();
