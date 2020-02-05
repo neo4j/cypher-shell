@@ -10,9 +10,9 @@ import org.neo4j.shell.ShellParameterMap;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 public class CliArgs {
-    private static final String DEFAULT_SCHEME = "bolt://";
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 7687;
+    static final String DEFAULT_SCHEME = "neo4j://";
+    static final String DEFAULT_HOST = "localhost";
+    static final int DEFAULT_PORT = 7687;
     static final int DEFAULT_NUM_SAMPLE_ROWS = 1000;
 
     private String scheme = DEFAULT_SCHEME;

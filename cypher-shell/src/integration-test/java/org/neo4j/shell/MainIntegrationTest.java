@@ -27,10 +27,12 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.ToStringLinePrinter;
 
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -467,12 +469,9 @@ public class MainIntegrationTest
             shell.disconnect();
 
             // Should get exception that database is unavailable when trying to connect
-            exception.expect(TransientException.class);
-            exception.expectMessage("Database 'neo4j' is unavailable");
             main.connectMaybeInteractively(shell, connectionConfig, true, true);
-
-            // then
-            assertFalse(shell.isConnected());
+        } catch(TransientException|ServiceUnavailableException e) {
+            expectDatabaseUnavailable(e, "neo4j");
         } finally {
             // Start the default database again
             ensureDefaultDatabaseStarted();
@@ -556,9 +555,9 @@ public class MainIntegrationTest
 
         try {
             // Should get exception that database is unavailable when trying to connect
-            exception.expect(TransientException.class);
-            exception.expectMessage("Database 'neo4j' is unavailable");
             shell.execute(":use " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+        } catch(TransientException|ServiceUnavailableException e) {
+            expectDatabaseUnavailable(e, "neo4j");
         } finally {
             // Start the default database again
             ensureDefaultDatabaseStarted();
@@ -594,13 +593,21 @@ public class MainIntegrationTest
 
         try {
             // Should get exception that database is unavailable when trying to connect
-            exception.expect(TransientException.class);
-            exception.expectMessage("Database 'neo4j' is unavailable");
             shell.execute(":use");
+        } catch(TransientException|ServiceUnavailableException e) {
+            expectDatabaseUnavailable(e, "neo4j");
         } finally {
             // Start the default database again
             ensureDefaultDatabaseStarted();
         }
+    }
+
+    private void expectDatabaseUnavailable(Throwable e, String dbName) {
+        String msg = new AnsiLogger(false).getFormattedMessage(e);
+        assertThat(msg, anyOf(
+                containsString("Database '" + dbName +"' is unavailable"),
+                containsString("Unable to get a routing table for database '" + dbName + "' because this database is unavailable")
+                ));
     }
 
     private String executeFileNonInteractively(String filename) {
