@@ -83,7 +83,8 @@ public class Main {
 
         CypherShell shell = new CypherShell( logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ),
                 cliArgs.getParameters() );
-       System.exit( runShell( cliArgs, shell, logger ) );
+        int exitCode = runShell( cliArgs, shell, logger );
+        System.exit( exitCode );
     }
 
     int runShell(@Nonnull CliArgs cliArgs, @Nonnull CypherShell shell, Logger logger )
