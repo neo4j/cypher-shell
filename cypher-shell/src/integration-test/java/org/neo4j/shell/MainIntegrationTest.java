@@ -183,19 +183,18 @@ public class MainIntegrationTest
         //given a user that require a password change
         int majorVersion = getVersionAndCreateUserWithPasswordChangeRequired();
 
-        //in 4.0 and later when the user attempts a non-interactive password update
-        if (majorVersion >= 4 ) {
-            baos.reset();
-            assertEquals( EXIT_SUCCESS, main.runShell( args( SYSTEM_DB_NAME, "foo", "pass",
-                    "ALTER CURRENT USER SET PASSWORD from \"pass\" to \"pass2\";" ), shell, mock(Logger.class) ) );
-            //we shouldn't ask for a new password
-            assertEquals("", baos.toString());
+        //when the user attempts a non-interactive password update
+        assumeTrue(majorVersion >= 4 );
+        baos.reset();
+        assertEquals( EXIT_SUCCESS, main.runShell( args( SYSTEM_DB_NAME, "foo", "pass",
+                "ALTER CURRENT USER SET PASSWORD from \"pass\" to \"pass2\";" ), shell, mock( Logger.class ) ) );
+        //we shouldn't ask for a new password
+        assertEquals( "", baos.toString() );
 
-            //then the new user should be able to successfully connect, and run a command
-            assertEquals( format( "n%n42%n" ),
-                    executeNonInteractively( args( DEFAULT_DEFAULT_DB_NAME,
-                            "foo", "pass2", "RETURN 42 AS n" ) ) );
-        }
+        //then the new user should be able to successfully connect, and run a command
+        assertEquals( format( "n%n42%n" ),
+                executeNonInteractively( args( DEFAULT_DEFAULT_DB_NAME,
+                        "foo", "pass2", "RETURN 42 AS n" ) ) );
     }
 
     @Test
@@ -203,11 +202,12 @@ public class MainIntegrationTest
         //given a user that require a password change
         int majorVersion = getVersionAndCreateUserWithPasswordChangeRequired();
 
-        //in 4.0 and later when the user attempts a non-interactive password update
-        if (majorVersion >= 4 ) {
-            assertEquals(EXIT_FAILURE, main.runShell( args( DEFAULT_DEFAULT_DB_NAME, "foo", "pass",
-                    "ALTER CURRENT USER SET PASSWORD from \"pass\" to \"pass2\";"), shell, mock(Logger.class)  ) );
-        }
+        //when
+        assumeTrue( majorVersion >= 4 );
+
+        //then
+        assertEquals( EXIT_FAILURE, main.runShell( args( DEFAULT_DEFAULT_DB_NAME, "foo", "pass",
+                "ALTER CURRENT USER SET PASSWORD from \"pass\" to \"pass2\";" ), shell, mock( Logger.class ) ) );
     }
 
     @Test
@@ -215,21 +215,22 @@ public class MainIntegrationTest
         //given a user that require a password change
         int majorVersion = getVersionAndCreateUserWithPasswordChangeRequired();
 
-        //in 4.0 and later when the user attempts a non-interactive password update
-        if (majorVersion >= 4 ) {
-            //when asked for a password use this
-            inputBuffer.put(String.format("pass2%n").getBytes());
-            baos.reset();
-            assertEquals( EXIT_SUCCESS, main.runShell( args( DEFAULT_DEFAULT_DB_NAME, "foo", "pass",
-                    "MATCH (n) RETURN n" ), shell, mock(Logger.class) ) );
-            //we should ask for a new password
-            assertEquals( format( "Password change required%nnew password: *****%n" ), baos.toString());
+        //when
+        assumeTrue( majorVersion >= 4 );
 
-            //then the new user should be able to successfully connect, and run a command
-            assertEquals( format( "n%n42%n" ),
-                    executeNonInteractively( args( DEFAULT_DEFAULT_DB_NAME,
-                            "foo", "pass2", "RETURN 42 AS n" ) ) );
-        }
+        //when interactively asked for a password use this
+        inputBuffer.put( String.format( "pass2%n" ).getBytes() );
+        baos.reset();
+        assertEquals( EXIT_SUCCESS, main.runShell( args( DEFAULT_DEFAULT_DB_NAME, "foo", "pass",
+                "MATCH (n) RETURN n" ), shell, mock( Logger.class ) ) );
+
+        //then should ask for a new password
+        assertEquals( format( "Password change required%nnew password: *****%n" ), baos.toString() );
+
+        //then the new user should be able to successfully connect, and run a command
+        assertEquals( format( "n%n42%n" ),
+                executeNonInteractively( args( DEFAULT_DEFAULT_DB_NAME,
+                        "foo", "pass2", "RETURN 42 AS n" ) ) );
     }
 
     @Test
@@ -602,12 +603,11 @@ public class MainIntegrationTest
         }
     }
 
-    private String executeFileNonInteractively(String filename) throws Exception {
+    private String executeFileNonInteractively(String filename) {
         return executeFileNonInteractively(filename, mock(Logger.class));
     }
 
-    private String executeFileNonInteractively(String filename, Logger logger) throws Exception
-    {
+    private String executeFileNonInteractively(String filename, Logger logger) {
         CliArgs cliArgs = new CliArgs();
         cliArgs.setUsername( USER, "" );
         cliArgs.setPassword( PASSWORD, "" );
@@ -616,18 +616,16 @@ public class MainIntegrationTest
        return executeNonInteractively( cliArgs, logger );
     }
 
-    private String executeNonInteractively(CliArgs cliArgs) throws Exception {
+    private String executeNonInteractively(CliArgs cliArgs) {
         return executeNonInteractively(cliArgs, mock(Logger.class));
     }
 
-    private String executeNonInteractively(CliArgs cliArgs, Logger logger) throws Exception
+    private String executeNonInteractively(CliArgs cliArgs, Logger logger)
     {
         ToStringLinePrinter linePrinter = new ToStringLinePrinter();
         ShellAndConnection sac = getShell( cliArgs, linePrinter );
         CypherShell shell = sac.shell;
         main.runShell(cliArgs, shell, logger);
-//        ConnectionConfig connectionConfig = sac.connectionConfig;
-//        main.connectMaybeInteractively( shell, connectionConfig, false, false );
         return linePrinter.result();
     }
 
