@@ -16,8 +16,10 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
+import static org.neo4j.shell.util.Versions.majorVersion;
+import static org.neo4j.shell.util.Versions.minorVersion;
 
 public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest {
     @Rule
@@ -65,6 +67,24 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest 
         assertThat(actual, containsString("Rows: 1"));
         assertThat(actual, containsString("null"));
         assertThat(actual, containsString("NULL"));
+    }
+
+    @Test
+    public void cypherWithProfileWithMemory() throws CommandException {
+        // given
+
+        String serverVersion = shell.getServerVersion();
+        // Memory profile are only available from 4.1
+        assumeTrue( majorVersion( serverVersion ) >= 4);
+        assumeTrue( minorVersion( serverVersion ) >= 1);
+
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE RETURN null");
+
+        //then
+        String actual = linePrinter.output();
+        System.out.println(actual);
+        assertThat(actual, containsString("Memory (Bytes): 0"));
     }
 
     @Test

@@ -223,6 +223,24 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
+    public void cypherWithProfileWithMemory() throws CommandException {
+        // given
+
+        String serverVersion = shell.getServerVersion();
+        // Memory profile are only available from 4.1
+        assumeTrue( majorVersion( serverVersion ) >= 4);
+        assumeTrue( minorVersion( serverVersion ) >= 1);
+
+        //when
+        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE WITH 1 AS x RETURN DISTINCT x");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat(actual, containsString("| Plan      | Statement   | Version      | Planner | Runtime       | Time | DbHits | Rows | Memory (Bytes) |")); // First table
+        assertThat(actual, containsString("| Operator        | Estimated Rows | Rows | DB Hits | Cache H/M | Memory (Bytes) | Identifiers |")); // Second table
+    }
+
+    @Test
     public void shouldShowTheNumberOfRows() throws CommandException {
         //when
         shell.execute("UNWIND [1,2,3] AS row RETURN row");

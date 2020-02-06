@@ -1,9 +1,9 @@
 package org.neo4j.shell.prettyprint;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -57,9 +57,27 @@ public class TableOutputFormatterTest {
     public void prettyPrintPlanInformation() {
         // given
         ResultSummary resultSummary = mock(ResultSummary.class);
+
+
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1",
+                                                           "Planner", "COST",
+                                                           "Runtime", "INTERPRETED",
+                                                           "GlobalMemory", 10,
+                                                           "DbHits", 2,
+                                                           "Rows", 3,
+                                                           "EstimatedRows", 10,
+                                                           "Time", 15,
+                                                           "Order", "a",
+                                                           "PageCacheHits", 22,
+                                                           "PageCacheMisses", 2,
+                                                           "Memory", 5).asMap(v -> v);
+
         ProfiledPlan plan = mock(ProfiledPlan.class);
         when(plan.dbHits()).thenReturn(1000L);
         when(plan.records()).thenReturn(20L);
+        when(plan.arguments()).thenReturn(argumentMap);
+        when(plan.operatorType()).thenReturn("MyOp");
+        when(plan.identifiers()).thenReturn(Arrays.asList( "a", "b" ));
 
         when(resultSummary.hasPlan()).thenReturn(true);
         when(resultSummary.hasProfile()).thenReturn(true);
@@ -68,7 +86,6 @@ public class TableOutputFormatterTest {
         when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
         when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
         when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
-        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
         BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
@@ -77,40 +94,20 @@ public class TableOutputFormatterTest {
         String actual = verbosePrinter.format(result);
 
         // then
-        argumentMap.forEach((k, v) -> {
-            assertThat(actual, CoreMatchers.containsString("| " + k));
-            assertThat(actual, CoreMatchers.containsString("| " + v.toString()));
-        });
-    }
-
-    @Test
-    public void prettyPrintPlanInformationWithNewlines() {
-        // given
-        ResultSummary resultSummary = mock(ResultSummary.class);
-        ProfiledPlan plan = mock(ProfiledPlan.class);
-
-        when(resultSummary.hasPlan()).thenReturn(true);
-        when(resultSummary.hasProfile()).thenReturn(false);
-        when(resultSummary.plan()).thenReturn(plan);
-        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
-        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
-        when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
-        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
-        when(plan.arguments()).thenReturn(argumentMap);
-
-        BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
-
-        // when
-        String actual = verbosePrinter.format(result);
-
-        // THEN
-        assertThat(actual, startsWith(String.join(NEWLINE,
-                                         "+--------------------------------------------------------------------+",
-                                         "| Plan      | Statement   | Version | Planner | Runtime       | Time |",
-                                         "+--------------------------------------------------------------------+",
-                                         "| \"EXPLAIN\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12   |",
-                                          "+--------------------------------------------------------------------+",
-                                         NEWLINE)));
+        assertThat( actual, startsWith( String.join( NEWLINE,
+                                                     "+-----------------------------------------------------------------------------------------------------+",
+                                                     "| Plan      | Statement   | Version | Planner | Runtime       | Time | DbHits | Rows | Memory (Bytes) |",
+                                                     "+-----------------------------------------------------------------------------------------------------+",
+                                                     "| \"PROFILE\" | \"READ_ONLY\" | \"3.1\"   | \"COST\"  | \"INTERPRETED\" | 12   | 1000   | 20   | 10             |",
+                                                     "+-----------------------------------------------------------------------------------------------------+",
+                                                     NEWLINE,
+                                                     "+----------+----------------+------+---------+-----------+-----------+----------------+-------------+------------+----------------------------+",
+                                                     "| Operator | Estimated Rows | Rows | DB Hits | Cache H/M | Time (ms) | Memory (Bytes) | Identifiers | Ordered by | Other                      |",
+                                                     "+----------+----------------+------+---------+-----------+-----------+----------------+-------------+------------+----------------------------+",
+                                                     "| +MyOp    |             10 |    3 |       2 |      22/2 |     0.000 |              5 | a, b        | a          | 15; INTERPRETED; 3.1; COST |",
+                                                     "+----------+----------------+------+---------+-----------+-----------+----------------+-------------+------------+----------------------------+",
+                                                     "",
+                                                     "0 rows available after 5 ms, consumed after another 7 ms" ) ));
     }
 
     @Test
