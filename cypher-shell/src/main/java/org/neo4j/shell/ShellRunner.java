@@ -3,15 +3,6 @@ package org.neo4j.shell;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.WriterOutputStream;
 
-import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.cli.FileHistorian;
-import org.neo4j.shell.cli.InteractiveShellRunner;
-import org.neo4j.shell.cli.NonInteractiveShellRunner;
-import org.neo4j.shell.cli.StringShellRunner;
-import org.neo4j.shell.log.Logger;
-import org.neo4j.shell.parser.ShellStatementParser;
-
-import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,6 +12,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import javax.annotation.Nonnull;
+
+import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.cli.FileHistorian;
+import org.neo4j.shell.cli.InteractiveShellRunner;
+import org.neo4j.shell.cli.NonInteractiveShellRunner;
+import org.neo4j.shell.log.Logger;
+import org.neo4j.shell.parser.ShellStatementParser;
 
 import static org.fusesource.jansi.internal.CLibrary.STDIN_FILENO;
 import static org.fusesource.jansi.internal.CLibrary.STDOUT_FILENO;
@@ -57,9 +56,7 @@ public interface ShellRunner {
                                       @Nonnull CypherShell cypherShell,
                                       @Nonnull Logger logger,
                                       @Nonnull ConnectionConfig connectionConfig) throws IOException {
-        if (cliArgs.getCypher().isPresent()) {
-            return new StringShellRunner(cliArgs, cypherShell, logger);
-        } else if (shouldBeInteractive(cliArgs)) {
+       if (shouldBeInteractive(cliArgs)) {
             UserMessagesHandler userMessagesHandler =
                     new UserMessagesHandler(connectionConfig, cypherShell.getServerVersion());
             return new InteractiveShellRunner(cypherShell, cypherShell, cypherShell, logger, new ShellStatementParser(),

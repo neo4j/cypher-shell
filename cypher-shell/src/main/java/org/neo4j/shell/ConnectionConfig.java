@@ -95,7 +95,7 @@ public class ConnectionConfig {
         this.password = password;
     }
 
-    public void setNewPassword(@Nonnull String password) {
+    public void setNewPassword( String password) {
         this.newPassword = password;
     }
 
