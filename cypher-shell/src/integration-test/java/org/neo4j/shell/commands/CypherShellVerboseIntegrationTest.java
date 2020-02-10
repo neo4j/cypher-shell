@@ -18,11 +18,13 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 import static org.neo4j.shell.util.Versions.majorVersion;
-import static org.neo4j.shell.util.Versions.minorVersion;
+import static org.neo4j.shell.util.Versions.version;
 
 public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTest {
     @Rule
@@ -192,7 +194,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public void cypherWithOrder() throws CommandException {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeTrue(minorVersion(serverVersion) == 6 || majorVersion(serverVersion) == 4);
+        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("3.6")));
 
         shell.execute( "CREATE INDEX ON :Person(age)" );
         shell.execute( "CALL db.awaitIndexes()" );
@@ -228,8 +230,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
 
         String serverVersion = shell.getServerVersion();
         // Memory profile are only available from 4.1
-        assumeTrue( majorVersion( serverVersion ) >= 4);
-        assumeTrue( minorVersion( serverVersion ) >= 1);
+        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("4.1")));
 
         //when
         shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE WITH 1 AS x RETURN DISTINCT x");
