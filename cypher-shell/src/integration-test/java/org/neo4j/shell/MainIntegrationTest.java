@@ -470,6 +470,7 @@ public class MainIntegrationTest
 
             // Should get exception that database is unavailable when trying to connect
             main.connectMaybeInteractively(shell, connectionConfig, true, true);
+            fail("No exception thrown");
         } catch(TransientException|ServiceUnavailableException e) {
             expectDatabaseUnavailable(e, "neo4j");
         } finally {
@@ -556,6 +557,7 @@ public class MainIntegrationTest
         try {
             // Should get exception that database is unavailable when trying to connect
             shell.execute(":use " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
+            fail("No exception thrown");
         } catch(TransientException|ServiceUnavailableException e) {
             expectDatabaseUnavailable(e, "neo4j");
         } finally {
@@ -594,6 +596,7 @@ public class MainIntegrationTest
         try {
             // Should get exception that database is unavailable when trying to connect
             shell.execute(":use");
+            fail("No exception thrown");
         } catch(TransientException|ServiceUnavailableException e) {
             expectDatabaseUnavailable(e, "neo4j");
         } finally {
