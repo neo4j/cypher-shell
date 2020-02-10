@@ -16,8 +16,11 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
+import static org.neo4j.shell.util.Versions.version;
 
 public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest {
     @Rule

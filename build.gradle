@@ -77,4 +77,5 @@ ext {
     mockitoVersion = '1.9.5'
     systemRulesVersion = '1.19.0'
     commonsIoVersion = '2.6'
+    hamcrestVersion = '2.0.0.0'
 }
