@@ -159,7 +159,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             try {
                 setActiveDatabase(connectionConfig.database());
                 driver = getDriver(connectionConfig, authToken);
-                reconnect();
+                reconnect(command);
             } catch (org.neo4j.driver.exceptions.ServiceUnavailableException e) {
                 if (!connectionConfig.scheme().equals(DriverFactory.BOLT_ROUTING_URI_SCHEME + "://")) {
                     throw e;
