@@ -115,7 +115,7 @@ public class AnsiLogger implements Logger {
      * Formatting for Bolt exceptions.
      */
     @Nonnull
-    String getFormattedMessage(@Nonnull final Throwable e) {
+    public String getFormattedMessage(@Nonnull final Throwable e) {
         AnsiFormattedText msg = AnsiFormattedText.s().colorRed();
 
         if (isDebugEnabled()) {

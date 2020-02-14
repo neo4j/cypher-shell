@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -150,8 +150,19 @@ public class CliArgHelperTest {
         assertNotNull(cliArgs);
         assertEquals("alice", cliArgs.getUsername());
         assertEquals("foo", cliArgs.getPassword());
+        assertEquals("bolt+routing://", cliArgs.getScheme());
         assertEquals("bar", cliArgs.getHost());
         assertEquals(69, cliArgs.getPort());
+    }
+
+    @Test
+    public void defaultAddress()
+    {
+        CliArgs cliArgs = CliArgHelper.parse();
+        assertNotNull( cliArgs );
+        assertEquals( CliArgs.DEFAULT_SCHEME, cliArgs.getScheme() );
+        assertEquals( CliArgs.DEFAULT_HOST, cliArgs.getHost() );
+        assertEquals( CliArgs.DEFAULT_PORT, cliArgs.getPort() );
     }
 
     @Test

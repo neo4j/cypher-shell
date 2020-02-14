@@ -82,7 +82,7 @@ public class CliArgHelper {
         cliArgs.setHost(addressMatcher.group("host"), "localhost");
         // Safe, regex only matches integers
         String portString = addressMatcher.group("port");
-        cliArgs.setPort(portString == null ? 7687 : Integer.parseInt(portString));
+        cliArgs.setPort(portString == null ? CliArgs.DEFAULT_PORT : Integer.parseInt(portString));
         // Also parse username and password from address if available
         cliArgs.setUsername(addressMatcher.group("username"), "");
         cliArgs.setPassword(addressMatcher.group("password"), "");
@@ -153,7 +153,7 @@ public class CliArgHelper {
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
                 .help("address and port to connect to")
-                .setDefault("neo4j://localhost:7687");
+                .setDefault(String.format("%s%s:%d", CliArgs.DEFAULT_SCHEME, CliArgs.DEFAULT_HOST, CliArgs.DEFAULT_PORT));
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
                 .help("username to connect as. Can also be specified using environment variable " + ConnectionConfig.USERNAME_ENV_VAR);
