@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.Neo4jException;
+import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
@@ -24,6 +25,8 @@ import static org.neo4j.shell.ShellRunner.isOutputInteractive;
 
 public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
+    public static final int EXIT_FAILURE = 1;
+    public static final int EXIT_SUCCESS = 0;
     private final InputStream in;
     private final PrintStream out;
     private final boolean hasSpecialInteractiveOutputStream;
@@ -75,8 +78,17 @@ public class Main {
         if (cliArgs.getVersion() || cliArgs.getDriverVersion()) {
             return;
         }
-        Logger logger = new AnsiLogger(cliArgs.getDebugMode());
-        PrettyConfig prettyConfig = new PrettyConfig(cliArgs);
+        Logger logger = new AnsiLogger( cliArgs.getDebugMode() );
+        PrettyConfig prettyConfig = new PrettyConfig( cliArgs );
+
+        CypherShell shell = new CypherShell( logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ),
+                cliArgs.getParameters() );
+        int exitCode = runShell( cliArgs, shell, logger );
+        System.exit( exitCode );
+    }
+
+    int runShell(@Nonnull CliArgs cliArgs, @Nonnull CypherShell shell, Logger logger )
+    {
         ConnectionConfig connectionConfig = new ConnectionConfig(
                 cliArgs.getScheme(),
                 cliArgs.getHost(),
@@ -84,35 +96,53 @@ public class Main {
                 cliArgs.getUsername(),
                 cliArgs.getPassword(),
                 cliArgs.getEncryption(),
-                cliArgs.getDatabase());
+                cliArgs.getDatabase() );
+        try
+        {
+            //If user is passing in a cypher statement just run that and be done with it
+            if ( cliArgs.getCypher().isPresent() )
+            {
+                // Can only prompt for password if input has not been redirected
+                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive(),
+                        () -> shell.execute( cliArgs.getCypher().get() ) );
+                return EXIT_SUCCESS;
+            }
+            else
+            {
+                // Can only prompt for password if input has not been redirected
+                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive());
+                // Construct shellrunner after connecting, due to interrupt handling
+                ShellRunner shellRunner = ShellRunner.getShellRunner( cliArgs, shell, logger, connectionConfig );
+                CommandHelper commandHelper = new CommandHelper( logger, shellRunner.getHistorian(), shell );
 
-        try {
-            CypherShell shell = new CypherShell(logger, prettyConfig, ShellRunner.shouldBeInteractive( cliArgs ), cliArgs.getParameters());
-            // Can only prompt for password if input has not been redirected
-            connectMaybeInteractively(shell, connectionConfig, isInputInteractive(), isOutputInteractive());
+                shell.setCommandHelper( commandHelper );
 
-            // Construct shellrunner after connecting, due to interrupt handling
-            ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, shell, logger, connectionConfig);
-
-            CommandHelper commandHelper = new CommandHelper(logger, shellRunner.getHistorian(), shell);
-
-            shell.setCommandHelper(commandHelper);
-
-            int code = shellRunner.runUntilEnd();
-            System.exit(code);
-        } catch (Throwable e) {
-            logger.printError(e);
-            System.exit(1);
+                return shellRunner.runUntilEnd();
+            }
         }
+        catch ( Throwable e )
+        {
+            logger.printError( e );
+            return EXIT_FAILURE;
+        }
+    }
+
+    void connectMaybeInteractively(@Nonnull CypherShell shell,
+            @Nonnull ConnectionConfig connectionConfig,
+            boolean inputInteractive,
+            boolean outputInteractive)
+            throws Exception {
+        connectMaybeInteractively( shell, connectionConfig, inputInteractive, outputInteractive, null );
     }
 
     /**
      * Connect the shell to the server, and try to handle missing passwords and such
      */
-    void connectMaybeInteractively(@Nonnull CypherShell shell,
-                                   @Nonnull ConnectionConfig connectionConfig,
-                                   boolean inputInteractive,
-                                   boolean outputInteractive)
+    private void connectMaybeInteractively( @Nonnull CypherShell shell,
+            @Nonnull ConnectionConfig connectionConfig,
+            boolean inputInteractive,
+            boolean outputInteractive,
+            ThrowingAction<CommandException> command )
             throws Exception {
 
         boolean didPrompt = false;
@@ -126,7 +156,7 @@ public class Main {
         while (true) {
             try {
                 // Try to connect
-                shell.connect(connectionConfig);
+                shell.connect(connectionConfig, command);
 
                 // If no exception occurred we are done
                 break;

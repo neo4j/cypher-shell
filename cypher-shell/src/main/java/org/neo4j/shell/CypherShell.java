@@ -1,8 +1,15 @@
 package org.neo4j.shell;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+
 import org.neo4j.driver.exceptions.DiscoveryException;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
+import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.commands.Command;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
@@ -13,12 +20,6 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
 import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A possibly interactive shell for evaluating cypher statements.
@@ -137,10 +138,12 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
      * Open a session to Neo4j
      *
      * @param connectionConfig
+     * @param command
      */
     @Override
-    public void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException {
-        boltStateHandler.connect(connectionConfig);
+    public void connect( @Nonnull ConnectionConfig connectionConfig,
+            ThrowingAction<CommandException> command) throws CommandException {
+        boltStateHandler.connect(connectionConfig, command );
     }
 
     @Nonnull

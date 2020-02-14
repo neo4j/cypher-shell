@@ -5,15 +5,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.Optional;
+
 import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.summary.ResultSummary;
-import org.neo4j.shell.cli.CliArgHelper;
-import org.neo4j.shell.cli.CliArgs;
-import org.neo4j.shell.cli.StringShellRunner;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
@@ -24,17 +23,20 @@ import org.neo4j.shell.state.BoltResult;
 import org.neo4j.shell.state.BoltStateHandler;
 import org.neo4j.shell.state.ListBoltResult;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
-import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyObject;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
@@ -64,7 +66,7 @@ public class CypherShellTest {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.connect(cc);
-        verify(mockedBoltStateHandler).connect(cc);
+        verify(mockedBoltStateHandler).connect(cc, null);
 
         shell.isConnected();
         verify(mockedBoltStateHandler).isConnected();
@@ -254,18 +256,6 @@ public class CypherShellTest {
         assertFalse(exe.isPresent());
     }
 
-    @Test
-    public void specifyingACypherStringShouldGiveAStringRunner() throws IOException {
-        CliArgs cliArgs = CliArgHelper.parse("MATCH (n) RETURN n");
-
-        ConnectionConfig connectionConfig = mock(ConnectionConfig.class);
-
-        ShellRunner shellRunner = ShellRunner.getShellRunner(cliArgs, offlineTestShell, logger, connectionConfig);
-
-        if (!(shellRunner instanceof StringShellRunner)) {
-            fail("Expected a different runner than: " + shellRunner.getClass().getSimpleName());
-        }
-    }
 
     @Test
     public void setParameterDoesNotTriggerByBoltError() throws EvaluationException, CommandException {

@@ -1,14 +1,15 @@
 package org.neo4j.shell.commands;
 
+import java.util.Arrays;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.exception.ExitException;
 import org.neo4j.shell.log.AnsiFormattedText;
 import org.neo4j.shell.log.Logger;
 
-import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.List;
-
+import static org.neo4j.shell.Main.EXIT_SUCCESS;
 import static org.neo4j.shell.commands.CommandHelper.simpleArgParse;
 
 /**
@@ -57,6 +58,6 @@ public class Exit implements Command {
     public void execute(@Nonnull final String argString) throws ExitException, CommandException {
         simpleArgParse(argString, 0, COMMAND_NAME, getUsage());
 
-        throw new ExitException(0);
+        throw new ExitException(EXIT_SUCCESS);
     }
 }

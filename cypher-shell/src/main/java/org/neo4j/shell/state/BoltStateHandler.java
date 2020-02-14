@@ -29,6 +29,7 @@ import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.internal.DriverFactory;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -149,18 +150,16 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     @Override
-    public void connect(@Nonnull ConnectionConfig connectionConfig) throws CommandException {
+    public void connect( @Nonnull ConnectionConfig connectionConfig, ThrowingAction<CommandException> command) throws CommandException {
         if (isConnected()) {
             throw new CommandException("Already connected");
         }
-
         final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
-
         try {
             try {
                 setActiveDatabase(connectionConfig.database());
                 driver = getDriver(connectionConfig, authToken);
-                reconnect();
+                reconnect(command);
             } catch (org.neo4j.driver.exceptions.ServiceUnavailableException e) {
                 if (!connectionConfig.scheme().equals(DriverFactory.BOLT_ROUTING_URI_SCHEME + "://")) {
                     throw e;
@@ -174,7 +173,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                     connectionConfig.encryption(),
                     connectionConfig.database());
                 driver = getDriver(connectionConfig, authToken);
-                reconnect();
+                reconnect(command);
             }
         } catch (Throwable t) {
             try {
@@ -186,42 +185,62 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
     }
 
-    private void reconnect() {
-        reconnect(true);
+    private void reconnect() throws CommandException {
+        reconnect(true, null);
     }
 
-    private void reconnect(boolean keepBookmark) {
+    private void reconnect(ThrowingAction<CommandException> command) throws CommandException {
+        reconnect(true, command);
+    }
+
+    private void reconnect(boolean keepBokmark) throws CommandException {
+        reconnect(keepBokmark, null);
+    }
+
+    private void reconnect( boolean keepBookmark, ThrowingAction<CommandException> command ) throws CommandException {
         SessionConfig.Builder builder = SessionConfig.builder();
-        builder.withDefaultAccessMode(AccessMode.WRITE);
-        if (!ABSENT_DB_NAME.equals(activeDatabaseNameAsSetByUser)) {
+        builder.withDefaultAccessMode( AccessMode.WRITE );
+        if ( !ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser ) )
+        {
             builder.withDatabase( activeDatabaseNameAsSetByUser );
         }
-        if (session != null && keepBookmark) {
+        if ( session != null && keepBookmark )
+        {
             // Save the last bookmark and close the session
             final Bookmark bookmark = session.lastBookmark();
             session.close();
-            builder.withBookmarks(bookmark);
-        } else if (systemBookmark != null) {
-            builder.withBookmarks(systemBookmark);
+            builder.withBookmarks( bookmark );
+        }
+        else if ( systemBookmark != null )
+        {
+            builder.withBookmarks( systemBookmark );
         }
 
-        session = driver.session(builder.build());
+        session = driver.session( builder.build() );
 
-        String query = activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "CALL db.indexes()" : "RETURN 1";
+        ThrowingAction<CommandException> action = command != null ? command : getPing();
 
         resetActualDbName(); // Set this to null first in case run throws an exception
-        Result run = session.run(query);
-        ResultSummary summary = null;
-        try {
-            summary = run.consume();
-        } finally {
-            // Since run.consume() can throw the first time we have to go through this extra hoop to get the summary
-            if (summary == null) {
+        action.apply();
+    }
+
+    private ThrowingAction<CommandException> getPing() {
+        String query =
+                activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "CALL db.indexes()" : "RETURN 1";
+        return () -> {
+            Result run = session.run(query.trim());
+            ResultSummary summary = null;
+            try {
                 summary = run.consume();
+            } finally {
+                // Since run.consume() can throw the first time we have to go through this extra hoop to get the summary
+                if (summary == null) {
+                    summary = run.consume();
+                }
+                BoltStateHandler.this.version = summary.server().version();
+                updateActualDbName(summary);
             }
-            this.version = summary.server().version();
-            updateActualDbName(summary);
-        }
+        };
     }
 
     @Nonnull
@@ -268,7 +287,8 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         actualDatabaseNameAsReportedByServer = getActualDbName(resultSummary);
     }
 
-    public void changePassword(@Nonnull ConnectionConfig connectionConfig) {
+    public void changePassword( @Nonnull ConnectionConfig connectionConfig )
+    {
         if (!connectionConfig.passwordChangeRequired()) {
             return;
         }
