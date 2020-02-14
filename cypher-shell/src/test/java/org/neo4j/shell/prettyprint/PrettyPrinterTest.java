@@ -74,7 +74,10 @@ public class PrettyPrinterTest {
         when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
         when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
         when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
-        Map<String, Value> argumentMap = Values.parameters("Version", "3.1", "Planner", "COST", "Runtime", "INTERPRETED").asMap(v -> v);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1",
+                                                           "Planner", "COST",
+                                                           "Runtime", "INTERPRETED",
+                                                           "GlobalMemory", 10).asMap(v -> v);
         when(plan.arguments()).thenReturn(argumentMap);
 
         BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
@@ -91,7 +94,47 @@ public class PrettyPrinterTest {
                 "Runtime: \"INTERPRETED\"\n" +
                 "Time: 12\n" +
                 "Rows: 20\n" +
-                "DbHits: 1000";
+                "DbHits: 1000\n" +
+                "Memory (Bytes): 10";
+        Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
+    }
+
+    @Test
+    public void prettyPrintProfileInformationIfGlobalMemoryIsMissing() {
+        // given
+        ResultSummary resultSummary = mock(ResultSummary.class);
+        ProfiledPlan plan = mock(ProfiledPlan.class);
+        when(plan.dbHits()).thenReturn(1000L);
+        when(plan.records()).thenReturn(20L);
+
+        when(resultSummary.hasPlan()).thenReturn(true);
+        when(resultSummary.hasProfile()).thenReturn(true);
+        when(resultSummary.plan()).thenReturn(plan);
+        when(resultSummary.profile()).thenReturn(plan);
+        when(resultSummary.resultAvailableAfter(anyObject())).thenReturn(5L);
+        when(resultSummary.resultConsumedAfter(anyObject())).thenReturn(7L);
+        when(resultSummary.queryType()).thenReturn(QueryType.READ_ONLY);
+        Map<String, Value> argumentMap = Values.parameters("Version", "3.1",
+                                                           "Planner", "COST",
+                                                           "Runtime", "INTERPRETED").asMap(v -> v);
+        when(plan.arguments()).thenReturn(argumentMap);
+
+        BoltResult result = new ListBoltResult(Collections.emptyList(), resultSummary);
+
+        // when
+        String actual = plainPrinter.format(result);
+
+        // then
+        String expected =
+                "Plan: \"PROFILE\"\n" +
+                "Statement: \"READ_ONLY\"\n" +
+                "Version: \"3.1\"\n" +
+                "Planner: \"COST\"\n" +
+                "Runtime: \"INTERPRETED\"\n" +
+                "Time: 12\n" +
+                "Rows: 20\n" +
+                "DbHits: 1000\n" +
+                "Memory (Bytes): \"?\"";
         Stream.of(expected.split("\n")).forEach(e -> assertThat(actual, containsString(e)));
     }
 

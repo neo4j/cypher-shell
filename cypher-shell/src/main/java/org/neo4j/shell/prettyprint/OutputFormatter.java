@@ -204,15 +204,17 @@ public interface OutputFormatter {
         result.put("Plan", Values.value(summary.hasProfile() ? "PROFILE" : "EXPLAIN"));
         result.put("Statement", Values.value(summary.queryType().name()));
         Map<String, Value> arguments = plan.arguments();
-        Value defaultValue = Values.value("");
+        Value emptyString = Values.value("");
+        Value questionMark = Values.value("?");
 
         for (String key : INFO_SUMMARY) {
-            Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), defaultValue));
+            Value value = arguments.getOrDefault(key, arguments.getOrDefault(key.toLowerCase(), emptyString));
             result.put(key, value);
         }
         result.put("Time", Values.value(summary.resultAvailableAfter(MILLISECONDS)+summary.resultConsumedAfter(MILLISECONDS)));
         if ( summary.hasProfile() ) result.put( "DbHits", Values.value( collectHits( summary.profile() ) ) );
         if (summary.hasProfile()) result.put("Rows", Values.value( summary.profile().records() ));
+        if (summary.hasProfile()) result.put("Memory (Bytes)", arguments.getOrDefault("GlobalMemory", questionMark));
         return result;
     }
 

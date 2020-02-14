@@ -37,16 +37,17 @@ class TablePlanFormatter {
     private static final String PAGE_CACHE = "Cache H/M";
     private static final String TIME = "Time (ms)";
     private static final String ORDER = "Ordered by";
+    private static final String MEMORY = "Memory (Bytes)";
     private static final String IDENTIFIERS = "Identifiers";
     private static final String OTHER = "Other";
     private static final String SEPARATOR = ", ";
     private static final Pattern DEDUP_PATTERN = Pattern.compile("\\s*(\\S+)@\\d+");
 
-    private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, PAGE_CACHE, TIME, IDENTIFIERS, ORDER, OTHER);
+    private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, PAGE_CACHE, TIME, MEMORY, IDENTIFIERS, ORDER, OTHER);
 
     private static final Set<String> IGNORED_ARGUMENTS = new LinkedHashSet<>(
             asList( "Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "planner-version", "version", "runtime", "runtime-impl", "runtime-version",
-                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "PageCacheHitRatio", "Order" ) );
+                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "PageCacheHitRatio", "Order", "Memory", "GlobalMemory" ) );
     public static final Value ZERO_VALUE = Values.value(0);
 
     private int width(@Nonnull String header, @Nonnull Map<String, Integer> columns) {
@@ -207,6 +208,8 @@ class TablePlanFormatter {
                     return mapping(TIME, new Right(String.format("%.3f", value.asLong() / 1000000.0d)), columns);
                 case "Order":
                     return mapping( ORDER, new Left( String.format( "%s", value.asString() ) ), columns );
+                case "Memory":
+                    return mapping( MEMORY, new Right( String.format( "%s", value.asNumber().toString() ) ), columns );
                 default:
                     return Optional.empty();
             }
