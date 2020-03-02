@@ -136,23 +136,17 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public void commitScenario() throws CommandException {
         beginCommand.execute("");
         shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
-        assertThat(linePrinter.output(), equalTo(""));
-        // Here ^^ we assert that nothing is printed before commit on explicit transactions. This was
-        // existing behaviour on typing this comment, but it could we worth thinking that through if
-        // we change explicit transaction queries to stream results.
+        assertThat(linePrinter.output(), containsString("0 rows available after"));
 
+        linePrinter.clear();
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        assertThat(linePrinter.output(), equalTo(""));
+        assertThat(linePrinter.output(), containsString("0 rows available after"));
 
+        linePrinter.clear();
         shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
-        assertThat(linePrinter.output(), equalTo(""));
+        assertThat(linePrinter.output(), containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
 
         commitCommand.execute("");
-
-        //then
-        String result = linePrinter.output();
-        assertThat(result,
-                containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
     }
 
     @Test
