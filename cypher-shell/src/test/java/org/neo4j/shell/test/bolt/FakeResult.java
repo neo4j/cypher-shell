@@ -2,6 +2,7 @@ package org.neo4j.shell.test.bolt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -13,6 +14,7 @@ import javax.annotation.Nonnull;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.exceptions.NoSuchRecordException;
+import org.neo4j.driver.internal.value.BooleanValue;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.shell.test.Util;
 
@@ -22,11 +24,16 @@ import org.neo4j.shell.test.Util;
 class FakeResult implements Result
 {
 
+    public static final FakeResult PING_SUCCESS = new FakeResult( Collections.singletonList( FakeRecord.of( "success", BooleanValue.TRUE ) ) );
     private final List<Record> records;
     private int currentRecord = -1;
 
     FakeResult() {
-        records = new ArrayList<>();
+        this(new ArrayList<>());
+    }
+
+    FakeResult(List<Record> records) {
+        this.records = records;
     }
 
     @Override
@@ -84,6 +91,10 @@ class FakeResult implements Result
      */
     static FakeResult parseStatement(@Nonnull final String statement) {
 
+        if ( isPing( statement ) ) {
+            return PING_SUCCESS;
+        }
+
         Pattern returnAsPattern = Pattern.compile("^return (.*) as (.*)$", Pattern.CASE_INSENSITIVE);
         Pattern returnPattern = Pattern.compile("^return (.*)$", Pattern.CASE_INSENSITIVE);
 
@@ -102,5 +113,10 @@ class FakeResult implements Result
             }
         }
         throw new IllegalArgumentException("No idea how to parse this statement");
+    }
+
+    private static boolean isPing( @Nonnull String statement )
+    {
+        return statement.trim().equalsIgnoreCase( "CALL db.ping()" );
     }
 }

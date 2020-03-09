@@ -1,6 +1,5 @@
 package org.neo4j.shell.state;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +16,6 @@ import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Query;
-import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
@@ -230,13 +228,19 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private ThrowingAction<CommandException> getPing() {
-        String query =
-                activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0 ? "CALL db.indexes()" : "RETURN 1";
+
         return () -> {
-            Result run = session.run(query.trim());
             ResultSummary summary = null;
+            Result run = session.run( "CALL db.ping()");
             try {
                 summary = run.consume();
+            } catch (ClientException e) {
+                //In older versions there is no db.ping procedure, use legacy method.
+                if ( procedureNotFound( e ) ) {
+                    run = session.run(isSystemDb() ? "CALL db.indexes()" : "RETURN 1" );
+                } else {
+                    throw e;
+                }
             } finally {
                 // Since run.consume() can throw the first time we have to go through this extra hoop to get the summary
                 if (summary == null) {
@@ -432,5 +436,15 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                         .map(transactionStatement -> biFunction.apply(transactionStatement, tx))
                         .collect(Collectors.toList()));
 
+    }
+
+    private boolean isSystemDb()
+    {
+        return activeDatabaseNameAsSetByUser.compareToIgnoreCase(SYSTEM_DB_NAME) == 0;
+    }
+
+    private boolean procedureNotFound( ClientException e )
+    {
+        return e.code().compareToIgnoreCase("Neo.ClientError.Procedure.ProcedureNotFound") == 0;
     }
 }
