@@ -26,7 +26,7 @@ import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.DriverFactory;
+import org.neo4j.driver.internal.Scheme;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.function.ThrowingAction;
@@ -161,11 +161,11 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 driver = getDriver(connectionConfig, authToken);
                 reconnect(command);
             } catch (org.neo4j.driver.exceptions.ServiceUnavailableException e) {
-                if (!connectionConfig.scheme().equals(DriverFactory.BOLT_ROUTING_URI_SCHEME + "://")) {
+                if (!connectionConfig.scheme().equals( Scheme.NEO4J_URI_SCHEME + "://")) {
                     throw e;
                 }
                 connectionConfig = new ConnectionConfig(
-                    DriverFactory.BOLT_URI_SCHEME + "://",
+                    Scheme.BOLT_URI_SCHEME + "://",
                     connectionConfig.host(),
                     connectionConfig.port(),
                     connectionConfig.username(),
