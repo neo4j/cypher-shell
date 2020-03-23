@@ -19,7 +19,6 @@ import org.neo4j.driver.Transaction;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
-import org.neo4j.driver.internal.DriverFactory;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.driver.summary.ServerInfo;
@@ -30,7 +29,7 @@ import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeDriver;
 import org.neo4j.shell.test.bolt.FakeSession;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,6 +38,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -64,7 +64,7 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void versionIsEmptyBeforeConnect() throws CommandException {
+    public void versionIsEmptyBeforeConnect() {
         assertFalse(boltStateHandler.isConnected());
         assertEquals("", boltStateHandler.getServerVersion());
     }
@@ -147,7 +147,7 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void exceptionsFromSilentDisconnectAreSuppressedToReportOriginalErrors() throws CommandException {
+    public void exceptionsFromSilentDisconnectAreSuppressedToReportOriginalErrors() {
         Session session = mock(Session.class);
         Result resultMock = mock(Result.class);
 
@@ -266,7 +266,7 @@ public class BoltStateHandlerTest {
 
         Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, sessionMock, "neo4j-version");
 
-        when(resultMock.list()).thenReturn(asList(recordMock));
+        when(resultMock.list()).thenReturn(singletonList(recordMock));
 
         when(valueMock.toString()).thenReturn("999");
         when(recordMock.get(0)).thenReturn(valueMock);
@@ -292,7 +292,7 @@ public class BoltStateHandlerTest {
 
         Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, sessionMock, "neo4j-version");
 
-        when(resultMock.list()).thenReturn(asList(recordMock));
+        when(resultMock.list()).thenReturn(singletonList(recordMock));
 
         when(valueMock.toString()).thenReturn("999");
         when(recordMock.get(0)).thenReturn(valueMock);
@@ -408,6 +408,29 @@ public class BoltStateHandlerTest {
         assertEquals("bolt", uriScheme[0]);
     }
 
+    @Test
+    public void fallbackToLegacyPing() throws CommandException {
+        //given
+        Session sessionMock = mock(Session.class);
+        Result resultMock = mock(Result.class);
+        Record recordMock = mock(Record.class);
+        Value valueMock = mock(Value.class);
+        Result failing = mock(Result.class);
+        Result other = mock(Result.class, RETURNS_DEEP_STUBS);
+        when(failing.consume()).thenThrow( new ClientException( "Neo.ClientError.Procedure.ProcedureNotFound", "No procedure CALL db.ping(()" ) );
+        when(sessionMock.run( "CALL db.ping()")).thenReturn( failing );
+        when(sessionMock.run( "RETURN 1")).thenReturn( other );
+        Driver driverMock = mock(Driver.class);
+        when(driverMock.session(any())).thenReturn(sessionMock);
+        OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(driverMock);
+
+        //when
+        boltStateHandler.connect();
+
+        //then
+        verify(sessionMock).run( "RETURN 1");
+    }
+
     private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version) {
         return stubResultSummaryInAnOpenSession(resultMock, sessionMock, version, DEFAULT_DEFAULT_DB_NAME);
     }
@@ -425,7 +448,7 @@ public class BoltStateHandlerTest {
         when(databaseInfo.name()).thenReturn(databaseName);
 
         when(sessionMock.isOpen()).thenReturn(true);
-        when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
+        when(sessionMock.run("CALL db.ping()")).thenReturn(resultMock);
         when(driverMock.session(any())).thenReturn(sessionMock);
 
         return driverMock;
