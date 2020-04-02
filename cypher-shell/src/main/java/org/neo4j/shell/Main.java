@@ -22,6 +22,7 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 
 import static org.neo4j.shell.ShellRunner.isInputInteractive;
 import static org.neo4j.shell.ShellRunner.isOutputInteractive;
+import static org.neo4j.shell.util.Versions.isPasswordChangeRequiredException;
 
 public class Main {
     static final String NEO_CLIENT_ERROR_SECURITY_UNAUTHORIZED = "Neo.ClientError.Security.Unauthorized";
@@ -172,7 +173,7 @@ public class Main {
                 promptForUsernameAndPassword(connectionConfig, outputInteractive);
                 didPrompt = true;
             } catch (Neo4jException e) {
-                if (passwordChangeRequiredException(e)) {
+                if (isPasswordChangeRequiredException(e)) {
                     promptForPasswordChange(connectionConfig, outputInteractive);
                     shell.changePassword(connectionConfig);
                     didPrompt = true;
@@ -181,10 +182,6 @@ public class Main {
                 }
             }
         }
-    }
-
-    private boolean passwordChangeRequiredException(Neo4jException e) {
-        return "Neo.ClientError.Security.CredentialsExpired".equalsIgnoreCase(e.code());
     }
 
     private void promptForUsernameAndPassword(ConnectionConfig connectionConfig, boolean outputInteractive) throws Exception {
