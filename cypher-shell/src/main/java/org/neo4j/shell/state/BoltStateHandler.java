@@ -224,11 +224,12 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         session = driver.session( builder.build() );
 
         resetActualDbName(); // Set this to null first in case run throws an exception
-        wrap(command).apply();
+        connect(command);
     }
 
-    private ThrowingAction<CommandException> wrap(ThrowingAction<CommandException> command) {
-        return command == null ? getPing() : () ->
+    private void connect( ThrowingAction<CommandException> command) throws CommandException
+    {
+        ThrowingAction<CommandException> toCall = command == null ? getPing() : () ->
         {
             try
             {
@@ -245,6 +246,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 throw e;
             }
         };
+
+        //execute
+        toCall.apply();
     }
 
     private ThrowingAction<CommandException> getPing() {
