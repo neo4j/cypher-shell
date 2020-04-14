@@ -23,6 +23,7 @@ import org.neo4j.driver.Transaction;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.exceptions.ClientException;
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.internal.Scheme;
 import org.neo4j.driver.summary.DatabaseInfo;
@@ -36,6 +37,7 @@ import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.NullLogging;
 
+import static org.neo4j.shell.util.Versions.isPasswordChangeRequiredException;
 import static org.neo4j.shell.util.Versions.majorVersion;
 
 /**
@@ -221,10 +223,32 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
         session = driver.session( builder.build() );
 
-        ThrowingAction<CommandException> action = command != null ? command : getPing();
-
         resetActualDbName(); // Set this to null first in case run throws an exception
-        action.apply();
+        connect(command);
+    }
+
+    private void connect( ThrowingAction<CommandException> command) throws CommandException
+    {
+        ThrowingAction<CommandException> toCall = command == null ? getPing() : () ->
+        {
+            try
+            {
+                command.apply();
+            }
+            catch ( Neo4jException e )
+            {
+                //If we need to update password we need to call the apply
+                //to set the server version and such.
+                if (isPasswordChangeRequiredException( e ))
+                {
+                    getPing().apply();
+                }
+                throw e;
+            }
+        };
+
+        //execute
+        toCall.apply();
     }
 
     private ThrowingAction<CommandException> getPing() {
@@ -418,6 +442,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     public void disconnect() {
          reset();
          silentDisconnect();
+         version = null;
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
