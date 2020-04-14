@@ -1,5 +1,7 @@
 package org.neo4j.shell.util;
 
+import org.neo4j.driver.exceptions.Neo4jException;
+
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -46,5 +48,9 @@ public final class Versions {
                 throw new AssertionError(
                         format("%s is not a proper version string, it should be of the form X.Y.Z ", version));
         }
+    }
+
+    public static boolean isPasswordChangeRequiredException( Neo4jException e) {
+        return "Neo.ClientError.Security.CredentialsExpired".equalsIgnoreCase(e.code());
     }
 }
