@@ -96,7 +96,7 @@ public class CliArgHelper {
         if (!pass.isEmpty()) {
             cliArgs.setPassword(pass, cliArgs.getPassword());
         }
-        cliArgs.setEncryption(ns.getBoolean("encryption"));
+        cliArgs.setEncryption(Encryption.parse(ns.get("encryption")));
         cliArgs.setDatabase(ns.getString("database"));
         cliArgs.setInputFilename(ns.getString( "file" )  );
 
@@ -161,10 +161,15 @@ public class CliArgHelper {
                 .setDefault("")
                 .help("password to connect with. Can also be specified using environment variable " + ConnectionConfig.PASSWORD_ENV_VAR);
         connGroup.addArgument("--encryption")
-                .help("whether the connection to Neo4j should be encrypted; must be consistent with Neo4j's " +
-                        "configuration")
-                .type(new BooleanArgumentType())
-                .setDefault(false);
+                .help("whether the connection to Neo4j should be encrypted. This must be consistent with Neo4j's " +
+                      "configuration. If choosing " + Encryption.DEFAULT.name().toLowerCase() +
+                      " the encryption setting is deduced from the specified address. " +
+                      "For example the 'neo4j+ssc' protocol would use encryption.")
+                 .choices(new CollectionArgumentChoice<>(
+                         Encryption.TRUE.name().toLowerCase(),
+                         Encryption.FALSE.name().toLowerCase(),
+                         Encryption.DEFAULT.name().toLowerCase()))
+                 .setDefault(Encryption.DEFAULT.name().toLowerCase());
         connGroup.addArgument("-d", "--database")
                 .help("database to connect to. Can also be specified using environment variable " + ConnectionConfig.DATABASE_ENV_VAR)
                 .setDefault("");

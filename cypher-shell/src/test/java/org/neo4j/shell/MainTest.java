@@ -16,6 +16,7 @@ import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.exceptions.SecurityException;
 import org.neo4j.shell.cli.CliArgs;
+import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.system.Utils;
 
 import static org.junit.Assert.assertEquals;
@@ -275,7 +276,7 @@ public class MainTest {
     @Test
     public void promptsForNewPasswordIfPasswordChangeRequired() throws Exception {
         // Use a real ConnectionConfig instead of the mock in this test
-        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
+        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", Encryption.DEFAULT, "");
         doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\nnewsecret\n";
@@ -300,7 +301,7 @@ public class MainTest {
     @Test
     public void promptsForNewPasswordIfPasswordChangeRequiredCannotBeEmpty() throws Exception {
         // Use a real ConnectionConfig instead of the mock in this test
-        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", false, "");
+        ConnectionConfig connectionConfig = new ConnectionConfig("", "", 0, "", "", Encryption.DEFAULT, "");
         doThrow(authException).doThrow(passwordChangeRequiredException).doNothing().when(shell).connect(connectionConfig, null);
 
         String inputString = "bob\nsecret\n\nnewsecret\n";

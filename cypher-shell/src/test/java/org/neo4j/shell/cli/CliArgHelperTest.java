@@ -196,14 +196,14 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void defaultsEncryptionToFalse() {
-        assertEquals(false, CliArgHelper.parse().getEncryption());
+    public void defaultsEncryptionToDefault() {
+        assertEquals(Encryption.DEFAULT, CliArgHelper.parse().getEncryption());
     }
 
     @Test
     public void allowsEncryptionToBeTurnedOnOrOff() {
-        assertEquals(true, CliArgHelper.parse("--encryption", "true").getEncryption());
-        assertEquals(false, CliArgHelper.parse("--encryption", "false").getEncryption());
+        assertEquals(Encryption.TRUE, CliArgHelper.parse("--encryption", "true").getEncryption());
+        assertEquals(Encryption.FALSE, CliArgHelper.parse("--encryption", "false").getEncryption());
     }
 
     @Test
