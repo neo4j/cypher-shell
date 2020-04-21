@@ -2,15 +2,14 @@ package org.neo4j.shell;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
+
+import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.log.Logger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
-
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class ConnectionConfigTest {
 
@@ -20,7 +19,7 @@ public class ConnectionConfigTest {
 
     private Logger logger = mock(Logger.class);
     private ConnectionConfig config = new ConnectionConfig("bolt://", "localhost", 1, "bob",
-            "pass", false, "db");
+                                                           "pass", Encryption.DEFAULT, "db");
 
 
     @Test
@@ -47,7 +46,7 @@ public class ConnectionConfigTest {
     public void usernameDefaultsToEnvironmentVar() {
         environmentVariables.set(ConnectionConfig.USERNAME_ENV_VAR, "alice");
         ConnectionConfig configWithEmptyParams = new ConnectionConfig("bolt://", "localhost", 1, "",
-                                                                      "", false, ABSENT_DB_NAME);
+                                                                      "", Encryption.DEFAULT, ABSENT_DB_NAME);
         assertEquals("alice", configWithEmptyParams.username());
     }
 
@@ -60,7 +59,7 @@ public class ConnectionConfigTest {
     public void passwordDefaultsToEnvironmentVar() {
         environmentVariables.set(ConnectionConfig.PASSWORD_ENV_VAR, "ssap");
         ConnectionConfig configWithEmptyParams = new ConnectionConfig("bolt://", "localhost", 1, "",
-                                                                      "", false, ABSENT_DB_NAME);
+                                                                      "", Encryption.DEFAULT, ABSENT_DB_NAME);
         assertEquals("ssap", configWithEmptyParams.password());
     }
 
@@ -73,7 +72,7 @@ public class ConnectionConfigTest {
     public void databaseDefaultsToEnvironmentVar() {
         environmentVariables.set(ConnectionConfig.DATABASE_ENV_VAR, "funnyDB");
         ConnectionConfig configWithEmptyParams = new ConnectionConfig("bolt://", "localhost", 1, "",
-                                                                      "", false, ABSENT_DB_NAME);
+                                                                      "", Encryption.DEFAULT, ABSENT_DB_NAME);
         assertEquals("funnyDB", configWithEmptyParams.database());
     }
     @Test
@@ -83,7 +82,8 @@ public class ConnectionConfigTest {
 
     @Test
     public void encryption() {
-        assertTrue(new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME).encryption());
-        assertFalse(new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME).encryption());
+        assertEquals(Encryption.DEFAULT, new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME).encryption());
+        assertEquals(Encryption.TRUE, new ConnectionConfig("bolt://", "", -1, "", "", Encryption.TRUE, ABSENT_DB_NAME).encryption());
+        assertEquals(Encryption.FALSE, new ConnectionConfig("bolt://", "", -1, "", "", Encryption.FALSE, ABSENT_DB_NAME).encryption());
     }
 }

@@ -163,11 +163,24 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 driver = getDriver(connectionConfig, authToken);
                 reconnect(command);
             } catch (org.neo4j.driver.exceptions.ServiceUnavailableException e) {
-                if (!connectionConfig.scheme().equals( Scheme.NEO4J_URI_SCHEME + "://")) {
+                String scheme = connectionConfig.scheme();
+                String fallbackScheme;
+                switch ( scheme )
+                {
+                case Scheme.NEO4J_URI_SCHEME + "://":
+                    fallbackScheme = Scheme.BOLT_URI_SCHEME;
+                    break;
+                case Scheme.NEO4J_LOW_TRUST_URI_SCHEME + "://":
+                    fallbackScheme = Scheme.BOLT_LOW_TRUST_URI_SCHEME;
+                    break;
+                case Scheme.NEO4J_HIGH_TRUST_URI_SCHEME + "://":
+                    fallbackScheme = Scheme.BOLT_HIGH_TRUST_URI_SCHEME;
+                    break;
+                default:
                     throw e;
                 }
                 connectionConfig = new ConnectionConfig(
-                    Scheme.BOLT_URI_SCHEME + "://",
+                    fallbackScheme + "://",
                     connectionConfig.host(),
                     connectionConfig.port(),
                     connectionConfig.username(),
@@ -438,10 +451,14 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
         Config.ConfigBuilder configBuilder = Config.builder().withLogging(NullLogging.NULL_LOGGING);
-        if (connectionConfig.encryption()) {
+        switch(connectionConfig.encryption())
+        {
+        case TRUE:
             configBuilder = configBuilder.withEncryption();
-        } else {
+            break;
+        case FALSE:
             configBuilder = configBuilder.withoutEncryption();
+            break;
         }
         return driverProvider.apply(connectionConfig.driverUrl(), authToken, configBuilder.build());
     }
