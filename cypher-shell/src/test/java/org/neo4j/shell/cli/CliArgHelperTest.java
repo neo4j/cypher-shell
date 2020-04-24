@@ -196,6 +196,13 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void shouldNotAcceptInvalidEncryption() throws Exception  {
+        thrown.expect( ArgumentParserException.class );
+        thrown.expectMessage( containsString("argument --encryption: invalid choice: 'bugaluga' (choose from {true,false,default})"));
+        CliArgHelper.parseAndThrow("--encryption", "bugaluga");
+    }
+
+    @Test
     public void shouldParseSingleIntegerArgWithAddition() {
         CliArgs cliArgs = CliArgHelper.parse( "-P", "foo=>3+5" );
         assertNotNull( cliArgs );
