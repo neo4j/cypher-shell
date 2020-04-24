@@ -162,8 +162,8 @@ public class CliArgHelper {
                 .help("password to connect with. Can also be specified using environment variable " + ConnectionConfig.PASSWORD_ENV_VAR);
         connGroup.addArgument("--encryption")
                 .help("whether the connection to Neo4j should be encrypted. This must be consistent with Neo4j's " +
-                      "configuration. If choosing " + Encryption.DEFAULT.name().toLowerCase() +
-                      " the encryption setting is deduced from the specified address. " +
+                      "configuration. If choosing '" + Encryption.DEFAULT.name().toLowerCase() +
+                      "' the encryption setting is deduced from the specified address. " +
                       "For example the 'neo4j+ssc' protocol would use encryption.")
                  .choices(new CollectionArgumentChoice<>(
                          Encryption.TRUE.name().toLowerCase(),
