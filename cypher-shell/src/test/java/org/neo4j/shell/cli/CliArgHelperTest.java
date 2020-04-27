@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -185,14 +185,21 @@ public class CliArgHelperTest {
     }
 
     @Test
-    public void defaultsEncryptionToFalse() {
-        assertEquals(false, CliArgHelper.parse().getEncryption());
+    public void defaultsEncryptionToDefault() {
+        assertEquals(Encryption.DEFAULT, CliArgHelper.parse().getEncryption());
     }
 
     @Test
     public void allowsEncryptionToBeTurnedOnOrOff() {
-        assertEquals(true, CliArgHelper.parse("--encryption", "true").getEncryption());
-        assertEquals(false, CliArgHelper.parse("--encryption", "false").getEncryption());
+        assertEquals(Encryption.TRUE, CliArgHelper.parse("--encryption", "true").getEncryption());
+        assertEquals(Encryption.FALSE, CliArgHelper.parse("--encryption", "false").getEncryption());
+    }
+
+    @Test
+    public void shouldNotAcceptInvalidEncryption() throws Exception  {
+        thrown.expect( ArgumentParserException.class );
+        thrown.expectMessage( containsString("argument --encryption: invalid choice: 'bugaluga' (choose from {true,false,default})"));
+        CliArgHelper.parseAndThrow("--encryption", "bugaluga");
     }
 
     @Test

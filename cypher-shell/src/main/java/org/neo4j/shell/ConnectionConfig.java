@@ -2,6 +2,8 @@ package org.neo4j.shell;
 
 import javax.annotation.Nonnull;
 
+import org.neo4j.shell.cli.Encryption;
+
 public class ConnectionConfig {
     public static final String USERNAME_ENV_VAR = "NEO4J_USERNAME";
     public static final String PASSWORD_ENV_VAR = "NEO4J_PASSWORD";
@@ -10,7 +12,7 @@ public class ConnectionConfig {
     private final String scheme;
     private final String host;
     private final int port;
-    private final boolean encryption;
+    private final Encryption encryption;
     private String username;
     private String password;
     private String newPassword;
@@ -21,7 +23,7 @@ public class ConnectionConfig {
                             int port,
                             @Nonnull String username,
                             @Nonnull String password,
-                            boolean encryption,
+                            Encryption encryption,
                             @Nonnull String database) {
         this.host = host;
         this.port = port;
@@ -78,7 +80,7 @@ public class ConnectionConfig {
     }
 
     @Nonnull
-    public boolean encryption() {
+    public Encryption encryption() {
         return encryption;
     }
 
