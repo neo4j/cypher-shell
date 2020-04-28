@@ -28,7 +28,7 @@ import static org.neo4j.shell.prettyprint.OutputFormatter.repeat;
 
 class TablePlanFormatter {
 
-    private static final String UNNAMED_PATTERN_STRING = "  (UNNAMED|FRESHID|AGGREGATION)(\\d+)";
+    private static final String UNNAMED_PATTERN_STRING = "  (UNNAMED|FRESHID|AGGREGATION|NODE|REL)(\\d+)";
     private static final Pattern UNNAMED_PATTERN = Pattern.compile(UNNAMED_PATTERN_STRING);
     private static final String OPERATOR = "Operator";
     private static final String ESTIMATED_ROWS = "Estimated Rows";
@@ -40,14 +40,16 @@ class TablePlanFormatter {
     private static final String MEMORY = "Memory (Bytes)";
     private static final String IDENTIFIERS = "Identifiers";
     private static final String OTHER = "Other";
+    private static final String DETAILS = "Details";
     private static final String SEPARATOR = ", ";
     private static final Pattern DEDUP_PATTERN = Pattern.compile("\\s*(\\S+)@\\d+");
+    public static final int MAX_DETAILS_COLUMN_WIDTH = 100;
 
-    private static final List<String> HEADERS = asList(OPERATOR, ESTIMATED_ROWS, ROWS, HITS, PAGE_CACHE, TIME, MEMORY, IDENTIFIERS, ORDER, OTHER);
+    private static final List<String> HEADERS = asList(OPERATOR, DETAILS, ESTIMATED_ROWS, ROWS, HITS, PAGE_CACHE, TIME, MEMORY, IDENTIFIERS, ORDER, OTHER);
 
     private static final Set<String> IGNORED_ARGUMENTS = new LinkedHashSet<>(
             asList( "Rows", "DbHits", "EstimatedRows", "planner", "planner-impl", "planner-version", "version", "runtime", "runtime-impl", "runtime-version",
-                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "PageCacheHitRatio", "Order", "Memory", "GlobalMemory" ) );
+                    "time", "source-code", "PageCacheMisses", "PageCacheHits", "PageCacheHitRatio", "Order", "Memory", "GlobalMemory", "Details" ) );
     public static final Value ZERO_VALUE = Values.value(0);
 
     private int width(@Nonnull String header, @Nonnull Map<String, Integer> columns) {
@@ -161,6 +163,8 @@ class TablePlanFormatter {
                 return v.asString();
             case "PageCacheMisses":
                 return v.asNumber().toString();
+            case "Details":
+                return v.asString();
             default:
                 return v.asObject().toString();
         }
@@ -208,6 +212,8 @@ class TablePlanFormatter {
                     return mapping(TIME, new Right(String.format("%.3f", value.asLong() / 1000000.0d)), columns);
                 case "Order":
                     return mapping( ORDER, new Left( String.format( "%s", value.asString() ) ), columns );
+                case "Details":
+                    return mapping( DETAILS, new Left( truncate(value.asString()) ), columns );
                 case "Memory":
                     return mapping( MEMORY, new Right( String.format( "%s", value.asNumber().toString() ) ), columns );
                 default:
@@ -438,5 +444,13 @@ class TablePlanFormatter {
         public static <T1, T2> Pair<T1, T2> of(T1 _1, T2 _2) {
             return new Pair<>(_1, _2);
         }
+    }
+
+    private String truncate( String original ) {
+        if(original.length() <= MAX_DETAILS_COLUMN_WIDTH){
+            return original;
+        }
+
+        return original.substring( 0, MAX_DETAILS_COLUMN_WIDTH - 3 ) + "...";
     }
 }

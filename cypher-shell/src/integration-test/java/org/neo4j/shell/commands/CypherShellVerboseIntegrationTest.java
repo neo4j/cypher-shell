@@ -203,6 +203,21 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
+    public void cypherWithQueryDetails() throws CommandException {
+        // given
+        String serverVersion = shell.getServerVersion();
+        assumeTrue((minorVersion(serverVersion) > 0 && majorVersion(serverVersion) == 4) || majorVersion(serverVersion) > 4);
+
+        //when
+        shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat( actual, containsString( "Details" ) );
+        assertThat( actual, containsString( "n.age AS age" ) );
+    }
+
+    @Test
     public void cypherWithExplainAndRulePlanner() throws CommandException {
         //given (there is no rule planner in neo4j 4.0)
         assumeTrue( majorVersion( shell.getServerVersion() ) < 4 );
