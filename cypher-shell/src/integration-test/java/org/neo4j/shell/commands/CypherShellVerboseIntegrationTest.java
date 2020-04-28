@@ -192,7 +192,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public void cypherWithOrder() throws CommandException {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeTrue(minorVersion(serverVersion) == 6 || majorVersion(serverVersion) == 4);
+        assumeTrue((minorVersion(serverVersion) == 6 && majorVersion(serverVersion) == 3) || majorVersion(serverVersion) > 3);
 
         shell.execute( "CREATE INDEX ON :Person(age)" );
         shell.execute( "CALL db.awaitIndexes()" );
@@ -204,6 +204,21 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String actual = linePrinter.output();
         assertThat( actual, containsString( "Order" ) );
         assertThat( actual, containsString( "n.age ASC" ) );
+    }
+
+    @Test
+    public void cypherWithQueryDetails() throws CommandException {
+        // given
+        String serverVersion = shell.getServerVersion();
+        assumeTrue((minorVersion(serverVersion) > 0 && majorVersion(serverVersion) == 4) || majorVersion(serverVersion) > 4);
+
+        //when
+        shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat( actual, containsString( "Details" ) );
+        assertThat( actual, containsString( "n.age AS age" ) );
     }
 
     @Test
