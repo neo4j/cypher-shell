@@ -13,6 +13,7 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.summary.ResultSummary;
+import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
@@ -62,7 +63,7 @@ public class CypherShellTest {
 
     @Test
     public void verifyDelegationOfConnectionMethods() throws CommandException {
-        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig cc = new ConnectionConfig("bolt://", "", 1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
 
         shell.connect(cc);

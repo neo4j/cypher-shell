@@ -25,7 +25,7 @@ public class CliArgs {
     private Format format = Format.AUTO;
     @SuppressWarnings( "OptionalUsedAsFieldOrParameterType" )
     private Optional<String> cypher = Optional.empty();
-    private boolean encryption;
+    private Encryption encryption = Encryption.DEFAULT;
     private boolean debugMode;
     private boolean nonInteractive = false;
     private boolean version = false;
@@ -101,7 +101,7 @@ public class CliArgs {
     /**
      * Set whether the connection should be encrypted
      */
-    public void setEncryption(boolean encryption) {
+    public void setEncryption(Encryption encryption) {
         this.encryption = encryption;
     }
 
@@ -171,7 +171,7 @@ public class CliArgs {
         return format;
     }
 
-    public boolean getEncryption() {
+    public Encryption getEncryption() {
         return encryption;
     }
 

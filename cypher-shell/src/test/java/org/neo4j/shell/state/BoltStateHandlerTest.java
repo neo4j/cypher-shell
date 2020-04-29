@@ -24,6 +24,7 @@ import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.driver.summary.ServerInfo;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.TriFunction;
+import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.test.bolt.FakeDriver;
@@ -79,7 +80,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("", handler.getServerVersion());
@@ -90,7 +91,7 @@ public class BoltStateHandlerTest {
         Driver driverMock = stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
@@ -102,7 +103,7 @@ public class BoltStateHandlerTest {
                 stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA", "my_default_db");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("my_default_db", handler.getActualDatabaseAsReportedByServer());
@@ -122,7 +123,7 @@ public class BoltStateHandlerTest {
                 .thenReturn(resultMock);
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         try {
@@ -373,7 +374,7 @@ public class BoltStateHandlerTest {
     public void turnOffEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
         assertFalse(provider.config.encrypted());
     }
@@ -382,7 +383,7 @@ public class BoltStateHandlerTest {
     public void turnOnEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", true, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.TRUE, ABSENT_DB_NAME);
         handler.connect(config);
         assertTrue(provider.config.encrypted());
     }
@@ -402,7 +403,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("neo4j://", "", -1, "", "", false, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("neo4j://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("bolt", uriScheme[0]);
@@ -429,6 +430,48 @@ public class BoltStateHandlerTest {
 
         //then
         verify(sessionMock).run( "RETURN 1");
+    }
+
+    @Test
+    public void fallbackToBoltSSC() throws CommandException {
+        final String[] uriScheme = new String[1];
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                uriScheme[0] = uri.substring(0, uri.indexOf(':'));
+                if (uriScheme[0].equals("neo4j+ssc")) {
+                    throw new org.neo4j.driver.exceptions.ServiceUnavailableException("Please fall back");
+                }
+                super.apply(uri, authToken, config);
+                return new FakeDriver();
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
+        ConnectionConfig config = new ConnectionConfig("neo4j+ssc://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        handler.connect(config);
+
+        assertEquals("bolt+ssc", uriScheme[0]);
+    }
+
+    @Test
+    public void fallbackToBoltS() throws CommandException {
+        final String[] uriScheme = new String[1];
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                uriScheme[0] = uri.substring(0, uri.indexOf(':'));
+                if (uriScheme[0].equals("neo4j+s")) {
+                    throw new org.neo4j.driver.exceptions.ServiceUnavailableException("Please fall back");
+                }
+                super.apply(uri, authToken, config);
+                return new FakeDriver();
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
+        ConnectionConfig config = new ConnectionConfig("neo4j+s://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        handler.connect(config);
+
+        assertEquals("bolt+s", uriScheme[0]);
     }
 
     private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version) {
@@ -464,7 +507,7 @@ public class BoltStateHandlerTest {
         }
 
         public void connect() throws CommandException {
-            connect(new ConnectionConfig("bolt://", "", 1, "", "", false, ABSENT_DB_NAME));
+            connect(new ConnectionConfig("bolt://", "", 1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME));
         }
     }
 

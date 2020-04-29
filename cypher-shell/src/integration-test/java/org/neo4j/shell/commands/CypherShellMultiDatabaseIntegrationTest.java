@@ -11,6 +11,7 @@ import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.CypherShell;
 import org.neo4j.shell.ShellParameterMap;
 import org.neo4j.shell.StringLinePrinter;
+import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
@@ -45,7 +46,7 @@ public class CypherShellMultiDatabaseIntegrationTest
         beginCommand = new Begin( shell );
         rollbackCommand = new Rollback( shell );
 
-        shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME ) );
+        shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", "neo", Encryption.DEFAULT, ABSENT_DB_NAME ) );
 
         // Multiple databases are only available from 4.0
         assumeTrue( majorVersion( shell.getServerVersion() ) >= 4 );
@@ -137,7 +138,7 @@ public class CypherShellMultiDatabaseIntegrationTest
     {
         shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), true, new ShellParameterMap() );
         useCommand = new Use( shell );
-        shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", "neo", false, ABSENT_DB_NAME ) );
+        shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", "neo", Encryption.DEFAULT, ABSENT_DB_NAME ) );
 
         useCommand.execute( SYSTEM_DB_NAME );
 
