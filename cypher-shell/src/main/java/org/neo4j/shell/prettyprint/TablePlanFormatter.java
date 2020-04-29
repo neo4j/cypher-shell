@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 import static org.neo4j.shell.prettyprint.OutputFormatter.repeat;
 
-class TablePlanFormatter {
+public class TablePlanFormatter {
 
     private static final String UNNAMED_PATTERN_STRING = "  (UNNAMED|FRESHID|AGGREGATION|NODE|REL)(\\d+)";
     private static final Pattern UNNAMED_PATTERN = Pattern.compile(UNNAMED_PATTERN_STRING);
@@ -40,7 +40,7 @@ class TablePlanFormatter {
     private static final String MEMORY = "Memory (Bytes)";
     private static final String IDENTIFIERS = "Identifiers";
     private static final String OTHER = "Other";
-    private static final String DETAILS = "Details";
+    public static final String DETAILS = "Details";
     private static final String SEPARATOR = ", ";
     private static final Pattern DEDUP_PATTERN = Pattern.compile("\\s*(\\S+)@\\d+");
     public static final int MAX_DETAILS_COLUMN_WIDTH = 100;
@@ -81,7 +81,8 @@ class TablePlanFormatter {
         Map<String, Integer> columns = new HashMap<>();
         List<Line> lines = accumulate(plan, new Root(), columns);
 
-        List<String> headers = HEADERS.stream().filter(columns::containsKey).collect(Collectors.toList());
+        // Remove Identifiers column if we have a Details column
+        List<String> headers = HEADERS.stream().filter(header -> columns.containsKey(header) && !(header.equals(IDENTIFIERS) && columns.containsKey(DETAILS))).collect(Collectors.toList());
 
         StringBuilder result = new StringBuilder((2 + NEWLINE.length() + headers.stream().mapToInt(h -> width(h, columns)).sum()) * (lines.size() * 2 + 3));
 

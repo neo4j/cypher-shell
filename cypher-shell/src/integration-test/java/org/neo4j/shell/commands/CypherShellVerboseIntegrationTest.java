@@ -13,6 +13,7 @@ import org.neo4j.shell.StringLinePrinter;
 import org.neo4j.shell.cli.Format;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.prettyprint.PrettyConfig;
+import org.neo4j.shell.prettyprint.TablePlanFormatter;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -213,8 +214,24 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
 
         //then
         String actual = linePrinter.output();
-        assertThat( actual, containsString( "Details" ) );
+        assertThat( actual, containsString( TablePlanFormatter.DETAILS ) );
         assertThat( actual, containsString( "n.age AS age" ) );
+        assertThat( actual, not( containsString( TablePlanFormatter.IDENTIFIERS ) ) );
+    }
+
+    @Test
+    public void cypherWithoutQueryDetails() throws CommandException {
+        // given
+        String serverVersion = shell.getServerVersion();
+        assumeTrue((minorVersion(serverVersion) == 0 && majorVersion(serverVersion) == 4) || majorVersion(serverVersion) < 4);
+
+        //when
+        shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
+
+        //then
+        String actual = linePrinter.output();
+        assertThat( actual, not( containsString( TablePlanFormatter.DETAILS ) ) );
+        assertThat( actual, containsString( TablePlanFormatter.IDENTIFIERS ) );
     }
 
     @Test
