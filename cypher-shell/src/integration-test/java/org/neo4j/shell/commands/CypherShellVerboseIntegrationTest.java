@@ -16,7 +16,6 @@ import org.neo4j.shell.prettyprint.PrettyConfig;
 import org.neo4j.shell.prettyprint.TablePlanFormatter;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -207,7 +206,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public void cypherWithQueryDetails() throws CommandException {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeTrue((minorVersion(serverVersion) > 0 && majorVersion(serverVersion) == 4) || majorVersion(serverVersion) > 4);
+        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("4.1")));
 
         //when
         shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
@@ -223,7 +222,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public void cypherWithoutQueryDetails() throws CommandException {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeTrue((minorVersion(serverVersion) == 0 && majorVersion(serverVersion) == 4) || majorVersion(serverVersion) < 4);
+        assumeThat( version(serverVersion), not(greaterThanOrEqualTo(version("4.1"))));
 
         //when
         shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
@@ -264,7 +263,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         //then
         String actual = linePrinter.output();
         assertThat(actual, containsString("| Plan      | Statement   | Version      | Planner | Runtime       | Time | DbHits | Rows | Memory (Bytes) |")); // First table
-        assertThat(actual, containsString("| Operator        | Estimated Rows | Rows | DB Hits | Cache H/M | Memory (Bytes) | Identifiers |")); // Second table
+        assertThat(actual, containsString("| Operator        | Details            | Estimated Rows | Rows | DB Hits | Cache H/M | Memory (Bytes) |")); // Second table
     }
 
     @Test

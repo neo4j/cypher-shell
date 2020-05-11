@@ -38,7 +38,7 @@ public class TablePlanFormatter {
     private static final String TIME = "Time (ms)";
     private static final String ORDER = "Ordered by";
     private static final String MEMORY = "Memory (Bytes)";
-    private static final String IDENTIFIERS = "Identifiers";
+    public static final String IDENTIFIERS = "Identifiers";
     private static final String OTHER = "Other";
     public static final String DETAILS = "Details";
     private static final String SEPARATOR = ", ";
