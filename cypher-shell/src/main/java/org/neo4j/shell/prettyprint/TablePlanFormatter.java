@@ -56,16 +56,16 @@ public class TablePlanFormatter {
         return 2 + Math.max(header.length(), columns.get(header));
     }
 
-    private void pad(int width, char chr, @Nonnull StringBuilder result) {
+    private static void pad(int width, char chr, @Nonnull StringBuilder result) {
         result.append(OutputFormatter.repeat(chr, width));
     }
 
 
-    private void divider(@Nonnull List<String> headers, @Nullable Line line /*= null*/, @Nonnull StringBuilder result, @Nonnull Map<String, Integer> columns) {
+    private void divider(@Nonnull List<String> headers, @Nullable TableRow tableRow /*= null*/, @Nonnull StringBuilder result, @Nonnull Map<String, Integer> columns) {
         for (String header : headers) {
-            if (line != null && header.equals(OPERATOR) && line.connection.isPresent()) {
+            if (tableRow != null && header.equals(OPERATOR) && tableRow.connection.isPresent()) {
                 result.append("|");
-                String connection = line.connection.get();
+                String connection = tableRow.connection.get();
                 result.append(" ").append(connection);
                 pad(width(header, columns) - connection.length() - 1, ' ', result);
             } else {
@@ -79,33 +79,34 @@ public class TablePlanFormatter {
     @Nonnull
     String formatPlan(@Nonnull Plan plan) {
         Map<String, Integer> columns = new HashMap<>();
-        List<Line> lines = accumulate(plan, new Root(), columns);
+        List<TableRow> tableRows = accumulate(plan, new Root(), columns);
 
         // Remove Identifiers column if we have a Details column
         List<String> headers = HEADERS.stream().filter(header -> columns.containsKey(header) && !(header.equals(IDENTIFIERS) && columns.containsKey(DETAILS))).collect(Collectors.toList());
 
-        StringBuilder result = new StringBuilder((2 + NEWLINE.length() + headers.stream().mapToInt(h -> width(h, columns)).sum()) * (lines.size() * 2 + 3));
+        StringBuilder result = new StringBuilder((2 + NEWLINE.length() + headers.stream().mapToInt(h -> width(h, columns)).sum()) * (tableRows.size() * 2 + 3));
 
-        List<Line> allLines = new ArrayList<>();
-        Map<String, Justified> headerMap = headers.stream().map(header -> Pair.of(header, new Left(header))).collect(toMap(p -> p._1, p -> p._2));
-        allLines.add(new Line(OPERATOR, headerMap, Optional.empty()));
-        allLines.addAll(lines);
-        for (Line line : allLines) {
-            divider(headers, line, result, columns);
-            for (String header : headers) {
-                Justified detail = line.get(header);
-                result.append("| ");
-                if (detail instanceof Left) {
-                    result.append(detail.text);
-                    pad(width(header, columns) - detail.length - 2, ' ', result);
+        List<TableRow> allTableRows = new ArrayList<>();
+        Map<String,Cell> headerMap = headers.stream().map(header -> Pair.of(header, new LeftJustifiedCell(header))).collect(toMap(p -> p._1, p -> p._2));
+        allTableRows.add(new TableRow(OPERATOR, headerMap, Optional.empty()));
+        allTableRows.addAll( tableRows );
+        for (int rowIndex = 0; rowIndex < allTableRows.size(); rowIndex++) {
+            TableRow tableRow = allTableRows.get( rowIndex);
+            divider(headers, tableRow, result, columns);
+            for (int rowLineIndex = 0; rowLineIndex < tableRow.height; rowLineIndex++) {
+                for (String header : headers) {
+                    Cell cell = tableRow.get(header);
+                    String defaultText = "";
+                    if (header.equals(OPERATOR) && rowIndex + 1 < allTableRows.size()) {
+                        defaultText = allTableRows.get(rowIndex + 1).connection.orElse("").replace('\\', ' ');
+                    }
+                    result.append( "| " );
+                    int columnWidth = width(header, columns);
+                    cell.writePaddedLine(rowLineIndex, defaultText, columnWidth, result);
+                    result.append( " " );
                 }
-                if (detail instanceof Right) {
-                    pad(width(header, columns) - detail.length - 2, ' ', result);
-                    result.append(detail.text);
-                }
-                result.append(" ");
+                result.append("|").append(NEWLINE);
             }
-            result.append("|").append(NEWLINE);
         }
         divider(headers, null, result, columns);
 
@@ -171,7 +172,7 @@ public class TablePlanFormatter {
         }
     }
 
-    @Nonnull private Stream<List<Line>> children(@Nonnull Plan plan, Level level,@Nonnull Map<String, Integer> columns) {
+    @Nonnull private Stream<List<TableRow>> children(@Nonnull Plan plan, Level level, @Nonnull Map<String, Integer> columns) {
         List<? extends Plan> c = plan.children();
         switch (c.size()) {
             case 0:
@@ -184,54 +185,55 @@ public class TablePlanFormatter {
         throw new IllegalStateException("Plan has more than 2 children " + c);
     }
 
-    @Nonnull private List<Line> accumulate(@Nonnull Plan plan, @Nonnull Level level, @Nonnull Map<String, Integer> columns) {
+    @Nonnull private List<TableRow> accumulate(@Nonnull Plan plan, @Nonnull Level level, @Nonnull Map<String, Integer> columns) {
         String line = level.line() + plan.operatorType(); // wa plan.name
-        mapping(OPERATOR, new Left(line), columns);
+        mapping(OPERATOR, new LeftJustifiedCell(line), columns);
 
         return Stream.concat(
-                Stream.of(new Line(line, details(plan, columns), level.connector())),
+                Stream.of(new TableRow(line, details(plan, columns), level.connector())),
                 children(plan, level, columns).flatMap(Collection::stream))
                 .collect(Collectors.toList());
     }
 
     @Nonnull
-    private Map<String, Justified> details(@Nonnull Plan plan, @Nonnull Map<String, Integer> columns) {
+    private Map<String,Cell> details(@Nonnull Plan plan, @Nonnull Map<String, Integer> columns) {
         Map<String, Value> args = plan.arguments();
 
-        Stream<Optional<Pair<String, Justified>>> formattedPlan = args.entrySet().stream().map((e) -> {
+        Stream<Optional<Pair<String,Cell>>> formattedPlan = args.entrySet().stream().map(e -> {
             Value value = e.getValue();
             switch (e.getKey()) {
                 case "EstimatedRows":
-                    return mapping(ESTIMATED_ROWS, new Right(format(value.asDouble())), columns);
+                    return mapping(ESTIMATED_ROWS, new RightJustifiedCell(format(value.asDouble())), columns);
                 case "Rows":
-                    return mapping(ROWS, new Right(value.asNumber().toString()), columns);
+                    return mapping(ROWS, new RightJustifiedCell(value.asNumber().toString()), columns);
                 case "DbHits":
-                    return mapping(HITS, new Right(value.asNumber().toString()), columns);
+                    return mapping(HITS, new RightJustifiedCell(value.asNumber().toString()), columns);
                 case "PageCacheHits":
-                    return mapping(PAGE_CACHE, new Right(String.format("%s/%s",value.asNumber(),args.getOrDefault("PageCacheMisses", ZERO_VALUE).asNumber())), columns);
+                    return mapping(PAGE_CACHE, new RightJustifiedCell(String.format("%s/%s", value.asNumber(), args.getOrDefault("PageCacheMisses", ZERO_VALUE).asNumber())), columns);
                 case "Time":
-                    return mapping(TIME, new Right(String.format("%.3f", value.asLong() / 1000000.0d)), columns);
+                    return mapping(TIME, new RightJustifiedCell(String.format("%.3f", value.asLong() / 1000000.0d)), columns);
                 case "Order":
-                    return mapping( ORDER, new Left( String.format( "%s", value.asString() ) ), columns );
+                    return mapping(ORDER, new LeftJustifiedCell(String.format("%s", value.asString())), columns);
                 case "Details":
-                    return mapping( DETAILS, new Left( truncate(value.asString()) ), columns );
+                    return mapping(DETAILS, new LeftJustifiedCell(splitDetails(value.asString())), columns);
                 case "Memory":
-                    return mapping( MEMORY, new Right( String.format( "%s", value.asNumber().toString() ) ), columns );
+                    return mapping(MEMORY, new RightJustifiedCell(String.format("%s", value.asNumber().toString())), columns);
                 default:
                     return Optional.empty();
             }
         });
+
         return Stream.concat(
                 formattedPlan,
                 Stream.of(
-                        Optional.of(Pair.of(IDENTIFIERS, new Left(identifiers(plan, columns)))),
-                        Optional.of(Pair.of(OTHER, new Left(other(plan, columns))))))
-                .filter(Optional::isPresent)
-                .collect(toMap(o -> o.get()._1, o -> o.get()._2));
+                        Optional.of(Pair.of(IDENTIFIERS, new LeftJustifiedCell(identifiers(plan, columns)))),
+                        Optional.of(Pair.of(OTHER, new LeftJustifiedCell(other(plan, columns))))))
+                     .filter(Optional::isPresent)
+                     .collect(toMap(o -> o.get()._1, o -> o.get()._2));
     }
 
     @Nonnull
-    private Optional<Pair<String, Justified>> mapping(@Nonnull String key, @Nonnull Justified value, @Nonnull Map<String, Integer> columns) {
+    private Optional<Pair<String,Cell>> mapping(@Nonnull String key, @Nonnull Cell value, @Nonnull Map<String, Integer> columns) {
         update(columns, key, value.length);
         return Optional.of(Pair.of(key, value));
     }
@@ -285,46 +287,75 @@ public class TablePlanFormatter {
         return String.valueOf(Math.round(v));
     }
 
-
-    static class Line {
-
+    static class TableRow {
         private final String tree;
-        private final Map<String, Justified> details;
+        private final Map<String,Cell> cells;
         private final Optional<String> connection;
+        private final int height;
 
-        Line(String tree, Map<String, Justified> details, Optional<String> connection) {
+        TableRow(String tree, Map<String,Cell> cells, Optional<String> connection) {
             this.tree = tree;
-            this.details = details;
+            this.cells = cells;
             this.connection = connection == null ? Optional.empty() : connection;
+            this.height = cells.values().stream().mapToInt(v -> v.lines.length).max().orElse(0);
         }
 
-        Justified get(String key) {
-            if (key.equals(TablePlanFormatter.OPERATOR)) {
-                return new Left(tree);
-            } else
-                return details.getOrDefault(key, new Left(""));
+        Cell get(String key) {
+            if (key.equals(TablePlanFormatter.OPERATOR))
+                return new LeftJustifiedCell(tree);
+            else
+                return cells.getOrDefault(key, new LeftJustifiedCell(""));
         }
     }
 
-    static abstract class Justified {
+    static abstract class Cell {
         final int length;
-        final String text;
+        final String[] lines;
 
-        Justified(String text) {
-            this.length = text.length();
-            this.text = text;
+        Cell(String[] lines) {
+            this.length = Stream.of(lines).mapToInt(String::length).max().orElse(0);
+            this.lines = lines;
+        }
+
+        abstract void writePaddedLine(int lineIndex, String orElseValue, int columnWidth, StringBuilder result);
+
+        protected int paddingWidth(int columnWidth, String line) {
+            return columnWidth - line.length() - 2;
+        }
+
+        protected String getLineOrElse(int lineIndex, String orElseValue) {
+            if (lineIndex < lines.length)
+                return lines[lineIndex];
+            else
+                return orElseValue;
         }
     }
 
-    static class Left extends Justified {
-        Left(String text) {
-            super(text);
+    static class LeftJustifiedCell extends Cell
+    {
+        LeftJustifiedCell(String... lines) {
+            super(lines);
+        }
+
+        @Override
+        void writePaddedLine(int lineIndex, String orElseValue, int columnWidth, StringBuilder result) {
+            String line = getLineOrElse(lineIndex, orElseValue);
+            result.append(line);
+            pad(paddingWidth(columnWidth, line), ' ', result);
         }
     }
 
-    static class Right extends Justified {
-        Right(String text) {
-            super(text);
+    static class RightJustifiedCell extends Cell {
+        RightJustifiedCell(String... lines) {
+            super(lines);
+        }
+
+        @Override
+        void writePaddedLine(int lineIndex, String orElseValue, int columnWidth, StringBuilder result)
+        {
+            String line = getLineOrElse(lineIndex, orElseValue);
+            pad(paddingWidth(columnWidth, line), ' ', result);
+            result.append(line);
         }
     }
 
@@ -447,11 +478,16 @@ public class TablePlanFormatter {
         }
     }
 
-    private String truncate( String original ) {
-        if(original.length() <= MAX_DETAILS_COLUMN_WIDTH){
-            return original;
+    private String[] splitDetails(String original) {
+        List<String> detailsList = new ArrayList<>();
+
+        int currentPos = 0;
+        while(currentPos < original.length()){
+            int newPos = Math.min(original.length(), currentPos + MAX_DETAILS_COLUMN_WIDTH);
+            detailsList.add(original.substring( currentPos,  newPos));
+            currentPos = newPos;
         }
 
-        return original.substring( 0, MAX_DETAILS_COLUMN_WIDTH - 3 ) + "...";
+        return detailsList.toArray(new String[0]);
     }
 }
