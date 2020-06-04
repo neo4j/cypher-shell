@@ -10,16 +10,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.neo4j.driver.AccessMode;
 import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.Bookmark;
 import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Query;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
 import org.neo4j.driver.exceptions.ClientException;
 import org.neo4j.driver.exceptions.SessionExpiredException;
+import org.neo4j.driver.internal.InternalBookmark;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.driver.summary.ServerInfo;
@@ -50,14 +55,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.neo4j.shell.DatabaseManager.ABSENT_DB_NAME;
 import static org.neo4j.shell.DatabaseManager.DEFAULT_DEFAULT_DB_NAME;
+import static org.neo4j.shell.DatabaseManager.SYSTEM_DB_NAME;
 
 public class BoltStateHandlerTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private Logger logger = mock(Logger.class);
+    private final Logger logger = mock(Logger.class);
     private final Driver mockDriver = mock(Driver.class);
-    private OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
+    private final OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
+    private final ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
 
     @Before
     public void setup() {
@@ -66,7 +73,7 @@ public class BoltStateHandlerTest {
     }
 
     @Test
-    public void versionIsEmptyBeforeConnect() throws CommandException {
+    public void versionIsEmptyBeforeConnect() {
         assertFalse(boltStateHandler.isConnected());
         assertEquals("", boltStateHandler.getServerVersion());
     }
@@ -81,7 +88,6 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("", handler.getServerVersion());
@@ -92,7 +98,6 @@ public class BoltStateHandlerTest {
         Driver driverMock = stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("9.4.1-ALPHA", handler.getServerVersion());
@@ -104,7 +109,6 @@ public class BoltStateHandlerTest {
                 stubResultSummaryInAnOpenSession(mock(Result.class), mock(Session.class), "Neo4j/9.4.1-ALPHA", "my_default_db");
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("my_default_db", handler.getActualDatabaseAsReportedByServer());
@@ -124,7 +128,6 @@ public class BoltStateHandlerTest {
                 .thenReturn(resultMock);
 
         BoltStateHandler handler = new BoltStateHandler((s, authToken, config) -> driverMock, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         try {
@@ -403,7 +406,7 @@ public class BoltStateHandlerTest {
     public void turnOffEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+
         handler.connect(config);
         assertFalse(provider.config.encrypted());
     }
@@ -460,6 +463,115 @@ public class BoltStateHandlerTest {
     }
 
     @Test
+    public void shouldChangePasswordAndKeepSystemDbBookmark() throws CommandException
+    {
+        // Given
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        config.setNewPassword("newPW");
+        Bookmark bookmark = InternalBookmark.parse("myBookmark");
+
+        Session sessionMock = mock(Session.class);
+        Result resultMock = mock(Result.class);
+        Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, sessionMock, "Neo4j/9.4.1-ALPHA", "my_default_db");
+        when(sessionMock.run("CALL dbms.security.changePassword($n)", Values.parameters( "n", config.newPassword()))).thenReturn(resultMock);
+        when(sessionMock.lastBookmark()).thenReturn(bookmark);
+        BoltStateHandler handler = new OfflineBoltStateHandler(driverMock);
+
+        // When
+        handler.changePassword(config);
+
+        // Then
+        assertEquals("newPW", config.password());
+        assertNull(config.newPassword());
+        assertNull(handler.session);
+
+        // When connecting to system db again
+        handler.connect( new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, SYSTEM_DB_NAME) );
+
+        // Then use bookmark for system DB
+        verify( driverMock ).session(SessionConfig.builder()
+                                                  .withDefaultAccessMode( AccessMode.WRITE )
+                                                  .withDatabase( SYSTEM_DB_NAME )
+                                                  .withBookmarks( bookmark )
+                                                  .build());
+    }
+
+    @SuppressWarnings( "OptionalGetWithoutIsPresent" )
+    @Test
+    public void shouldKeepOneBookmarkPerDatabase() throws CommandException
+    {
+        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, "database1");
+        Bookmark db1Bookmark = InternalBookmark.parse("db1");
+        Bookmark db2Bookmark = InternalBookmark.parse("db2");
+
+        // A couple of these mock calls are now redundant with what is called in stubResultSummaryInAnOpenSession
+        Result resultMock = mock(Result.class);
+        Session db1SessionMock = mock(Session.class);
+        when(db1SessionMock.isOpen()).thenReturn(true);
+        when(db1SessionMock.lastBookmark()).thenReturn(db1Bookmark);
+        when(db1SessionMock.run("RETURN 1")).thenReturn(resultMock);
+        Session db2SessionMock = mock(Session.class);
+        when(db2SessionMock.isOpen()).thenReturn(true);
+        when(db2SessionMock.lastBookmark()).thenReturn(db2Bookmark);
+        when(db2SessionMock.run("RETURN 1")).thenReturn(resultMock);
+
+
+        Driver driverMock = stubResultSummaryInAnOpenSession(resultMock, db1SessionMock, "Neo4j/9.4.1-ALPHA", "database1");
+        when(driverMock.session(any())).thenAnswer(arg -> {
+            SessionConfig sc = (SessionConfig) arg.getArguments()[0];
+            switch ( sc.database().get() )
+            {
+            case "database1":
+                return db1SessionMock;
+            case "database2":
+                return db2SessionMock;
+            }
+            return null;
+        });
+
+
+        BoltStateHandler handler = new OfflineBoltStateHandler(driverMock);
+
+        // When
+        handler.connect( config );
+
+        // Then no bookmark yet for db1
+        verify( driverMock ).session(SessionConfig.builder()
+                                                .withDefaultAccessMode( AccessMode.WRITE )
+                                                .withDatabase( "database1" )
+                                                .build());
+
+        // When
+        handler.setActiveDatabase( "database2" );
+
+        // Then no bookmark yet for db2
+        verify( driverMock ).session(SessionConfig.builder()
+                                                .withDefaultAccessMode( AccessMode.WRITE )
+                                                .withDatabase( "database2" )
+                                                .build());
+
+        // When
+        handler.setActiveDatabase( "database1" );
+
+        // Then use bookmark for db1
+        verify( driverMock ).session(SessionConfig.builder()
+                                                .withDefaultAccessMode( AccessMode.WRITE )
+                                                .withDatabase( "database1" )
+                                                .withBookmarks( db1Bookmark )
+                                                .build());
+
+        // When
+        handler.setActiveDatabase( "database2" );
+
+        // Then use bookmark for db2
+        verify( driverMock ).session(SessionConfig.builder()
+                                                .withDefaultAccessMode( AccessMode.WRITE )
+                                                .withDatabase( "database2" )
+                                                .withBookmarks( db2Bookmark )
+                                                .build());
+    }
+
+    @Test
     public void fallbackToBoltS() throws CommandException {
         final String[] uriScheme = new String[1];
         RecordingDriverProvider provider = new RecordingDriverProvider() {
@@ -498,6 +610,7 @@ public class BoltStateHandlerTest {
 
         when(sessionMock.isOpen()).thenReturn(true);
         when(sessionMock.run("RETURN 1")).thenReturn(resultMock);
+        when(sessionMock.run("CALL db.indexes()")).thenReturn(resultMock);
         when(driverMock.session(any())).thenReturn(sessionMock);
 
         return driverMock;
@@ -517,7 +630,7 @@ public class BoltStateHandlerTest {
         }
     }
 
-    private class RecordingDriverProvider implements TriFunction<String, AuthToken, Config, Driver> {
+    private static class RecordingDriverProvider implements TriFunction<String, AuthToken, Config, Driver> {
         public Config config;
 
         @Override
