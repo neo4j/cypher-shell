@@ -1,5 +1,6 @@
 package org.neo4j.shell.state;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +52,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     private String activeDatabaseNameAsSetByUser;
     private String actualDatabaseNameAsReportedByServer;
     private final boolean isInteractive;
-    private Bookmark systemBookmark;
+    private final Map<String, Bookmark> bookmarks = new HashMap<>();
     private Transaction tx = null;
 
     public BoltStateHandler(boolean isInteractive) {
@@ -75,7 +76,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         activeDatabaseNameAsSetByUser = databaseName;
         try {
             if (isConnected()) {
-                reconnect(true);
+                reconnect(databaseName, previousDatabaseName);
             }
         }
         catch (ClientException e) {
@@ -83,7 +84,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 // We want to try to connect to the previous database
                 activeDatabaseNameAsSetByUser = previousDatabaseName;
                 try {
-                    reconnect(true);
+                    reconnect(previousDatabaseName, previousDatabaseName);
                 }
                 catch (Exception e2) {
                     e.addSuppressed(e2);
@@ -161,10 +162,11 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
         final AuthToken authToken = AuthTokens.basic(connectionConfig.username(), connectionConfig.password());
         try {
+            String previousDatabaseName = activeDatabaseNameAsSetByUser;
             try {
-                setActiveDatabase(connectionConfig.database());
+                activeDatabaseNameAsSetByUser = connectionConfig.database();
                 driver = getDriver(connectionConfig, authToken);
-                reconnect(command);
+                reconnect(activeDatabaseNameAsSetByUser, previousDatabaseName, command);
             } catch (org.neo4j.driver.exceptions.ServiceUnavailableException e) {
                 String scheme = connectionConfig.scheme();
                 String fallbackScheme;
@@ -191,7 +193,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                     connectionConfig.encryption(),
                     connectionConfig.database());
                 driver = getDriver(connectionConfig, authToken);
-                reconnect(command);
+                reconnect(activeDatabaseNameAsSetByUser, previousDatabaseName, command);
             }
         } catch (Throwable t) {
             try {
@@ -203,41 +205,46 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         }
     }
 
-    private void reconnect() throws CommandException {
-        reconnect(true, null);
+    private void reconnect(String databaseToConnectTo, String previousDatabase) throws CommandException {
+        reconnect(databaseToConnectTo, previousDatabase, null);
     }
 
-    private void reconnect(ThrowingAction<CommandException> command) throws CommandException {
-        reconnect(true, command);
-    }
-
-    private void reconnect(boolean keepBokmark) throws CommandException {
-        reconnect(keepBokmark, null);
-    }
-
-    private void reconnect( boolean keepBookmark, ThrowingAction<CommandException> command ) throws CommandException {
+    private void reconnect( String databaseToConnectTo,
+                            String previousDatabase,
+                            ThrowingAction<CommandException> command ) throws CommandException {
         SessionConfig.Builder builder = SessionConfig.builder();
         builder.withDefaultAccessMode( AccessMode.WRITE );
-        if ( !ABSENT_DB_NAME.equals( activeDatabaseNameAsSetByUser ) )
+        if ( !ABSENT_DB_NAME.equals( databaseToConnectTo ) )
         {
-            builder.withDatabase( activeDatabaseNameAsSetByUser );
+            builder.withDatabase( databaseToConnectTo );
         }
-        if ( session != null && keepBookmark )
+        closeSession( previousDatabase );
+        final Bookmark bookmarkForDBToConnectTo = bookmarks.get( databaseToConnectTo );
+        if ( bookmarkForDBToConnectTo != null )
         {
-            // Save the last bookmark and close the session
-            final Bookmark bookmark = session.lastBookmark();
-            session.close();
-            builder.withBookmarks( bookmark );
-        }
-        else if ( systemBookmark != null )
-        {
-            builder.withBookmarks( systemBookmark );
+            builder.withBookmarks( bookmarkForDBToConnectTo );
         }
 
         session = driver.session( builder.build() );
 
         resetActualDbName(); // Set this to null first in case run throws an exception
         connect(command);
+    }
+
+    /**
+     * Closes the session, if there is any.
+     * Saves a bookmark for the database currently connected to.
+     * @param databaseName the name of the database currently connected to
+     */
+    private void closeSession( String databaseName )
+    {
+        if ( session != null )
+        {
+            // Save the last bookmark and close the session
+            final Bookmark bookmarkForPreviousDB = session.lastBookmark();
+            session.close();
+            bookmarks.put(databaseName, bookmarkForPreviousDB);
+        }
     }
 
     private void connect( ThrowingAction<CommandException> command) throws CommandException
@@ -323,7 +330,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             } catch (SessionExpiredException e) {
                 // Server is no longer accepting writes, reconnect and try again.
                 // If it still fails, leave it up to the user
-                reconnect();
+                reconnect(activeDatabaseNameAsSetByUser, activeDatabaseNameAsSetByUser);
                 return getBoltResult(cypher, queryParams);
             }
         }
@@ -348,10 +355,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         try {
             driver = getDriver(connectionConfig, authToken);
 
-            SessionConfig.Builder builder = SessionConfig.builder()
-                    .withDefaultAccessMode(AccessMode.WRITE)
-                    .withDatabase(SYSTEM_DB_NAME);
-            session = driver.session(builder.build());
+            activeDatabaseNameAsSetByUser = SYSTEM_DB_NAME;
+            // Supply empty command, so that we do not run ping.
+            reconnect( SYSTEM_DB_NAME, SYSTEM_DB_NAME, () -> {} );
 
             String command;
             Value parameters;
@@ -370,9 +376,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             connectionConfig.setPassword(connectionConfig.newPassword());
             connectionConfig.setNewPassword(null);
 
-            // Save a system bookmark to make sure we wait for the password change to propagate on reconnection
-            systemBookmark = session.lastBookmark();
-
             silentDisconnect();
         } catch (Throwable t) {
             try {
@@ -380,7 +383,12 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
             } catch (Exception e) {
                 t.addSuppressed(e);
             }
-            throw t;
+            if (t instanceof RuntimeException) {
+                throw (RuntimeException) t;
+            }
+            // The only checked exception is CommandException and we know that
+            // we cannot get that since we supply an empty command.
+            throw new RuntimeException(t);
         }
     }
 
@@ -419,9 +427,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
      */
     void silentDisconnect() {
         try {
-            if (session != null) {
-                session.close();
-            }
+            closeSession( activeDatabaseNameAsSetByUser );
             if (driver != null) {
                 driver.close();
             }
