@@ -13,6 +13,11 @@ public interface DatabaseManager
 
     String DATABASE_UNAVAILABLE_ERROR_CODE = "Neo.TransientError.General.DatabaseUnavailable";
 
+    /**
+     * Sets the active database name as set by the user.
+     * If the current state is connected, try to reconnect to that database.
+     * If the current state is disconnected, simply update `activeDatabaseAsSetByUser`.
+     */
     void setActiveDatabase(String databaseName) throws CommandException;
 
     String getActiveDatabaseAsSetByUser();
