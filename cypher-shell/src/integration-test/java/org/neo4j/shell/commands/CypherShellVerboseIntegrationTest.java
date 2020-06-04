@@ -190,6 +190,13 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String serverVersion = shell.getServerVersion();
         assumeThat( version(serverVersion), greaterThanOrEqualTo(version("3.6")));
 
+        // Make sure we are creating a new NEW index
+        try {
+            shell.execute( "DROP INDEX ON :Person(age)" );
+        } catch ( Exception e ) {
+            // ignore if the index didn't exist
+        }
+
         shell.execute( "CREATE INDEX ON :Person(age)" );
         shell.execute( "CALL db.awaitIndexes()" );
 
