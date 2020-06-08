@@ -101,6 +101,6 @@ class FakeResult implements Result
                 return statementResult;
             }
         }
-        throw new IllegalArgumentException("No idea how to parse this statement");
+        throw new IllegalArgumentException("No idea how to parse this statement: " + statement);
     }
 }
