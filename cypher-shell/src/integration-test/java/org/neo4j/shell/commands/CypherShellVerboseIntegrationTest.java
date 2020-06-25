@@ -190,6 +190,13 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         String serverVersion = shell.getServerVersion();
         assumeThat( version(serverVersion), greaterThanOrEqualTo(version("3.6")));
 
+        // Make sure we are creating a new NEW index
+        try {
+            shell.execute( "DROP INDEX ON :Person(age)" );
+        } catch ( Exception e ) {
+            // ignore if the index didn't exist
+        }
+
         shell.execute( "CREATE INDEX ON :Person(age)" );
         shell.execute( "CALL db.awaitIndexes()" );
 
@@ -262,8 +269,8 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
 
         //then
         String actual = linePrinter.output();
-        assertThat(actual, containsString("| Plan      | Statement   | Version      | Planner | Runtime       | Time | DbHits | Rows | Memory (Bytes) |")); // First table
-        assertThat(actual, containsString("| Operator        | Details            | Estimated Rows | Rows | DB Hits | Cache H/M | Memory (Bytes) |")); // Second table
+        assertThat(actual.replace( " ", "" ), containsString("|Plan|Statement|Version|Planner|Runtime|Time|DbHits|Rows|Memory(Bytes)|")); // First table
+        assertThat(actual.replace( " ", "" ), containsString("|Operator|Details|EstimatedRows|Rows|DBHits|CacheH/M|Memory(Bytes)|")); // Second table
     }
 
     @Test
