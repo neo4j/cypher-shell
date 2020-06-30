@@ -100,7 +100,6 @@ public class CypherShellTest {
     @Test
     public void verifyDelegationOfTransactionMethods() throws CommandException {
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());
-        when(mockedBoltStateHandler.commitTransaction()).thenReturn(Optional.empty());
 
         shell.beginTransaction();
         verify(mockedBoltStateHandler).beginTransaction();
@@ -184,21 +183,6 @@ public class CypherShellTest {
 
         OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
         shell.execute("RETURN 999");
-        verify(logger).printOut(contains("999"));
-    }
-
-    @Test
-    public void commitShouldPrintResult() throws CommandException {
-        BoltResult result = mock(ListBoltResult.class);
-
-        BoltStateHandler boltStateHandler = mock(BoltStateHandler.class);
-
-        doAnswer((a) -> { ((LinePrinter)a.getArguments()[1]).printOut("999"); return null;}).when(mockedPrettyPrinter).format(any(BoltResult.class), anyObject());
-        when(boltStateHandler.commitTransaction()).thenReturn(Optional.of(asList(result)));
-
-        OfflineTestShell shell = new OfflineTestShell(logger, boltStateHandler, mockedPrettyPrinter);
-
-        shell.commitTransaction();
         verify(logger).printOut(contains("999"));
     }
 
