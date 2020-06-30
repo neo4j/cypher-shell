@@ -143,6 +143,29 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         tx = null;
     }
 
+    /**
+     * Handle an exception while getting or consuming the result.
+     * If not in TX, return the given exception.
+     * If in a TX, terminate the TX and return a more verbose error message.
+     *
+     * @param e the thrown exception.
+     * @return a suitable exception to rethrow.
+     */
+    public Neo4jException handleException( Neo4jException e )
+    {
+        if ( isTransactionOpen() )
+        {
+            tx.close();
+            tx = null;
+            return new ErrorWhileInTransactionException(
+                    "An error occurred while in an open transaction. The transaction will be rolled back and terminated. Error: " + e.getMessage(), e );
+        }
+        else
+        {
+            return e;
+        }
+    }
+
     @Override
     public boolean isTransactionOpen() {
         return tx != null;

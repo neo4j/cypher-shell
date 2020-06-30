@@ -101,7 +101,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
             lastNeo4jErrorCode = getErrorCode(e);
-            throw e;
+            throw boltStateHandler.handleException( e );
         }
     }
 
