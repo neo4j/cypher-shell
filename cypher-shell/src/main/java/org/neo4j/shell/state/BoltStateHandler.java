@@ -118,7 +118,7 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     @Override
-    public Optional<List<BoltResult>> commitTransaction() throws CommandException {
+    public void commitTransaction() throws CommandException {
         if (!isConnected()) {
             throw new CommandException("Not connected to Neo4j");
         }
@@ -128,8 +128,6 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
         tx.commit();
         tx.close();
         tx = null;
-
-        return Optional.empty();
     }
 
     @Override
