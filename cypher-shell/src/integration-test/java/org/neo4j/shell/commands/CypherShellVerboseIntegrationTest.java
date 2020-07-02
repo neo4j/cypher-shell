@@ -270,7 +270,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         //then
         String actual = linePrinter.output();
         assertThat(actual.replace( " ", "" ), containsString("|Plan|Statement|Version|Planner|Runtime|Time|DbHits|Rows|Memory(Bytes)|")); // First table
-        assertThat(actual.replace( " ", "" ), containsString("|Operator|Details|EstimatedRows|Rows|DBHits|CacheH/M|Memory(Bytes)|")); // Second table
+        assertThat(actual.replace( " ", "" ), containsString("|Operator|Details|EstimatedRows|Rows|DBHits|Memory(Bytes)|PageCacheHits/Misses|")); // Second table
     }
 
     @Test
