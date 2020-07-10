@@ -10,12 +10,12 @@ import javax.annotation.Nullable;
 
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.Neo4jException;
-import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.cli.CliArgHelper;
 import org.neo4j.shell.cli.CliArgs;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ThrowingAction;
 import org.neo4j.shell.log.AnsiLogger;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.PrettyConfig;

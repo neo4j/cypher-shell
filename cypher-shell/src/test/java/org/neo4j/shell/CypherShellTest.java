@@ -7,7 +7,6 @@ import org.junit.rules.ExpectedException;
 
 import java.util.Optional;
 
-import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
@@ -17,6 +16,7 @@ import org.neo4j.shell.cli.Encryption;
 import org.neo4j.shell.commands.CommandExecutable;
 import org.neo4j.shell.commands.CommandHelper;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ParameterException;
 import org.neo4j.shell.log.Logger;
 import org.neo4j.shell.prettyprint.LinePrinter;
 import org.neo4j.shell.prettyprint.PrettyPrinter;
@@ -112,7 +112,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setWhenOfflineShouldWork() throws EvaluationException, CommandException
+    public void setWhenOfflineShouldWork() throws ParameterException, CommandException
     {
         CypherShell shell = new OfflineTestShell(logger, mockedBoltStateHandler, mockedPrettyPrinter);
         when(mockedBoltStateHandler.isConnected()).thenReturn(false);
@@ -134,7 +134,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws EvaluationException, CommandException {
+    public void setParamShouldAddParamWithSpecialCharactersAndValue() throws ParameterException, CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = new ListBoltResult(asList(recordMock), mock(ResultSummary.class));
@@ -151,7 +151,7 @@ public class CypherShellTest {
     }
 
     @Test
-    public void setParamShouldAddParam() throws EvaluationException, CommandException {
+    public void setParamShouldAddParam() throws ParameterException, CommandException {
         Value value = mock(Value.class);
         Record recordMock = mock(Record.class);
         BoltResult boltResult = mock(ListBoltResult.class);
@@ -243,7 +243,7 @@ public class CypherShellTest {
 
 
     @Test
-    public void setParameterDoesNotTriggerByBoltError() throws EvaluationException, CommandException {
+    public void setParameterDoesNotTriggerByBoltError() throws ParameterException, CommandException {
         // given
         when(mockedBoltStateHandler.runCypher(anyString(), anyMap())).thenReturn(Optional.empty());
         CypherShell shell = new CypherShell(logger, mockedBoltStateHandler, mockedPrettyPrinter, new ShellParameterMap());

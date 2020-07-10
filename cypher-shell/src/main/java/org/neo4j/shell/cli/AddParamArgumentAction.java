@@ -7,8 +7,8 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 
 import java.util.Map;
 
-import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.shell.ParameterMap;
+import org.neo4j.shell.exception.ParameterException;
 import org.neo4j.shell.util.ParameterSetter;
 
 /**
@@ -63,7 +63,7 @@ public class AddParamArgumentAction extends ParameterSetter<ArgumentParserExcept
     }
 
     @Override
-    protected void onEvaluationException( EvaluationException e )
+    protected void onParameterException( ParameterException e )
     {
         throw new RuntimeException( e.getMessage(), e );
     }

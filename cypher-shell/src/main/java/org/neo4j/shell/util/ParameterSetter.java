@@ -5,8 +5,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
-import org.neo4j.cypher.internal.evaluator.EvaluationException;
 import org.neo4j.shell.ParameterMap;
+import org.neo4j.shell.exception.ParameterException;
 
 /**
  * Shared logic to parse parameters and set them in a ParameterMap
@@ -28,7 +28,7 @@ public abstract class ParameterSetter<E extends Exception> {
 
     protected abstract void onWrongUsage() throws E;
     protected abstract void onWrongNumberOfArguments() throws E;
-    protected abstract void onEvaluationException(EvaluationException e) throws E;
+    protected abstract void onParameterException(ParameterException e) throws E;
 
     public void execute(@Nonnull final String argString) throws E {
         Matcher lambdaMapMatcher = lambdaMapPattern.matcher( argString);
@@ -41,13 +41,13 @@ public abstract class ParameterSetter<E extends Exception> {
                 onWrongNumberOfArguments();
             }
         }
-        catch ( EvaluationException e )
+        catch ( ParameterException e )
         {
-            onEvaluationException(e);
+            onParameterException(e);
         }
     }
 
-    private boolean assignIfValidParameter(@Nonnull String argString) throws EvaluationException
+    private boolean assignIfValidParameter(@Nonnull String argString) throws ParameterException
     {
         return setParameterIfItMatchesPattern(argString, lambdaPattern, assignIfValidParameter())
                || setParameterIfItMatchesPattern(argString, argPattern, assignIfValidParameter())
@@ -56,7 +56,7 @@ public abstract class ParameterSetter<E extends Exception> {
     }
 
     private boolean setParameterIfItMatchesPattern(@Nonnull String argString, Pattern pattern,
-                                                   BiPredicate<String, Matcher> matchingFunction) throws EvaluationException
+                                                   BiPredicate<String, Matcher> matchingFunction) throws ParameterException
     {
         Matcher matcher = pattern.matcher(argString);
         if (matchingFunction.test(argString, matcher)) {
