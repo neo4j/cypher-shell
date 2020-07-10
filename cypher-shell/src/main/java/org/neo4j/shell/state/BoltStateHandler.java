@@ -29,7 +29,6 @@ import org.neo4j.driver.exceptions.SessionExpiredException;
 import org.neo4j.driver.internal.Scheme;
 import org.neo4j.driver.summary.DatabaseInfo;
 import org.neo4j.driver.summary.ResultSummary;
-import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
@@ -37,6 +36,7 @@ import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
 import org.neo4j.shell.build.Build;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ThrowingAction;
 import org.neo4j.shell.log.NullLogging;
 
 import static org.neo4j.shell.util.Versions.isPasswordChangeRequiredException;

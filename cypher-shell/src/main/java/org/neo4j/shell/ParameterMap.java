@@ -1,6 +1,6 @@
 package org.neo4j.shell;
 
-import org.neo4j.cypher.internal.evaluator.EvaluationException;
+import org.neo4j.shell.exception.ParameterException;
 import org.neo4j.shell.state.ParamValue;
 
 import javax.annotation.Nonnull;
@@ -15,7 +15,7 @@ public interface ParameterMap {
      * @param valueString to interpret the value from
      * @return the evaluated value
      */
-    Object setParameter(@Nonnull String name, @Nonnull String valueString) throws EvaluationException;
+    Object setParameter(@Nonnull String name, @Nonnull String valueString) throws ParameterException;
 
     /**
      * @return map of all currently set variables and their values
