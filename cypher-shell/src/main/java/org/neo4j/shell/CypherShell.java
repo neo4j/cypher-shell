@@ -1,6 +1,5 @@
 package org.neo4j.shell;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -102,7 +101,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
             lastNeo4jErrorCode = null;
         } catch (Neo4jException e) {
             lastNeo4jErrorCode = getErrorCode(e);
-            throw e;
+            throw boltStateHandler.handleException( e );
         }
     }
 
@@ -158,12 +157,10 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     }
 
     @Override
-    public Optional<List<BoltResult>> commitTransaction() throws CommandException {
+    public void commitTransaction() throws CommandException {
         try {
-            Optional<List<BoltResult>> results = boltStateHandler.commitTransaction();
-            results.ifPresent(boltResult -> boltResult.forEach(result -> prettyPrinter.format(result, linePrinter)));
+            boltStateHandler.commitTransaction();
             lastNeo4jErrorCode = null;
-            return results;
         } catch (Neo4jException e) {
             lastNeo4jErrorCode = getErrorCode(e);
             throw e;

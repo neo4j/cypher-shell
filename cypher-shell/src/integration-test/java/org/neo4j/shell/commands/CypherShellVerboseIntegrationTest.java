@@ -31,17 +31,11 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     public final ExpectedException thrown = ExpectedException.none();
 
     private StringLinePrinter linePrinter = new StringLinePrinter();
-    private Command rollbackCommand;
-    private Command commitCommand;
-    private Command beginCommand;
 
     @Before
     public void setUp() throws Exception {
         linePrinter.clear();
         shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false, new ShellParameterMap());
-        rollbackCommand = new Rollback(shell);
-        commitCommand = new Commit(shell);
-        beginCommand = new Begin(shell);
 
         connect( "neo" );
     }
@@ -82,25 +76,6 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
-    public void rollbackScenario() throws CommandException {
-        //given
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-
-        //when
-        beginCommand.execute("");
-        shell.execute("CREATE (:NotCreated)");
-        rollbackCommand.execute("");
-
-        //then
-        shell.execute("MATCH (n) RETURN n");
-
-        String output = linePrinter.output();
-        assertThat(output, containsString("| n "));
-        assertThat(output, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
-        assertThat(output, not(containsString(":NotCreated")));
-    }
-
-    @Test
     public void resetOutOfTxScenario() throws CommandException {
         //when
         shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
@@ -114,39 +89,6 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         assertThat(result, containsString(
                 "| (:TestPerson {name: \"Jane Smith\"}) |\n" +
                 "| (:TestPerson {name: \"Jane Smith\"}) |"));
-    }
-
-    @Test
-    public void resetInTxScenario() throws CommandException {
-        //when
-        beginCommand.execute("");
-        shell.execute("CREATE (:NotCreated)");
-        shell.reset();
-
-        //then
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n) RETURN n");
-
-        String result = linePrinter.output();
-        assertThat(result, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
-        assertThat(result, not(containsString(":NotCreated")));
-    }
-
-    @Test
-    public void commitScenario() throws CommandException {
-        beginCommand.execute("");
-        shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
-        assertThat(linePrinter.output(), containsString("0 rows available after"));
-
-        linePrinter.clear();
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        assertThat(linePrinter.output(), containsString("0 rows available after"));
-
-        linePrinter.clear();
-        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
-        assertThat(linePrinter.output(), containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
-
-        commitCommand.execute("");
     }
 
     @Test
