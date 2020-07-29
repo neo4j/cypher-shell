@@ -587,6 +587,21 @@ public class BoltStateHandlerTest {
         assertEquals("bolt+s", uriScheme[0]);
     }
 
+    @Test
+    public void provideUserAgentstring() throws CommandException {
+        RecordingDriverProvider provider = new RecordingDriverProvider() {
+            @Override
+            public Driver apply(String uri, AuthToken authToken, Config config) {
+                super.apply(uri, authToken, config);
+                return new FakeDriver();
+            }
+        };
+        BoltStateHandler handler = new BoltStateHandler(provider, false);
+        handler.connect(config);
+
+        assertTrue(provider.config.userAgent().startsWith( "neo4j-cypher-shell/v4.1" ));
+    }
+
     private Driver stubResultSummaryInAnOpenSession(Result resultMock, Session sessionMock, String version) {
         return stubResultSummaryInAnOpenSession(resultMock, sessionMock, version, DEFAULT_DEFAULT_DB_NAME);
     }

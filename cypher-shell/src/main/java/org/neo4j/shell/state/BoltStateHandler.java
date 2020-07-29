@@ -35,6 +35,7 @@ import org.neo4j.shell.Connector;
 import org.neo4j.shell.DatabaseManager;
 import org.neo4j.shell.TransactionHandler;
 import org.neo4j.shell.TriFunction;
+import org.neo4j.shell.build.Build;
 import org.neo4j.shell.exception.CommandException;
 import org.neo4j.shell.log.NullLogging;
 
@@ -46,6 +47,7 @@ import static org.neo4j.shell.util.Versions.majorVersion;
  */
 public class BoltStateHandler implements TransactionHandler, Connector, DatabaseManager {
     private final TriFunction<String, AuthToken, Config, Driver> driverProvider;
+    private static final String USER_AGENT = "neo4j-cypher-shell/v" + Build.version();
     protected Driver driver;
     Session session;
     private String version;
@@ -486,7 +488,9 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
     }
 
     private Driver getDriver(@Nonnull ConnectionConfig connectionConfig, @Nullable AuthToken authToken) {
-        Config.ConfigBuilder configBuilder = Config.builder().withLogging(NullLogging.NULL_LOGGING);
+        Config.ConfigBuilder configBuilder = Config.builder()
+                                                   .withLogging(NullLogging.NULL_LOGGING)
+                                                   .withUserAgent( USER_AGENT );
         switch(connectionConfig.encryption())
         {
         case TRUE:
