@@ -419,7 +419,7 @@ public class MainIntegrationTest
 
         // then
         exception.expect( ClientException.class );
-        exception.expectMessage( "Invalid input 'T':" );
+        exception.expectMessage( "Invalid input 'T" );
         shell.execute( ":source " + fileFromResource( "invalid.cypher" ));
     }
 
