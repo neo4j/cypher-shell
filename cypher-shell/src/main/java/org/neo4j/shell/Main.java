@@ -104,14 +104,18 @@ public class Main {
             if ( cliArgs.getCypher().isPresent() )
             {
                 // Can only prompt for password if input has not been redirected
-                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive(),
+                connectMaybeInteractively( shell, connectionConfig,
+                        !cliArgs.getNonInteractive() && isInputInteractive(),
+                        !cliArgs.getNonInteractive() && isOutputInteractive(),
                         () -> shell.execute( cliArgs.getCypher().get() ) );
                 return EXIT_SUCCESS;
             }
             else
             {
                 // Can only prompt for password if input has not been redirected
-                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive());
+                connectMaybeInteractively( shell, connectionConfig,
+                        !cliArgs.getNonInteractive() && isInputInteractive(),
+                        !cliArgs.getNonInteractive() && isOutputInteractive());
                 // Construct shellrunner after connecting, due to interrupt handling
                 ShellRunner shellRunner = ShellRunner.getShellRunner( cliArgs, shell, logger, connectionConfig );
                 CommandHelper commandHelper = new CommandHelper( logger, shellRunner.getHistorian(), shell );
@@ -173,7 +177,7 @@ public class Main {
                 promptForUsernameAndPassword(connectionConfig, outputInteractive);
                 didPrompt = true;
             } catch (Neo4jException e) {
-                if (isPasswordChangeRequiredException(e)) {
+                if (inputInteractive && isPasswordChangeRequiredException(e)) {
                     promptForPasswordChange(connectionConfig, outputInteractive);
                     shell.changePassword(connectionConfig);
                     didPrompt = true;
