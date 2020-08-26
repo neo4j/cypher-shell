@@ -64,7 +64,7 @@ public class BoltStateHandlerTest {
     private final Logger logger = mock(Logger.class);
     private final Driver mockDriver = mock(Driver.class);
     private final OfflineBoltStateHandler boltStateHandler = new OfflineBoltStateHandler(mockDriver);
-    private final ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+    private final ConnectionConfig config = new ConnectionConfig("bolt", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
 
     @Before
     public void setup() {
@@ -387,7 +387,7 @@ public class BoltStateHandlerTest {
     public void turnOnEncryptionIfRequested() throws CommandException {
         RecordingDriverProvider provider = new RecordingDriverProvider();
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.TRUE, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt", "", -1, "", "", Encryption.TRUE, ABSENT_DB_NAME);
         handler.connect(config);
         assertTrue(provider.config.encrypted());
     }
@@ -407,7 +407,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("neo4j://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("neo4j", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("bolt", uriScheme[0]);
@@ -451,7 +451,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("neo4j+ssc://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("neo4j+ssc", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("bolt+ssc", uriScheme[0]);
@@ -461,7 +461,7 @@ public class BoltStateHandlerTest {
     public void shouldChangePasswordAndKeepSystemDbBookmark() throws CommandException
     {
         // Given
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("bolt", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         config.setNewPassword("newPW");
         Bookmark bookmark = InternalBookmark.parse("myBookmark");
 
@@ -481,7 +481,7 @@ public class BoltStateHandlerTest {
         assertNull(handler.session);
 
         // When connecting to system db again
-        handler.connect( new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, SYSTEM_DB_NAME) );
+        handler.connect( new ConnectionConfig("bolt", "", -1, "", "", Encryption.DEFAULT, SYSTEM_DB_NAME) );
 
         // Then use bookmark for system DB
         verify( driverMock ).session(SessionConfig.builder()
@@ -495,7 +495,7 @@ public class BoltStateHandlerTest {
     @Test
     public void shouldKeepOneBookmarkPerDatabase() throws CommandException
     {
-        ConnectionConfig config = new ConnectionConfig("bolt://", "", -1, "", "", Encryption.DEFAULT, "database1");
+        ConnectionConfig config = new ConnectionConfig("bolt", "", -1, "", "", Encryption.DEFAULT, "database1");
         Bookmark db1Bookmark = InternalBookmark.parse("db1");
         Bookmark db2Bookmark = InternalBookmark.parse("db2");
 
@@ -581,7 +581,7 @@ public class BoltStateHandlerTest {
             }
         };
         BoltStateHandler handler = new BoltStateHandler(provider, false);
-        ConnectionConfig config = new ConnectionConfig("neo4j+s://", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
+        ConnectionConfig config = new ConnectionConfig("neo4j+s", "", -1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME);
         handler.connect(config);
 
         assertEquals("bolt+s", uriScheme[0]);
@@ -635,7 +635,7 @@ public class BoltStateHandlerTest {
         }
 
         public void connect() throws CommandException {
-            connect(new ConnectionConfig("bolt://", "", 1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME));
+            connect(new ConnectionConfig("bolt", "", 1, "", "", Encryption.DEFAULT, ABSENT_DB_NAME));
         }
     }
 
