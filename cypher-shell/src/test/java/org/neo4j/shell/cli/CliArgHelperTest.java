@@ -66,7 +66,7 @@ public class CliArgHelperTest {
     public void testDefaultScheme() {
         CliArgs arguments = CliArgHelper.parse();
         assertNotNull( arguments );
-        assertEquals( "neo4j://", arguments.getScheme() );
+        assertEquals( "neo4j", arguments.getScheme() );
     }
 
     @Test
@@ -155,6 +155,15 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void parseAddressWithRoutingContext() {
+        CliArgs cliArgs = CliArgHelper.parse("--address", "neo4j://localhost:7697?policy=one");
+        assertNotNull(cliArgs);
+        assertEquals("neo4j", cliArgs.getScheme());
+        assertEquals("localhost", cliArgs.getHost());
+        assertEquals(7697, cliArgs.getPort());
+    }
+
+    @Test
     public void nonsenseArgsGiveError() {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         System.setErr(new PrintStream(bout));
@@ -172,7 +181,7 @@ public class CliArgHelperTest {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         System.setErr(new PrintStream(bout));
 
-        CliArgs cliargs = CliArgHelper.parse("--address", "host;port");
+        CliArgs cliargs = CliArgHelper.parse("--address", "host port");
 
         assertNull("should have failed", cliargs);
 

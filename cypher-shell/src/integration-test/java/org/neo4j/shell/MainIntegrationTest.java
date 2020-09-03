@@ -271,7 +271,7 @@ public class MainIntegrationTest
     {
         // given
         CliArgs cliArgs = new CliArgs();
-        cliArgs.setScheme( "bolt://", "" );
+        cliArgs.setScheme( "bolt", "" );
         cliArgs.setPort( 1234 );
 
         ShellAndConnection sac = getShell( cliArgs );
@@ -288,7 +288,7 @@ public class MainIntegrationTest
     {
         // given
         CliArgs cliArgs = new CliArgs();
-        cliArgs.setScheme( "neo4j://", "" );
+        cliArgs.setScheme( "neo4j", "" );
         cliArgs.setPort( 1234 );
 
         ShellAndConnection sac = getShell( cliArgs );
