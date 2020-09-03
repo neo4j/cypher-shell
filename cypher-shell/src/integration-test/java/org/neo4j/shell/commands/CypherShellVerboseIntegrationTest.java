@@ -208,7 +208,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         shell.execute( "CALL db.awaitIndexes()" );
 
         //when
-        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age");
+        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age ORDER BY n.age");
 
         //then
         String actual = linePrinter.output();
