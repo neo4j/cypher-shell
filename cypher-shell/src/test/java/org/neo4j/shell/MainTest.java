@@ -63,7 +63,7 @@ public class MainTest {
         thrown.expectMessage("No text could be read, exiting");
 
         Main main = new Main(inputStream, out);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
         verify(shell, times(1)).connect(connectionConfig, null);
     }
 
@@ -75,7 +75,7 @@ public class MainTest {
         thrown.expectMessage("bla");
 
         Main main = new Main(mock(InputStream.class), out);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
         verify(shell, times(1)).connect(connectionConfig, null);
     }
 
@@ -90,7 +90,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -124,7 +124,7 @@ public class MainTest {
 
         try {
             Main main = new Main();
-            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+            main.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -151,7 +151,7 @@ public class MainTest {
         Main main = new Main(inputStream, ps);
 
         try {
-            main.connectMaybeInteractively(shell, connectionConfig, false, true);
+            main.connectMaybeInteractively(shell, connectionConfig, false, true, true);
             fail("Expected auth exception");
         } catch (AuthenticationException e) {
             verify(shell, times(1)).connect(connectionConfig, null);
@@ -170,7 +170,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -203,7 +203,7 @@ public class MainTest {
 
         try {
             Main main = new Main();
-            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+            main.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -227,7 +227,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -260,7 +260,7 @@ public class MainTest {
 
         try {
             Main main = new Main();
-            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+            main.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -286,7 +286,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -311,7 +311,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -334,7 +334,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -358,7 +358,7 @@ public class MainTest {
         Main main = new Main(inputStream, ps);
 
         try {
-            main.connectMaybeInteractively(shell, connectionConfig, true, true);
+            main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
             fail("Expected an exception");
         } catch (Neo4jException e) {
             assertEquals(authException.code(), e.code());
@@ -377,7 +377,7 @@ public class MainTest {
         PrintStream ps = new PrintStream(baos);
 
         Main main = new Main(inputStream, ps);
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
@@ -410,7 +410,7 @@ public class MainTest {
 
         try {
             Main main = new Main();
-            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+            main.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             String out = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
