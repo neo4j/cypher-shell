@@ -12,6 +12,6 @@ abstract class CypherShellIntegrationTest
     CypherShell shell;
 
     void connect(String password) throws CommandException {
-        shell.connect( new ConnectionConfig( "bolt://", "localhost", 7687, "neo4j", password, Encryption.DEFAULT, ABSENT_DB_NAME ) );
+        shell.connect( new ConnectionConfig( "bolt", "localhost", 7687, "neo4j", password, Encryption.DEFAULT, ABSENT_DB_NAME ) );
     }
 }
