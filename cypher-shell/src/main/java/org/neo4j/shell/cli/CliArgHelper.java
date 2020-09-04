@@ -14,6 +14,8 @@ import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -30,9 +32,6 @@ import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
  * Command line argument parsing and related stuff
  */
 public class CliArgHelper {
-
-    static final Pattern ADDRESS_ARG_PATTERN =
-            Pattern.compile("\\s*(?<scheme>[a-zA-Z0-9+\\-.]+://)?((?<username>\\w+):(?<password>[^\\s]+)@)?(?<host>[a-zA-Z\\d\\-.]+)?(:(?<port>\\d+))?\\s*");
 
     /**
      * @param args to parse
@@ -70,22 +69,21 @@ public class CliArgHelper {
     private static CliArgs getCliArgs( CliArgs cliArgs, ArgumentParser parser, Namespace ns )
     {
         // Parse address string, returns null on error
-        final Matcher addressMatcher = parseAddressMatcher( parser, ns.getString( "address"));
+        final URI uri = parseURI( parser, ns.getString( "address"));
 
-        if (addressMatcher == null) {
+        if (uri == null) {
             return null;
         }
 
         //---------------------
         // Connection arguments
-        cliArgs.setScheme(addressMatcher.group("scheme"), "bolt://");
-        cliArgs.setHost(addressMatcher.group("host"), "localhost");
-        // Safe, regex only matches integers
-        String portString = addressMatcher.group("port");
-        cliArgs.setPort(portString == null ? CliArgs.DEFAULT_PORT : Integer.parseInt(portString));
+        cliArgs.setScheme(uri.getScheme(), "bolt");
+        cliArgs.setHost(uri.getHost(), "localhost");
+
+        int port = uri.getPort();
+        cliArgs.setPort(port == -1 ? 7687 : port);
         // Also parse username and password from address if available
-        cliArgs.setUsername(addressMatcher.group("username"), "");
-        cliArgs.setPassword(addressMatcher.group("password"), "");
+        parseUserInfo( uri, cliArgs );
 
         // Only overwrite user/pass from address string if the arguments were specified
         String user = ns.getString("username");
@@ -125,19 +123,46 @@ public class CliArgHelper {
         return cliArgs;
     }
 
+    private static void parseUserInfo(URI uri, CliArgs cliArgs)
+    {
+        String userInfo = uri.getUserInfo();
+        String user = null;
+        String password = null;
+        if (userInfo != null)
+        {
+            String[] split = userInfo.split( ":" );
+            if (split.length == 0)
+            {
+                user = userInfo;
+            } else if (split.length == 2)
+            {
+                user = split[0];
+                password = split[1];
+            } else {
+                throw new IllegalArgumentException("Cannot parse user and password from " + userInfo);
+            }
+
+        }
+        cliArgs.setUsername(user, "");
+        cliArgs.setPassword(password, "");
+    }
+
     @Nullable
-    private static Matcher parseAddressMatcher(ArgumentParser parser, String address) {
-        Matcher matcher = ADDRESS_ARG_PATTERN.matcher(address);
-        if (!matcher.matches()) {
-            // Match behavior in built-in error handling
-            PrintWriter printWriter = new PrintWriter(System.err);
-            parser.printUsage(printWriter);
-            printWriter.println("cypher-shell: error: Failed to parse address: '" + address + "'");
-            printWriter.println("\n  Address should be of the form: [scheme://][username:password@][host][:port]");
+    static URI parseURI( ArgumentParser parser, String address )
+    {
+        try
+        {
+            return new URI( address );
+        }
+        catch ( URISyntaxException e )
+        {
+            PrintWriter printWriter = new PrintWriter( System.err );
+            parser.printUsage( printWriter );
+            printWriter.println( "cypher-shell: error: Failed to parse address: '" + address + "'" );
+            printWriter.println( "\n  Address should be of the form: [scheme://][username:password@][host][:port]" );
             printWriter.flush();
             return null;
         }
-        return matcher;
     }
 
     private static ArgumentParser setupParser(ParameterMap parameterMap)
@@ -153,7 +178,7 @@ public class CliArgHelper {
         ArgumentGroup connGroup = parser.addArgumentGroup("connection arguments");
         connGroup.addArgument("-a", "--address")
                 .help("address and port to connect to")
-                .setDefault(String.format("%s%s:%d", CliArgs.DEFAULT_SCHEME, CliArgs.DEFAULT_HOST, CliArgs.DEFAULT_PORT));
+                .setDefault(String.format("%s://%s:%d", CliArgs.DEFAULT_SCHEME, CliArgs.DEFAULT_HOST, CliArgs.DEFAULT_PORT));
         connGroup.addArgument("-u", "--username")
                 .setDefault("")
                 .help("username to connect as. Can also be specified using environment variable " + ConnectionConfig.USERNAME_ENV_VAR);

@@ -195,20 +195,20 @@ public class BoltStateHandler implements TransactionHandler, Connector, Database
                 String fallbackScheme;
                 switch ( scheme )
                 {
-                case Scheme.NEO4J_URI_SCHEME + "://":
+                case Scheme.NEO4J_URI_SCHEME:
                     fallbackScheme = Scheme.BOLT_URI_SCHEME;
                     break;
-                case Scheme.NEO4J_LOW_TRUST_URI_SCHEME + "://":
+                case Scheme.NEO4J_LOW_TRUST_URI_SCHEME:
                     fallbackScheme = Scheme.BOLT_LOW_TRUST_URI_SCHEME;
                     break;
-                case Scheme.NEO4J_HIGH_TRUST_URI_SCHEME + "://":
+                case Scheme.NEO4J_HIGH_TRUST_URI_SCHEME:
                     fallbackScheme = Scheme.BOLT_HIGH_TRUST_URI_SCHEME;
                     break;
                 default:
                     throw e;
                 }
                 connectionConfig = new ConnectionConfig(
-                    fallbackScheme + "://",
+                    fallbackScheme,
                     connectionConfig.host(),
                     connectionConfig.port(),
                     connectionConfig.username(),

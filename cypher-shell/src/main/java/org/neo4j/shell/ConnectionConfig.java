@@ -76,7 +76,7 @@ public class ConnectionConfig {
 
     @Nonnull
     public String driverUrl() {
-        return String.format("%s%s:%d", scheme(), host(), port());
+        return String.format("%s://%s:%d", scheme(), host(), port());
     }
 
     @Nonnull
