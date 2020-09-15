@@ -118,7 +118,7 @@ public class MainIntegrationTest
         cliArgs.setPassword("neo", "");
         cliArgs.setDatabase("system");
         ShellAndConnection sac = getShell(cliArgs);
-        main.connectMaybeInteractively(sac.shell, sac.connectionConfig, true, false);
+        main.connectMaybeInteractively(sac.shell, sac.connectionConfig, true, false, true);
         sac.shell.execute("START DATABASE " + DatabaseManager.DEFAULT_DEFAULT_DB_NAME);
     }
 
@@ -128,7 +128,7 @@ public class MainIntegrationTest
         assertEquals("", connectionConfig.username());
         assertEquals("", connectionConfig.password());
 
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // then
         // should be connected
@@ -150,7 +150,7 @@ public class MainIntegrationTest
         // when
         inputBuffer.put(String.format("foo%npass%nnewpass%n").getBytes());
         baos.reset();
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // then
         assertTrue(shell.isConnected());
@@ -234,6 +234,23 @@ public class MainIntegrationTest
     }
 
     @Test
+    public void shouldNotBePromptedIfRunningWithExplicitNonInteractiveCypherThatDoesntUpdatePassword() throws Exception {
+        //given a user that require a password change
+        int majorVersion = getVersionAndCreateUserWithPasswordChangeRequired();
+
+        //when
+        assumeTrue( majorVersion >= 4 );
+
+        //when interactively asked for a password use this
+        inputBuffer.put( String.format( "pass2%n" ).getBytes() );
+        baos.reset();
+        CliArgs args = args( DEFAULT_DEFAULT_DB_NAME, "foo", "pass",
+                             "MATCH (n) RETURN n" );
+        args.setNonInteractive( true );
+        assertEquals( EXIT_FAILURE, main.runShell( args, shell, mock( Logger.class ) ) );
+    }
+
+    @Test
     public void doesNotPromptToStdOutOnWrongAuthenticationIfOutputRedirected() throws Exception {
         // when
         assertEquals("", connectionConfig.username());
@@ -248,7 +265,7 @@ public class MainIntegrationTest
         // Create a Main with the standard in and out
         try {
             Main realMain = new Main();
-            realMain.connectMaybeInteractively(shell, connectionConfig, true, false);
+            realMain.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             // then
             // should be connected
@@ -280,7 +297,7 @@ public class MainIntegrationTest
 
         exception.expect( ServiceUnavailableException.class );
         exception.expectMessage( "Unable to connect to localhost:1234, ensure the database is running and that there is a working network connection to it" );
-        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true, true);
     }
 
     @Test
@@ -297,7 +314,7 @@ public class MainIntegrationTest
 
         exception.expect( ServiceUnavailableException.class );
         // The error message here may be subject to change and is not stable across versions so let us not assert on it
-        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true, true);
     }
 
     @Test
@@ -313,7 +330,7 @@ public class MainIntegrationTest
         ShellAndConnection sac = getShell(cliArgs);
         CypherShell shell = sac.shell;
         ConnectionConfig connectionConfig = sac.connectionConfig;
-        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true, true);
 
         // then we should have prompted and set the username and password
         assertEquals( format( "username: neo4j%npassword: ***%n" ), baos.toString() );
@@ -445,7 +462,7 @@ public class MainIntegrationTest
         assertEquals("", connectionConfig.password());
 
         // when
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // Multiple databases are only available from 4.0
         assumeTrue( majorVersion( shell.getServerVersion() ) >= 4 );
@@ -469,7 +486,7 @@ public class MainIntegrationTest
             // Should get exception that database is unavailable when trying to connect
             exception.expect(TransientException.class);
             exception.expectMessage("Database 'neo4j' is unavailable");
-            main.connectMaybeInteractively(shell, connectionConfig, true, true);
+            main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
             // then
             assertFalse(shell.isConnected());
@@ -487,7 +504,7 @@ public class MainIntegrationTest
         assertEquals("", connectionConfig.password());
 
         // when
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // Multiple databases are only available from 4.0
         assumeTrue( majorVersion( shell.getServerVersion() ) >= 4 );
@@ -517,7 +534,7 @@ public class MainIntegrationTest
             // Use the new shell and connection config from here on
             shell = sac.shell;
             connectionConfig = sac.connectionConfig;
-            main.connectMaybeInteractively(shell, connectionConfig, true, false);
+            main.connectMaybeInteractively(shell, connectionConfig, true, false, true);
 
             // then
             assertTrue(shell.isConnected());
@@ -536,7 +553,7 @@ public class MainIntegrationTest
         assertEquals("", connectionConfig.password());
 
         // when
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // Multiple databases are only available from 4.0
         assumeTrue(majorVersion( shell.getServerVersion() ) >= 4);
@@ -574,7 +591,7 @@ public class MainIntegrationTest
         assertEquals("", connectionConfig.password());
 
         // when
-        main.connectMaybeInteractively(shell, connectionConfig, true, true);
+        main.connectMaybeInteractively(shell, connectionConfig, true, true, true);
 
         // Multiple databases are only available from 4.0
         assumeTrue(majorVersion( shell.getServerVersion() ) >= 4);
@@ -638,7 +655,7 @@ public class MainIntegrationTest
     {
         PrettyConfig prettyConfig = new PrettyConfig( new CliArgs() );
         CypherShell shell = new CypherShell( linePrinter, prettyConfig, true, new ShellParameterMap() );
-        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true, true);
         shell.setCommandHelper( new CommandHelper( mock( Logger.class ), Historian.empty, shell) );
         return shell;
     }
@@ -695,7 +712,7 @@ public class MainIntegrationTest
     private int getVersionAndCreateUserWithPasswordChangeRequired() throws Exception {
         shell.setCommandHelper( new CommandHelper( mock( Logger.class ), Historian.empty, shell ) );
 
-        main.connectMaybeInteractively( shell, connectionConfig, true, true );
+        main.connectMaybeInteractively( shell, connectionConfig, true, true, true);
         String expectedLoginOutput = format( "username: neo4j%npassword: ***%n" );
         assertEquals( expectedLoginOutput, baos.toString() );
         ensureUser();

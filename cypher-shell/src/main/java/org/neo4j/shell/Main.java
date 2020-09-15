@@ -104,14 +104,20 @@ public class Main {
             if ( cliArgs.getCypher().isPresent() )
             {
                 // Can only prompt for password if input has not been redirected
-                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive(),
+                connectMaybeInteractively( shell, connectionConfig,
+                        !cliArgs.getNonInteractive() && isInputInteractive(),
+                        !cliArgs.getNonInteractive() && isOutputInteractive(),
+                                       !cliArgs.getNonInteractive()/*Don't ask for password if using --non-interactive*/,
                         () -> shell.execute( cliArgs.getCypher().get() ) );
                 return EXIT_SUCCESS;
             }
             else
             {
                 // Can only prompt for password if input has not been redirected
-                connectMaybeInteractively( shell, connectionConfig, isInputInteractive(), isOutputInteractive());
+                connectMaybeInteractively( shell, connectionConfig,
+                        !cliArgs.getNonInteractive() && isInputInteractive(),
+                                           !cliArgs.getNonInteractive() && isOutputInteractive(),
+                                       !cliArgs.getNonInteractive()/*Don't ask for password if using --non-interactive*/);
                 // Construct shellrunner after connecting, due to interrupt handling
                 ShellRunner shellRunner = ShellRunner.getShellRunner( cliArgs, shell, logger, connectionConfig );
                 CommandHelper commandHelper = new CommandHelper( logger, shellRunner.getHistorian(), shell );
@@ -131,9 +137,10 @@ public class Main {
     void connectMaybeInteractively(@Nonnull CypherShell shell,
             @Nonnull ConnectionConfig connectionConfig,
             boolean inputInteractive,
-            boolean outputInteractive)
+            boolean outputInteractive,
+            boolean shouldPromptForPassword)
             throws Exception {
-        connectMaybeInteractively( shell, connectionConfig, inputInteractive, outputInteractive, null );
+        connectMaybeInteractively( shell, connectionConfig, inputInteractive, outputInteractive, shouldPromptForPassword, null );
     }
 
     /**
@@ -143,6 +150,7 @@ public class Main {
             @Nonnull ConnectionConfig connectionConfig,
             boolean inputInteractive,
             boolean outputInteractive,
+            boolean shouldPromptForPassword,
             ThrowingAction<CommandException> command )
             throws Exception {
 
@@ -173,7 +181,7 @@ public class Main {
                 promptForUsernameAndPassword(connectionConfig, outputInteractive);
                 didPrompt = true;
             } catch (Neo4jException e) {
-                if (isPasswordChangeRequiredException(e)) {
+                if (shouldPromptForPassword && isPasswordChangeRequiredException(e)) {
                     promptForPasswordChange(connectionConfig, outputInteractive);
                     shell.changePassword(connectionConfig);
                     didPrompt = true;
