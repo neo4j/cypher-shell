@@ -165,6 +165,15 @@ public class CliArgHelperTest {
         assertEquals( CliArgs.DEFAULT_PORT, cliArgs.getPort() );
     }
 
+    public void parseWithoutProtocol() {
+        CliArgs cliArgs = CliArgHelper.parse("--address", "localhost:10000");
+        assertNotNull(cliArgs);
+        assertNotNull(cliArgs);
+        assertEquals("bolt", cliArgs.getScheme());
+        assertEquals("localhost", cliArgs.getHost());
+        assertEquals(10000, cliArgs.getPort());
+    }
+
     @Test
     public void parseAddressWithRoutingContext()
     {

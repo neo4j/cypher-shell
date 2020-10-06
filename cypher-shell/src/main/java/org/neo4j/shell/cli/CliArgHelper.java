@@ -25,6 +25,7 @@ import org.neo4j.shell.ConnectionConfig;
 import org.neo4j.shell.ParameterMap;
 
 import static java.lang.String.format;
+import static org.neo4j.shell.cli.CliArgs.DEFAULT_SCHEME;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_AT_END;
 import static org.neo4j.shell.cli.FailBehavior.FAIL_FAST;
 
@@ -152,6 +153,12 @@ public class CliArgHelper {
     {
         try
         {
+            String[] schemeSplit = address.split( "://" );
+            if ( schemeSplit.length == 1 )
+            {
+                // URI can't parse addresses without scheme, prepend fake "bolt://" to reuse the parsing facility
+                address = DEFAULT_SCHEME + "://" + address;
+            }
             return new URI( address );
         }
         catch ( URISyntaxException e )
