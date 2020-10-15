@@ -155,6 +155,16 @@ public class CliArgHelperTest {
     }
 
     @Test
+    public void parseWithoutProtocol() {
+        CliArgs cliArgs = CliArgHelper.parse("--address", "localhost:10000");
+        assertNotNull(cliArgs);
+        assertNotNull(cliArgs);
+        assertEquals("bolt", cliArgs.getScheme());
+        assertEquals("localhost", cliArgs.getHost());
+        assertEquals(10000, cliArgs.getPort());
+    }
+
+    @Test
     public void parseAddressWithRoutingContext() {
         CliArgs cliArgs = CliArgHelper.parse("--address", "neo4j://localhost:7697?policy=one");
         assertNotNull(cliArgs);
