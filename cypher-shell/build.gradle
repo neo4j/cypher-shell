@@ -56,6 +56,7 @@ dependencies {
         exclude(group: 'org.neo4j', module: 'neo4j-procedure-api')
         exclude(group: 'org.neo4j', module: 'neo4j-kernel-api')
         exclude(group: 'org.eclipse.collections')
+
     }
     compile "org.neo4j.driver:neo4j-java-driver:$neo4jJavaDriverVersion"
     compileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
