@@ -54,6 +54,7 @@ dependencies {
         exclude(group: 'org.neo4j', module: 'neo4j-annotation-processors')
         exclude(group: 'org.neo4j', module: 'neo4j-spatial-index')
         exclude(group: 'org.neo4j', module: 'neo4j-native')
+
         exclude(group: 'org.neo4j', module: 'neo4j-logging')
         exclude(group: 'org.neo4j', module: 'neo4j-procedure-api')
         exclude(group: 'org.neo4j', module: 'neo4j-kernel-api')
