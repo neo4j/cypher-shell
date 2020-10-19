@@ -68,3 +68,7 @@ dependencies {
     testCompile "org.mockito:mockito-core:$mockitoVersion"
     testCompileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
 }
+
+checkstyle {
+    toolVersion = '8.35'
+}
