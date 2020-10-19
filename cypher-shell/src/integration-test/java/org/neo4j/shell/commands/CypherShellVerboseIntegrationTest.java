@@ -75,6 +75,16 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
+    public void parseDuration() throws CommandException
+    {
+        //when
+        shell.execute( "RETURN duration({months:0.75})" );
+
+        //then
+        assertThat( linePrinter.output(), containsString( "P22DT19H51M49.5S" ) );
+    }
+
+    @Test
     public void cypherWithNoReturnStatements() throws CommandException
     {
         //when
