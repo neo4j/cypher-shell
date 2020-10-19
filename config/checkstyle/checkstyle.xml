@@ -97,9 +97,12 @@
     <module name="GenericWhitespace"/>
     <module name="ExplicitInitialization"/>
 
+    <!-- Included in mono repo but not worth it to introduce here at this moment
     <module name="IllegalImport">
       <property name="illegalPkgs" value="junit.framework"/>
     </module>
+    -->
+    
     <module name="LocalVariableName">
       <property name="allowOneCharVarInForLoop" value="true"/>
     </module>

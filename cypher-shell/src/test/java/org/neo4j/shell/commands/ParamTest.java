@@ -1,5 +1,23 @@
+/*
+ * Copyright (c) 2002-2020 "Neo4j,"
+ * Neo4j Sweden AB [http://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.neo4j.shell.commands;
-
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,169 +34,191 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class ParamTest {
+public class ParamTest
+{
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private ParameterMap mockShell = mock( ParameterMap.class);
+    private ParameterMap mockShell = mock( ParameterMap.class );
     private Command cmd;
 
     @Before
-    public void setup() {
-        this.cmd = new Param(mockShell);
+    public void setup()
+    {
+        this.cmd = new Param( mockShell );
     }
 
     @Test
-    public void shouldFailIfNoArgs() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailIfNoArgs() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("");
+        cmd.execute( "" );
     }
 
     @Test
-    public void shouldFailIfOneArg() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailIfOneArg() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("bob");
+        cmd.execute( "bob" );
     }
 
     @Test
-    public void setParam() throws ParameterException, CommandException {
-        cmd.execute("bob   9");
+    public void setParam() throws ParameterException, CommandException
+    {
+        cmd.execute( "bob   9" );
 
-        verify(mockShell).setParameter("bob", "9");
+        verify( mockShell ).setParameter( "bob", "9" );
     }
 
     @Test
-    public void setLambdasAsParam() throws ParameterException, CommandException {
-        cmd.execute("bob => 9");
+    public void setLambdasAsParam() throws ParameterException, CommandException
+    {
+        cmd.execute( "bob => 9" );
 
-        verify(mockShell).setParameter("bob", "9");
+        verify( mockShell ).setParameter( "bob", "9" );
     }
 
     @Test
-    public void setLambdasAsParamWithBackticks() throws ParameterException, CommandException {
-        cmd.execute("`bob` => 9");
+    public void setLambdasAsParamWithBackticks() throws ParameterException, CommandException
+    {
+        cmd.execute( "`bob` => 9" );
 
-        verify(mockShell).setParameter("`bob`", "9");
+        verify( mockShell ).setParameter( "`bob`", "9" );
     }
 
     @Test
-    public void setSpecialCharacterParameter() throws ParameterException, CommandException {
-        cmd.execute("bØb   9");
+    public void setSpecialCharacterParameter() throws ParameterException, CommandException
+    {
+        cmd.execute( "bØb   9" );
 
-        verify(mockShell).setParameter("bØb", "9");
+        verify( mockShell ).setParameter( "bØb", "9" );
     }
 
     @Test
-    public void setSpecialCharacterParameterForLambdaExpressions() throws ParameterException, CommandException {
-        cmd.execute("`first=>Name` => \"Bruce\"");
+    public void setSpecialCharacterParameterForLambdaExpressions() throws ParameterException, CommandException
+    {
+        cmd.execute( "`first=>Name` => \"Bruce\"" );
 
-        verify(mockShell).setParameter("`first=>Name`", "\"Bruce\"");
+        verify( mockShell ).setParameter( "`first=>Name`", "\"Bruce\"" );
     }
 
     @Test
-    public void setParamWithSpecialCharacters() throws ParameterException, CommandException {
-        cmd.execute("`bob#`   9");
+    public void setParamWithSpecialCharacters() throws ParameterException, CommandException
+    {
+        cmd.execute( "`bob#`   9" );
 
-        verify(mockShell).setParameter("`bob#`", "9");
+        verify( mockShell ).setParameter( "`bob#`", "9" );
     }
 
     @Test
-    public void setParamWithOddNoOfBackTicks() throws ParameterException, CommandException {
-        cmd.execute(" `bo `` sömething ```   9");
+    public void setParamWithOddNoOfBackTicks() throws ParameterException, CommandException
+    {
+        cmd.execute( " `bo `` sömething ```   9" );
 
-        verify(mockShell).setParameter("`bo `` sömething ```", "9");
+        verify( mockShell ).setParameter( "`bo `` sömething ```", "9" );
     }
 
     @Test
-    public void shouldFailForVariablesWithoutEscaping() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailForVariablesWithoutEscaping() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("bob#   9");
+        cmd.execute( "bob#   9" );
 
-        fail("Expected error");
+        fail( "Expected error" );
     }
 
     @Test
-    public void shouldFailForVariablesMixingMapStyleAssignmentAndLambdas() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect usage"));
+    public void shouldFailForVariablesMixingMapStyleAssignmentAndLambdas() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect usage" ) );
 
-        cmd.execute("bob: => 9");
+        cmd.execute( "bob: => 9" );
 
-        fail("Expected error");
+        fail( "Expected error" );
     }
 
     @Test
-    public void shouldFailForEmptyVariables() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailForEmptyVariables() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("``   9");
+        cmd.execute( "``   9" );
 
-        fail("Expected error");
+        fail( "Expected error" );
     }
 
     @Test
-    public void shouldFailForInvalidVariables() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailForInvalidVariables() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("`   9");
+        cmd.execute( "`   9" );
 
-        fail("Expected error");
+        fail( "Expected error" );
     }
 
     @Test
-    public void shouldFailForVariablesWithoutText() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(containsString("Incorrect number of arguments"));
+    public void shouldFailForVariablesWithoutText() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( containsString( "Incorrect number of arguments" ) );
 
-        cmd.execute("```   9");
+        cmd.execute( "```   9" );
 
-        fail("Expected error");
+        fail( "Expected error" );
     }
 
     @Test
-    public void shouldNotSplitOnSpace() throws ParameterException, CommandException {
-        cmd.execute("bob 'one two'");
-        verify(mockShell).setParameter("bob", "'one two'");
+    public void shouldNotSplitOnSpace() throws ParameterException, CommandException
+    {
+        cmd.execute( "bob 'one two'" );
+        verify( mockShell ).setParameter( "bob", "'one two'" );
     }
 
     @Test
-    public void shouldAcceptUnicodeAlphaNumeric() throws ParameterException, CommandException {
-        cmd.execute("böb 'one two'");
-        verify(mockShell).setParameter("böb", "'one two'");
+    public void shouldAcceptUnicodeAlphaNumeric() throws ParameterException, CommandException
+    {
+        cmd.execute( "böb 'one two'" );
+        verify( mockShell ).setParameter( "böb", "'one two'" );
     }
 
     @Test
-    public void shouldAcceptColonFormOfParams() throws ParameterException, CommandException {
-        cmd.execute("bob: one");
-        verify(mockShell).setParameter("bob", "one");
+    public void shouldAcceptColonFormOfParams() throws ParameterException, CommandException
+    {
+        cmd.execute( "bob: one" );
+        verify( mockShell ).setParameter( "bob", "one" );
     }
 
     @Test
-    public void shouldAcceptForTwoColonsFormOfParams() throws ParameterException, CommandException {
-        cmd.execute("`bob:`: one");
-        verify(mockShell).setParameter("`bob:`", "one");
+    public void shouldAcceptForTwoColonsFormOfParams() throws ParameterException, CommandException
+    {
+        cmd.execute( "`bob:`: one" );
+        verify( mockShell ).setParameter( "`bob:`", "one" );
 
-        cmd.execute("`t:om` two");
-        verify(mockShell).setParameter("`t:om`", "two");
+        cmd.execute( "`t:om` two" );
+        verify( mockShell ).setParameter( "`t:om`", "two" );
     }
 
     @Test
-    public void shouldNotExecuteEscapedCypher() throws ParameterException, CommandException {
-        cmd.execute("bob \"RETURN 5 as bob\"");
-        verify(mockShell).setParameter("bob", "\"RETURN 5 as bob\"");
+    public void shouldNotExecuteEscapedCypher() throws ParameterException, CommandException
+    {
+        cmd.execute( "bob \"RETURN 5 as bob\"" );
+        verify( mockShell ).setParameter( "bob", "\"RETURN 5 as bob\"" );
     }
 
     @Test
-    public void printUsage() {
+    public void printUsage()
+    {
         String usage = cmd.getUsage();
-        assertEquals(usage, "name => value");
+        assertEquals( usage, "name => value" );
     }
 }
