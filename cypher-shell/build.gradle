@@ -49,6 +49,7 @@ dependencies {
         exclude(group: 'org.neo4j', module: 'neo4j-collections')
         exclude(group: 'org.neo4j', module: 'neo4j-diagnostics')
         exclude(group: 'org.neo4j', module: 'neo4j-resource')
+
         exclude(group: 'org.neo4j', module: 'neo4j-annotation-processors')
         exclude(group: 'org.neo4j', module: 'neo4j-spatial-index')
         exclude(group: 'org.neo4j', module: 'neo4j-native')
