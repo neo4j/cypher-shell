@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2002-2020 "Neo4j,"
+ * Neo4j Sweden AB [http://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.neo4j.shell.commands;
 
 import org.junit.After;
@@ -27,7 +46,8 @@ import static org.junit.Assume.assumeTrue;
 import static org.neo4j.shell.util.Versions.majorVersion;
 import static org.neo4j.shell.util.Versions.version;
 
-public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTest {
+public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTest
+{
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -37,170 +57,185 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     private Command beginCommand;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception
+    {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.VERBOSE, true, 1000), false, new ShellParameterMap());
-        rollbackCommand = new Rollback(shell);
-        commitCommand = new Commit(shell);
-        beginCommand = new Begin(shell);
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.VERBOSE, true, 1000 ), false, new ShellParameterMap() );
+        rollbackCommand = new Rollback( shell );
+        commitCommand = new Commit( shell );
+        beginCommand = new Begin( shell );
 
         connect( "neo" );
     }
 
     @After
-    public void tearDown() throws Exception {
-        shell.execute("MATCH (n) DETACH DELETE (n)");
+    public void tearDown() throws Exception
+    {
+        shell.execute( "MATCH (n) DETACH DELETE (n)" );
     }
 
     @Test
-    public void cypherWithNoReturnStatements() throws CommandException {
+    public void cypherWithNoReturnStatements() throws CommandException
+    {
         //when
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
 
         //then
-        assertThat(linePrinter.output(), containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat( linePrinter.output(), containsString( "Added 1 nodes, Set 1 properties, Added 1 labels" ) );
     }
 
     @Test
-    public void cypherWithReturnStatements() throws CommandException {
+    public void cypherWithReturnStatements() throws CommandException
+    {
         //when
-        shell.execute("CREATE (jane :TestPerson {name: \"Jane Smith\"}) RETURN jane");
+        shell.execute( "CREATE (jane :TestPerson {name: \"Jane Smith\"}) RETURN jane" );
 
         //then
         String output = linePrinter.output();
-        assertThat(output, containsString("| jane "));
-        assertThat(output, containsString("| (:TestPerson {name: \"Jane Smith\"}) |" ));
-        assertThat(output, containsString("Added 1 nodes, Set 1 properties, Added 1 labels"));
+        assertThat( output, containsString( "| jane " ) );
+        assertThat( output, containsString( "| (:TestPerson {name: \"Jane Smith\"}) |" ) );
+        assertThat( output, containsString( "Added 1 nodes, Set 1 properties, Added 1 labels" ) );
     }
 
     @Test
-    public void connectTwiceThrows() throws CommandException {
-        thrown.expect(CommandException.class);
-        thrown.expectMessage("Already connected");
+    public void connectTwiceThrows() throws CommandException
+    {
+        thrown.expect( CommandException.class );
+        thrown.expectMessage( "Already connected" );
 
-        assertTrue("Shell should already be connected", shell.isConnected());
+        assertTrue( "Shell should already be connected", shell.isConnected() );
         connect( "neo" );
     }
 
     @Test
-    public void rollbackScenario() throws CommandException {
+    public void rollbackScenario() throws CommandException
+    {
         //given
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
 
         //when
-        beginCommand.execute("");
-        shell.execute("CREATE (:NotCreated)");
-        rollbackCommand.execute("");
+        beginCommand.execute( "" );
+        shell.execute( "CREATE (:NotCreated)" );
+        rollbackCommand.execute( "" );
 
         //then
-        shell.execute("MATCH (n) RETURN n");
+        shell.execute( "MATCH (n) RETURN n" );
 
         String output = linePrinter.output();
-        assertThat(output, containsString("| n "));
-        assertThat(output, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
-        assertThat(output, not(containsString(":NotCreated")));
+        assertThat( output, containsString( "| n " ) );
+        assertThat( output, containsString( "| (:TestPerson {name: \"Jane Smith\"}) |" ) );
+        assertThat( output, not( containsString( ":NotCreated" ) ) );
     }
 
     @Test
-    public void resetOutOfTxScenario() throws CommandException {
+    public void resetOutOfTxScenario() throws CommandException
+    {
         //when
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
         shell.reset();
 
         //then
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
+        shell.execute( "MATCH (n:TestPerson) RETURN n ORDER BY n.name" );
 
         String result = linePrinter.output();
-        assertThat(result, containsString(
+        assertThat( result, containsString(
                 "| (:TestPerson {name: \"Jane Smith\"}) |\n" +
-                "| (:TestPerson {name: \"Jane Smith\"}) |"));
+                "| (:TestPerson {name: \"Jane Smith\"}) |" ) );
     }
 
     @Test
-    public void resetInTxScenario() throws CommandException {
+    public void resetInTxScenario() throws CommandException
+    {
         //when
-        beginCommand.execute("");
-        shell.execute("CREATE (:NotCreated)");
+        beginCommand.execute( "" );
+        shell.execute( "CREATE (:NotCreated)" );
         shell.reset();
 
         //then
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        shell.execute("MATCH (n) RETURN n");
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
+        shell.execute( "MATCH (n) RETURN n" );
 
         String result = linePrinter.output();
-        assertThat(result, containsString("| (:TestPerson {name: \"Jane Smith\"}) |"));
-        assertThat(result, not(containsString(":NotCreated")));
+        assertThat( result, containsString( "| (:TestPerson {name: \"Jane Smith\"}) |" ) );
+        assertThat( result, not( containsString( ":NotCreated" ) ) );
     }
 
     @Test
-    public void commitScenario() throws CommandException {
-        beginCommand.execute("");
-        shell.execute("CREATE (:TestPerson {name: \"Joe Smith\"})");
-        assertThat(linePrinter.output(), equalTo(""));
+    public void commitScenario() throws CommandException
+    {
+        beginCommand.execute( "" );
+        shell.execute( "CREATE (:TestPerson {name: \"Joe Smith\"})" );
+        assertThat( linePrinter.output(), equalTo( "" ) );
         // Here ^^ we assert that nothing is printed before commit on explicit transactions. This was
         // existing behaviour on typing this comment, but it could we worth thinking that through if
         // we change explicit transaction queries to stream results.
 
-        shell.execute("CREATE (:TestPerson {name: \"Jane Smith\"})");
-        assertThat(linePrinter.output(), equalTo(""));
+        shell.execute( "CREATE (:TestPerson {name: \"Jane Smith\"})" );
+        assertThat( linePrinter.output(), equalTo( "" ) );
 
-        shell.execute("MATCH (n:TestPerson) RETURN n ORDER BY n.name");
-        assertThat(linePrinter.output(), equalTo(""));
+        shell.execute( "MATCH (n:TestPerson) RETURN n ORDER BY n.name" );
+        assertThat( linePrinter.output(), equalTo( "" ) );
 
-        commitCommand.execute("");
+        commitCommand.execute( "" );
 
         //then
         String result = linePrinter.output();
-        assertThat(result,
-                containsString("\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n"));
+        assertThat( result,
+                    containsString( "\n| (:TestPerson {name: \"Jane Smith\"}) |\n| (:TestPerson {name: \"Joe Smith\"})  |\n" ) );
     }
 
     @Test
-    public void paramsAndListVariables() throws EvaluationException, CommandException {
-        assertTrue(shell.getParameterMap().allParameterValues().isEmpty());
+    public void paramsAndListVariables() throws EvaluationException, CommandException
+    {
+        assertTrue( shell.getParameterMap().allParameterValues().isEmpty() );
 
         long randomLong = System.currentTimeMillis();
         String stringInput = "\"randomString\"";
-        shell.getParameterMap().setParameter("string", stringInput);
-        Object paramValue = shell.getParameterMap().setParameter("bob", String.valueOf(randomLong));
-        assertEquals(randomLong, paramValue);
+        shell.getParameterMap().setParameter( "string", stringInput );
+        Object paramValue = shell.getParameterMap().setParameter( "bob", String.valueOf( randomLong ) );
+        assertEquals( randomLong, paramValue );
 
-        shell.execute("RETURN $bob, $string");
+        shell.execute( "RETURN $bob, $string" );
 
         String result = linePrinter.output();
-        assertThat(result, containsString("| $bob"));
-        assertThat(result, containsString("| " + randomLong + " | " + stringInput + " |"));
-        assertEquals(randomLong, shell.getParameterMap().allParameterValues().get( "bob"));
-        assertEquals("randomString", shell.getParameterMap().allParameterValues().get( "string"));
+        assertThat( result, containsString( "| $bob" ) );
+        assertThat( result, containsString( "| " + randomLong + " | " + stringInput + " |" ) );
+        assertEquals( randomLong, shell.getParameterMap().allParameterValues().get( "bob" ) );
+        assertEquals( "randomString", shell.getParameterMap().allParameterValues().get( "string" ) );
     }
 
     @Test
-    public void paramsAndListVariablesWithSpecialCharacters() throws EvaluationException, CommandException {
-        assertTrue(shell.getParameterMap().allParameterValues().isEmpty());
+    public void paramsAndListVariablesWithSpecialCharacters() throws EvaluationException, CommandException
+    {
+        assertTrue( shell.getParameterMap().allParameterValues().isEmpty() );
 
         long randomLong = System.currentTimeMillis();
-        Object paramValue = shell.getParameterMap().setParameter("`bob`", String.valueOf(randomLong));
-        assertEquals(randomLong, paramValue);
+        Object paramValue = shell.getParameterMap().setParameter( "`bob`", String.valueOf( randomLong ) );
+        assertEquals( randomLong, paramValue );
 
-        shell.execute("RETURN $`bob`");
+        shell.execute( "RETURN $`bob`" );
 
         String result = linePrinter.output();
-        assertThat(result, containsString("| $`bob`"));
-        assertThat(result, containsString("\n| " + randomLong+ " |\n"));
-        assertEquals(randomLong, shell.getParameterMap().allParameterValues().get("bob"));
+        assertThat( result, containsString( "| $`bob`" ) );
+        assertThat( result, containsString( "\n| " + randomLong + " |\n" ) );
+        assertEquals( randomLong, shell.getParameterMap().allParameterValues().get( "bob" ) );
     }
 
     @Test
-    public void cypherWithOrder() throws CommandException {
+    public void cypherWithOrder() throws CommandException
+    {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("3.6")));
+        assumeThat( version( serverVersion ), greaterThanOrEqualTo( version( "3.6" ) ) );
 
         // Make sure we are creating a new NEW index
-        try {
+        try
+        {
             shell.execute( "DROP INDEX ON :Person(age)" );
-        } catch ( Exception e ) {
+        }
+        catch ( Exception e )
+        {
             // ignore if the index didn't exist
         }
 
@@ -208,7 +243,7 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
         shell.execute( "CALL db.awaitIndexes()" );
 
         //when
-        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age ORDER BY n.age");
+        shell.execute( "CYPHER RUNTIME=INTERPRETED EXPLAIN MATCH (n:Person) WHERE n.age >= 18 RETURN n.name, n.age ORDER BY n.age" );
 
         //then
         String actual = linePrinter.output();
@@ -217,13 +252,14 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
-    public void cypherWithQueryDetails() throws CommandException {
+    public void cypherWithQueryDetails() throws CommandException
+    {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("4.1")));
+        assumeThat( version( serverVersion ), greaterThanOrEqualTo( version( "4.1" ) ) );
 
         //when
-        shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
+        shell.execute( "EXPLAIN MATCH (n) with n.age AS age RETURN age" );
 
         //then
         String actual = linePrinter.output();
@@ -233,13 +269,14 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
-    public void cypherWithoutQueryDetails() throws CommandException {
+    public void cypherWithoutQueryDetails() throws CommandException
+    {
         // given
         String serverVersion = shell.getServerVersion();
-        assumeThat( version(serverVersion), not(greaterThanOrEqualTo(version("4.1"))));
+        assumeThat( version( serverVersion ), not( greaterThanOrEqualTo( version( "4.1" ) ) ) );
 
         //when
-        shell.execute("EXPLAIN MATCH (n) with n.age AS age RETURN age");
+        shell.execute( "EXPLAIN MATCH (n) with n.age AS age RETURN age" );
 
         //then
         String actual = linePrinter.output();
@@ -248,48 +285,51 @@ public class CypherShellVerboseIntegrationTest extends CypherShellIntegrationTes
     }
 
     @Test
-    public void cypherWithExplainAndRulePlanner() throws CommandException {
+    public void cypherWithExplainAndRulePlanner() throws CommandException
+    {
         //given (there is no rule planner in neo4j 4.0)
         assumeTrue( majorVersion( shell.getServerVersion() ) < 4 );
 
         //when
-        shell.execute("CYPHER planner=rule EXPLAIN MATCH (e:E) WHERE e.bucket='Live' and e.id = 23253473 RETURN count(e)");
+        shell.execute( "CYPHER planner=rule EXPLAIN MATCH (e:E) WHERE e.bucket='Live' and e.id = 23253473 RETURN count(e)" );
 
         //then
         String actual = linePrinter.output();
-        assertThat(actual, containsString("\"EXPLAIN\""));
-        assertThat(actual, containsString("\"READ_ONLY\""));
-        assertThat(actual, containsString("\"RULE\""));
-        assertThat(actual, containsString("\"INTERPRETED\""));
+        assertThat( actual, containsString( "\"EXPLAIN\"" ) );
+        assertThat( actual, containsString( "\"READ_ONLY\"" ) );
+        assertThat( actual, containsString( "\"RULE\"" ) );
+        assertThat( actual, containsString( "\"INTERPRETED\"" ) );
     }
 
     @Test
-    public void shouldShowTheNumberOfRows() throws CommandException {
+    public void shouldShowTheNumberOfRows() throws CommandException
+    {
         //when
-        shell.execute("UNWIND [1,2,3] AS row RETURN row");
+        shell.execute( "UNWIND [1,2,3] AS row RETURN row" );
 
         //then
         String actual = linePrinter.output();
-        assertThat(actual, containsString("3 rows available"));
+        assertThat( actual, containsString( "3 rows available" ) );
     }
 
     @Test
-    public void shouldNotContainUnnecessaryNewLines() throws CommandException {
+    public void shouldNotContainUnnecessaryNewLines() throws CommandException
+    {
         //when
-        shell.execute("UNWIND [1,2,3] AS row RETURN row");
+        shell.execute( "UNWIND [1,2,3] AS row RETURN row" );
 
         //then
         String actual = linePrinter.output();
-        assertThat(actual,
-                containsString( String.format(
-                        "+-----+%n" +
-                        "| row |%n" +
-                        "+-----+%n" +
-                        "| 1   |%n" +
-                        "| 2   |%n" +
-                        "| 3   |%n" +
-                        "+-----+%n" +
-                        "%n" +
-                        "3 rows available after")));
+        assertThat( actual,
+                    containsString( String.format(
+                            "+-----+%n" +
+                            "| row |%n" +
+                            "+-----+%n" +
+                            "| 1   |%n" +
+                            "| 2   |%n" +
+                            "| 3   |%n" +
+                            "+-----+%n" +
+                            "%n" +
+                            "3 rows available after" ) ) );
     }
 }
