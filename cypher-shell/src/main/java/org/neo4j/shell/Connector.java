@@ -2,8 +2,8 @@ package org.neo4j.shell;
 
 import javax.annotation.Nonnull;
 
-import org.neo4j.function.ThrowingAction;
 import org.neo4j.shell.exception.CommandException;
+import org.neo4j.shell.exception.ThrowingAction;
 
 /**
  * An object with the ability to connect and disconnect.
