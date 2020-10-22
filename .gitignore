@@ -3,6 +3,7 @@ build
 out
 .idea/
 *.iml
+
 **/src/**/gen
 /tmp/
 hej.js
