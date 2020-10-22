@@ -70,3 +70,7 @@ dependencies {
     testCompile "org.hamcrest:java-hamcrest:$hamcrestVersion"
     testCompileOnly "com.google.code.findbugs:annotations:$findbugsVersion"
 }
+
+checkstyle {
+    toolVersion = '8.35'
+}

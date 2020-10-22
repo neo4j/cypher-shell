@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2002-2020 "Neo4j,"
+ * Neo4j Sweden AB [http://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.neo4j.shell.commands;
 
 import org.junit.After;
@@ -21,83 +40,90 @@ import static org.junit.Assume.assumeThat;
 import static org.neo4j.shell.prettyprint.OutputFormatter.NEWLINE;
 import static org.neo4j.shell.util.Versions.version;
 
-public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest {
+public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest
+{
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
     private StringLinePrinter linePrinter = new StringLinePrinter();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception
+    {
         linePrinter.clear();
-        shell = new CypherShell(linePrinter, new PrettyConfig(Format.PLAIN, true, 1000), false, new ShellParameterMap());
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), false, new ShellParameterMap() );
         connect( "neo" );
     }
 
     @After
-    public void tearDown() throws Exception {
-        shell.execute("MATCH (n) DETACH DELETE (n)");
+    public void tearDown() throws Exception
+    {
+        shell.execute( "MATCH (n) DETACH DELETE (n)" );
     }
 
     @Test
-    public void periodicCommitWorks() throws CommandException {
-        shell.execute("USING PERIODIC COMMIT\n" +
-                "LOAD CSV FROM 'https://neo4j.com/docs/cypher-refcard/3.2/csv/artists.csv' AS line\n" +
-                "CREATE (:Artist {name: line[1], year: toInteger(line[2])});");
+    public void periodicCommitWorks() throws CommandException
+    {
+        shell.execute( "USING PERIODIC COMMIT\n" +
+                       "LOAD CSV FROM 'https://neo4j.com/docs/cypher-refcard/3.2/csv/artists.csv' AS line\n" +
+                       "CREATE (:Artist {name: line[1], year: toInteger(line[2])});" );
         linePrinter.clear();
 
-        shell.execute("MATCH (a:Artist) WHERE a.name = 'Europe' RETURN a.name");
+        shell.execute( "MATCH (a:Artist) WHERE a.name = 'Europe' RETURN a.name" );
 
-        assertThat(linePrinter.output(), containsString("a.name"+ NEWLINE+"\"Europe\""));
+        assertThat( linePrinter.output(), containsString( "a.name" + NEWLINE + "\"Europe\"" ) );
     }
 
     @Test
-    public void cypherWithProfileStatements() throws CommandException {
+    public void cypherWithProfileStatements() throws CommandException
+    {
         //when
-        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE RETURN null");
+        shell.execute( "CYPHER RUNTIME=INTERPRETED PROFILE RETURN null" );
 
         //then
         String actual = linePrinter.output();
         //      This assertion checks everything except for time and cypher
-        assertThat(actual, containsString("Plan: \"PROFILE\""));
-        assertThat(actual, containsString("Statement: \"READ_ONLY\""));
-        assertThat(actual, containsString("Planner: \"COST\""));
-        assertThat(actual, containsString("Runtime: \"INTERPRETED\""));
-        assertThat(actual, containsString("DbHits: 0"));
-        assertThat(actual, containsString("Rows: 1"));
-        assertThat(actual, containsString("null"));
-        assertThat(actual, containsString("NULL"));
+        assertThat( actual, containsString( "Plan: \"PROFILE\"" ) );
+        assertThat( actual, containsString( "Statement: \"READ_ONLY\"" ) );
+        assertThat( actual, containsString( "Planner: \"COST\"" ) );
+        assertThat( actual, containsString( "Runtime: \"INTERPRETED\"" ) );
+        assertThat( actual, containsString( "DbHits: 0" ) );
+        assertThat( actual, containsString( "Rows: 1" ) );
+        assertThat( actual, containsString( "null" ) );
+        assertThat( actual, containsString( "NULL" ) );
     }
 
     @Test
-    public void cypherWithProfileWithMemory() throws CommandException {
+    public void cypherWithProfileWithMemory() throws CommandException
+    {
         // given
 
         String serverVersion = shell.getServerVersion();
         // Memory profile are only available from 4.1
-        assumeThat( version(serverVersion), greaterThanOrEqualTo(version("4.1")));
+        assumeThat( version( serverVersion ), greaterThanOrEqualTo( version( "4.1" ) ) );
 
         //when
-        shell.execute("CYPHER RUNTIME=INTERPRETED PROFILE RETURN null");
+        shell.execute( "CYPHER RUNTIME=INTERPRETED PROFILE RETURN null" );
 
         //then
         String actual = linePrinter.output();
-        System.out.println(actual);
-        assertThat(actual, containsString("Memory (Bytes): 0"));
+        System.out.println( actual );
+        assertThat( actual, containsString( "Memory (Bytes): 0" ) );
     }
 
     @Test
-    public void cypherWithExplainStatements() throws CommandException {
+    public void cypherWithExplainStatements() throws CommandException
+    {
         //when
-        shell.execute("CYPHER RUNTIME=INTERPRETED EXPLAIN RETURN null");
+        shell.execute( "CYPHER RUNTIME=INTERPRETED EXPLAIN RETURN null" );
 
         //then
         String actual = linePrinter.output();
         //      This assertion checks everything except for time and cypher
-        assertThat(actual, containsString("Plan: \"EXPLAIN\""));
-        assertThat(actual, containsString("Statement: \"READ_ONLY\""));
-        assertThat(actual, containsString("Planner: \"COST\""));
-        assertThat(actual, containsString("Runtime: \"INTERPRETED\""));
+        assertThat( actual, containsString( "Plan: \"EXPLAIN\"" ) );
+        assertThat( actual, containsString( "Statement: \"READ_ONLY\"" ) );
+        assertThat( actual, containsString( "Planner: \"COST\"" ) );
+        assertThat( actual, containsString( "Runtime: \"INTERPRETED\"" ) );
     }
 
     @Test
@@ -106,15 +132,15 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest 
         // given a CLI arg
         ShellParameterMap parameterMap = new ShellParameterMap();
         parameterMap.setParameter( "foo", "'bar'" );
-        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000), false, parameterMap );
+        shell = new CypherShell( linePrinter, new PrettyConfig( Format.PLAIN, true, 1000 ), false, parameterMap );
         connect( "neo" );
 
         //when
-        shell.execute("CYPHER RETURN $foo");
+        shell.execute( "CYPHER RETURN $foo" );
 
         //then
         String actual = linePrinter.output();
-        assertThat(actual, containsString("$foo"));
-        assertThat(actual, containsString("bar"));
+        assertThat( actual, containsString( "$foo" ) );
+        assertThat( actual, containsString( "bar" ) );
     }
 }
