@@ -39,6 +39,7 @@ import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Point;
 import org.neo4j.driver.types.Relationship;
 import org.neo4j.shell.state.BoltResult;
+import org.neo4j.values.storable.DurationValue;
 
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -205,6 +206,8 @@ public interface OutputFormatter
             return pathAsString( value.asPath() );
         case POINT:
             return pointAsString( value.asPoint() );
+        case DURATION:
+            return DurationValue.parse( value.toString() ).prettyPrint();
         case ANY:
         case BOOLEAN:
         case BYTES:
@@ -217,7 +220,6 @@ public interface OutputFormatter
         case DATE_TIME:
         case LOCAL_TIME:
         case LOCAL_DATE_TIME:
-        case DURATION:
         case NULL:
         default:
             return value.toString();
