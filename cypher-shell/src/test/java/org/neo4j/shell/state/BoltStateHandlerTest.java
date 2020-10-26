@@ -669,7 +669,7 @@ public class BoltStateHandlerTest
         BoltStateHandler handler = new BoltStateHandler( provider, false );
         handler.connect( config );
 
-        assertTrue( provider.config.userAgent().startsWith( "neo4j-cypher-shell/v4.2" ) );
+        assertTrue( provider.config.userAgent().startsWith( "neo4j-cypher-shell/v" ) );
     }
 
     private Driver stubResultSummaryInAnOpenSession( Result resultMock, Session sessionMock, String version )
