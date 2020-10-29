@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -eu
+# build-deb-package:
+# Build Debian package for Neo4j Cypher Shell from jar distribution
+
+if [ $# -ne 4 ]
+then
+  echo "Usage: ${0} <jar-distribution-dir> <version> <distribution> <output-dir>"
+  exit 1
+fi
+
+jar_dist_dir=${1}
+version=${2}
+distribution=${3}
+output_dir=${4}
+deb_build_dir=${output_dir}/debian/cypher-shell-${version}
+
+echo "Building DEB package"
+echo "Output directory: ${output_dir}"
+echo "Version: ${version}"
+echo "Distribution: ${distribution}"
+echo "Jar distribution directory: ${jar_dist_dir}"
+
+mkdir -p ${deb_build_dir}/debian/
+mkdir -p ${deb_build_dir}/cypher-shell/build/install/cypher-shell/
+
+cp ${jar_dist_dir}/cypher-shell ${deb_build_dir}/cypher-shell/build/install/cypher-shell/cypher-shell
+cp ${jar_dist_dir}/cypher-shell.jar ${deb_build_dir}/cypher-shell/build/install/cypher-shell/cypher-shell.jar
+
+cp packaging/debian/cypher-shell.install ${deb_build_dir}/debian/cypher-shell.install
+cp packaging/debian/rules ${deb_build_dir}/debian/rules
+cp packaging/debian/compat ${deb_build_dir}/debian/compat
+cp packaging/debian/copyright ${deb_build_dir}/debian/copyright
+cp packaging/debian/control ${deb_build_dir}/debian/control
+cp packaging/debian/cypher-shell.manpages ${deb_build_dir}/debian/cypher-shell.manpages
+cp cypher-shell.1.md ${deb_build_dir}/cypher-shell.1.md
+
+VERSION=${version} DISTRIBUTION=${distribution} DATE=`date -R` envsubst '${VERSION} ${DISTRIBUTION} ${DATE}' < packaging/debian/changelog > ${deb_build_dir}/debian/changelog
+
+( cd ${deb_build_dir} && debuild -A -uc -us )
+cp ${output_dir}/debian/cypher-shell_4.1.0_all.deb ${output_dir}/cypher-shell_4.1.0_all.deb

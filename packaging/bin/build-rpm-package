@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -eu
+# build-rpm-package:
+# Build RPM package for Neo4j Cypher Shell from jar distribution
+
+if [ $# -ne 4 ]
+then
+  echo "Usage: ${0} <jar-distribution-dir> <version> <release> <output-dir>"
+  exit 1
+fi
+
+# We use realpath because rpmbuild gets confused otherwi
+jar_dist_dir=$(realpath ${1})
+version=${2}
+release=${3}
+output_dir=$(realpath ${4})
+cypher_shell_project_dir=$(realpath "$(dirname "$(dirname "$(dirname "$0")")")")
+spec_file_output=${output_dir}/rpm/SPECS/cypher-shell.spec
+
+echo "Building RPM package"
+echo "Version: ${version}"
+echo "Release: ${release}"
+echo "Output directory: ${output_dir}"
+echo "Jar distribution directory: ${jar_dist_dir}"
+
+mkdir -p ${output_dir}/rpm/SPECS/
+mkdir -p ${output_dir}/rpm/BUILD/cypher-shell/build/install/cypher-shell/
+mkdir -p ${output_dir}/rpm/BUILD/manpages
+
+VERSION=${version} RELEASE=${release} DATE=`date -R` envsubst '${VERSION} ${RELEASE}' < packaging/rpm/cypher-shell.spec > ${spec_file_output}
+
+cp ${jar_dist_dir}/cypher-shell ${output_dir}/rpm/BUILD/cypher-shell/build/install/cypher-shell/cypher-shell
+cp ${jar_dist_dir}/cypher-shell.bat ${output_dir}/rpm/BUILD/cypher-shell/build/install/cypher-shell/cypher-shell.bat
+cp ${jar_dist_dir}/cypher-shell.jar ${output_dir}/rpm/BUILD/cypher-shell/build/install/cypher-shell/cypher-shell.jar
+
+pandoc -s -o ${output_dir}/rpm/BUILD/manpages/cypher-shell.1 ${cypher_shell_project_dir}/cypher-shell.1.md
+gzip ${output_dir}/rpm/BUILD/manpages/*
+
+rpmbuild --define "_topdir ${output_dir}/rpm" -bb --clean ${spec_file_output}
+cp ${output_dir}/rpm/RPMS/noarch/cypher-shell-${version}-${release}.noarch.rpm ${output_dir}/cypher-shell-${version}-${release}.noarch.rpm

@@ -31,12 +31,9 @@ rpmfile := cypher-shell-$(rpmversion).noarch.rpm
 debfile := cypher-shell_$(debversion)_all.deb
 outputs := cypher-shell cypher-shell.bat $(jarfile)
 artifacts:=$(patsubst %,cypher-shell/build/install/cypher-shell/%,${outputs})
-rpm_artifacts:=$(patsubst %,out/rpm/BUILD/%,${artifacts})
-deb_artifacts:=$(patsubst %,out/debian/cypher-shell-$(debversion)/%,${artifacts})
-deb_files:=$(wildcard packaging/debian/*)
-deb_targets:=$(patsubst packaging/debian/%,out/debian/cypher-shell-$(debversion)/debian/%,${deb_files})
 
 DOCKERUUIDRPM   := $(shell uuidgen)
+DOCKERUUIDDEB   := $(shell uuidgen)
 YUMREPO_VOLUMEID := $(shell uuidgen)
 YUMREPO_IMAGEID  := repomaker/$(shell uuidgen | head -c 5)
 
@@ -125,21 +122,12 @@ out/cypher-shell.zip: tmp/cypher-shell.zip
 	mkdir -p out
 	cp $< $@
 
-# ======================= RPM CYPHER-SHELL =======================
+# ======================= RPM =======================
 
-out/rpm/SPECS/cypher-shell.spec: packaging/rpm/cypher-shell.spec
-	mkdir -p $(dir $@)
-	VERSION=$(versionnumber) RELEASE=$(release) envsubst '$${VERSION} $${RELEASE}' < $< > $@
+out/${rpmfile}: $(artifacts)
+	packaging/bin/build-rpm-package cypher-shell/build/install/cypher-shell ${versionnumber} ${release} out
 
-out/rpm/BUILD/%: %
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/%.rpm: out/rpm/RPMS/noarch/%.rpm
-	mkdir -p $(dir $@)
-	cp $< $@
-
-tmp/rpm-test/%.rpm: out/rpm/RPMS/noarch/%.rpm
+tmp/rpm-test/%.rpm: out/${rpmfile}
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -147,40 +135,20 @@ tmp/rpm-test/Dockerfile: packaging/test/rpm/Dockerfile
 	mkdir -p $(dir $@)
 	RPMFILE=$(rpmfile) envsubst '$${RPMFILE}' < $< > $@
 
-out/rpm/RPMS/noarch/$(rpmfile): out/rpm/SPECS/cypher-shell.spec $(rpm_artifacts) out/rpm/BUILD/Makefile out/rpm/BUILD/cypher-shell.1.md
-	rpmbuild --define "_topdir $(CURDIR)/out/rpm" -bb --clean $<
-
 .PHONY: rpm
-rpm: out/$(rpmfile) ## Build the RPM package
+rpm: out/${rpmfile} ## Build the RPM package
 
 .PHONY: rpm-test
 rpm-test: tmp/rpm-test/$(rpmfile) tmp/rpm-test/Dockerfile ## Test the RPM package (requires Docker)
 	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version
 
 
-
 # ======================= DEBIAN =======================
 
+out/${debfile}: $(artifacts)
+	packaging/bin/build-deb-package cypher-shell/build/install/cypher-shell ${versionnumber} ${distribution} out
 
-out/debian/cypher-shell-$(debversion)/debian/changelog: packaging/debian/changelog
-	mkdir -p $(dir $@)
-	VERSION=$(debversion) DISTRIBUTION=$(distribution) DATE="$(shell date -R)" envsubst '$${VERSION} $${DISTRIBUTION} $${DATE}' < $< > $@
-
-out/debian/cypher-shell-$(debversion)/debian/%: packaging/debian/%
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/debian/cypher-shell-$(debversion)/%: %
-	mkdir -p $(dir $@)
-	cp $< $@
-
-out/debian/$(debfile): $(deb_artifacts) $(deb_targets) out/debian/cypher-shell-$(debversion)/cypher-shell.1.md
-	cd out/debian/cypher-shell-$(debversion) && debuild -A -uc -us
-
-out/%.deb: out/debian/%.deb
-	cp $< $@
-
-tmp/debian-test/%.deb: out/debian/%.deb
+tmp/debian-test/%.deb: out/%.deb
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -189,9 +157,9 @@ tmp/debian-test/Dockerfile: packaging/test/debian/Dockerfile
 	DEBFILE=$(debfile) envsubst '$${DEBFILE}' < $< > $@
 
 .PHONY: debian
-debian: out/$(debfile) ## Build the Debian package
+debian: out/${debfile} ## Build the Debian package
+	packaging/bin/build-deb-package cypher-shell/build/install/cypher-shell ${versionnumber} ${distribution} out
 
-DOCKERUUIDDEB := $(shell uuidgen)
 .PHONY: debian-test
 debian-test: tmp/debian-test/$(debfile) tmp/debian-test/Dockerfile ## Test the Debian package (requires Docker)
 	cd $(dir $<) && docker build . -t $(DOCKERUUIDRPM) && docker run --rm $(DOCKERUUIDRPM) --version

@@ -24,9 +24,15 @@ of Neo4j.
 #make clean build
 
 %install
-rm -rf ${RPM_BUILD_ROOT}
-# Calls make with correct DESTDIR
-%make_install prefix=/usr
+rm -rf ${buildroot}
+
+mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_datadir}/cypher-shell/lib
+mkdir -p %{buildroot}/%{_mandir}/man1
+
+install -m 0755 cypher-shell/build/install/cypher-shell/cypher-shell %{buildroot}/%{_bindir}
+install -m 0755 cypher-shell/build/install/cypher-shell/cypher-shell.jar %{buildroot}/%{_datadir}/cypher-shell/lib
+install -m 0644 manpages/* %{buildroot}/%{_mandir}/man1
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -35,4 +41,4 @@ rm -rf ${RPM_BUILD_ROOT}
 %defattr(-,root,root)
 %{_bindir}/cypher-shell
 %{_datadir}/cypher-shell
-%doc %{_mandir}/man1/cypher-shell.1.gz
+%doc %{_mandir}/man1/*
