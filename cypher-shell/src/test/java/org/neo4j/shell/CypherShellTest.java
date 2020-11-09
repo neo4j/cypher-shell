@@ -330,4 +330,13 @@ public class CypherShellTest
         Object result = shell.setParameter( "bob", "99" );
         assertEquals( 99L, result );
     }
+
+    @Test
+    public void ignoreEmptyStatement() throws CommandException
+    {
+        when( mockedBoltStateHandler.runCypher( anyString(), anyMap() ) ).thenThrow( new IllegalStateException( "Test failed" ) );
+        OfflineTestShell shell = new OfflineTestShell( logger, mockedBoltStateHandler, mockedPrettyPrinter );
+
+        shell.execute( "  \t;" );
+    }
 }
