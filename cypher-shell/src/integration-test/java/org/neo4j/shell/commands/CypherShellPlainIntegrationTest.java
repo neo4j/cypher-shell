@@ -108,7 +108,7 @@ public class CypherShellPlainIntegrationTest extends CypherShellIntegrationTest
         //then
         String actual = linePrinter.output();
         System.out.println( actual );
-        assertThat( actual, containsString( "Memory (Bytes): 0" ) );
+        assertThat( actual, containsString( "Memory (Bytes): " ) );
     }
 
     @Test
