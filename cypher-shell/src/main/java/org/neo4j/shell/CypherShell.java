@@ -47,6 +47,7 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
 {
     // Final space to catch newline
     private static final Pattern cmdNamePattern = Pattern.compile( "^\\s*(?<name>[^\\s]+)\\b(?<args>.*)\\s*$" );
+    private static final Pattern emptyStatementPattern = Pattern.compile( "^\\s*;$" );
     private final ParameterMap parameterMap;
     private final LinePrinter linePrinter;
     private final BoltStateHandler boltStateHandler;
@@ -91,6 +92,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
     @Override
     public void execute( @Nonnull final String cmdString ) throws ExitException, CommandException
     {
+        if ( isEmptyStatement( cmdString ) )
+        {
+            return;
+        }
+
         // See if it's a shell command
         final Optional<CommandExecutable> cmd = getCommandExecutable( cmdString );
         if ( cmd.isPresent() )
@@ -106,6 +112,11 @@ public class CypherShell implements StatementExecuter, Connector, TransactionHan
         }
 
         executeCypher( cmdString );
+    }
+
+    private static boolean isEmptyStatement( final String statement )
+    {
+        return emptyStatementPattern.matcher( statement ).matches();
     }
 
     @Override
