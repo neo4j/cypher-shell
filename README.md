@@ -1,3 +1,5 @@
+Contains Cypher Shell 1.1. __PLEASE NOTE!__ newer versions have moved to https://github.com/neo-technology/neo4j/tree/4.3/public/community/cypher-shell.
+
 ## How to build
 
 Use `make help` (`gradlew tasks`) to list possible tasks. But you
