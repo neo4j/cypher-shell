@@ -292,4 +292,11 @@ public class ShellStatementParser implements StatementParser
         parsedStatements.clear();
         awaitedRightDelimiter = Optional.empty();
     }
+
+    @Nonnull
+    @Override
+    public Optional<String> incompleteStatement()
+    {
+        return Optional.of( statement.toString().trim() ).filter( s -> !s.isEmpty() );
+    }
 }
