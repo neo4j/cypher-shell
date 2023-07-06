@@ -1,4 +1,4 @@
-Contains Cypher Shell 1.1. __PLEASE NOTE!__ newer versions have moved to https://github.com/neo-technology/neo4j/tree/4.3/public/community/cypher-shell.
+Contains Cypher Shell 1.1. __PLEASE NOTE!__ newer versions have moved to https://github.com/neo4j/neo4j/tree/4.3/community/cypher-shell.
 
 ## How to build
 
